@@ -1,17 +1,19 @@
 #include "ValueCounter.h"
 
+namespace mimir {
+namespace models {
+
 ValueCounter::ValueCounter() :
-    pair(0, 0)
+    _valueIndex(0),
+    _count(0)
 {
 }
 
-ValueCounter::ValueCounter(size_t value, unsigned count) :
-    pair(value, count)
+ValueCounter::ValueCounter(ValueIndex valueIndex, unsigned long count) :
+    _valueIndex(valueIndex),
+    _count(count)
 {
 }
 
-ValueCounter &ValueCounter::operator +=(unsigned n)
-{
-    second += n;
-    return *this;
-}
+} // namespace models
+} // namespace mimir

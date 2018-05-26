@@ -7,29 +7,27 @@ namespace models {
 class Probability
 {
 public:
-    explicit Probability(long double probability, long double significance, long double cardinality);
+    explicit Probability() : _probability(1) {}
+    inline explicit Probability(long double probability, long double cardinality) : _probability(probability), _cardinality(cardinality) {}
     Probability(const Probability&) = default;
     Probability(Probability &&) = default;
     Probability &operator=(const Probability&) = default;
 
-    bool operator <(const Probability &rhs);
+    inline bool operator <(const Probability &rhs) { return _probability < rhs._probability; }
 
-    long double probability() const;
-    void setProbability(long double probability);
+    inline long double probability() const { return _probability; }
+    inline void setProbability(long double probability) { _probability = probability; }
 
-    long double significance() const;
-    void setSignificance(long double significance);
-
-    long double cardinality() const;
-    void setCardinality(long double cardinality);
+    inline long double cardinality() const { return _cardinality; }
+    inline void setCardinality(long double cardinality) { _cardinality = cardinality; }
 
 private:
     long double _probability;
-    long double _significance;
     long double _cardinality;
 };
 
 } // namespace models
 } // namespace mimir
+inline mimir::models::Probability operator "" _p (long double p) { return mimir::models::Probability(p, 1); }
 
 #endif // PROBABILITY_H

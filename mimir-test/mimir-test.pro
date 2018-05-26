@@ -30,4 +30,7 @@ SOURCES += \
         tst_Models.cpp \
         ../mimir/models/SampleStore.cpp \
         ../mimir/models/Sample.cpp \
-        ../mimir/models/ValueCounter.cpp
+        ../mimir/models/ValueCounter.cpp \
+        ../mimir/services/Sampler.cpp \
+        ../mimir/services/NameResolver.cpp \
+        ../mimir/services/Probabilator.cpp \

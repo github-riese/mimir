@@ -5,12 +5,9 @@
 #include <vector>
 #include <string>
 
-#include "models/Sample.h"
-#include "models/SampleStore.h"
-
-using std::string;
-
-using mimir::models::SampleStore;
+#include "../models/Sample.h"
+#include "../models/SampleStore.h"
+#include "../models/ValueIndex.h"
 
 namespace mimir {
 namespace services {
@@ -18,14 +15,15 @@ namespace services {
 class Sampler
 {
 public:
-    explicit Sampler(string name);
-    void addSample(models::Sample);
-    unsigned total() const;
-    unsigned countIn(size_t value) const;
-    unsigned count(size_t classifier, size_t value) const;
+    explicit Sampler(std::string name);
+    void addSample(mimir::models::Sample);
+    unsigned long total() const;
+    unsigned long countInValue(mimir::models::ValueIndex value) const;
+    unsigned long countInClass(mimir::models::ValueIndex classifier) const;
+    unsigned long count(mimir::models::ValueIndex classifier, mimir::models::ValueIndex value) const;
 private:
-    string _name;
-    SampleStore _samples;
+    std::string _name;
+    mimir::models::SampleStore _samples;
 };
 
 } // namespace services

@@ -3,22 +3,24 @@
 
 #include <cstdlib>
 
+#include "ValueIndex.h"
+
 namespace mimir {
 namespace models {
 
 class Sample
 {
 public:
-    explicit Sample(size_t classifier, size_t value, unsigned count = 1);
-    size_t classifier() const;
+    explicit Sample(ValueIndex classifier, ValueIndex valueIndex, unsigned long count = 1);
+    ValueIndex classifier() const;
 
-    size_t value() const;
+    ValueIndex valueIndex() const;
 
-    unsigned count() const;
+    unsigned long count() const;
 
 private:
-    size_t _classifier;
-    size_t _value;
+    ValueIndex _classifier;
+    ValueIndex _valueIndex;
     unsigned _count;
 };
 

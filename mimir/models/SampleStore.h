@@ -4,8 +4,9 @@
 #include <map>
 #include <vector>
 
-#include "ValueCounter.h"
 #include "Sample.h"
+#include "ValueCounter.h"
+#include "ValueIndex.h"
 
 using std::map;
 using std::vector;
@@ -14,15 +15,11 @@ using std::pair;
 namespace mimir {
 namespace models {
 
-class SampleStore : public map<size_t, vector<ValueCounter>>
+class SampleStore : public map<ValueIndex, vector<ValueCounter>>
 {
 public:
     SampleStore();
     void add(const Sample &);
-    unsigned total() const;
-    unsigned countInValue(size_t value) const;
-    unsigned countInClass(size_t classifier) const;
-    unsigned count(size_t classifier, size_t value) const;
 };
 
 } // namespace models

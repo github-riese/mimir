@@ -1,4 +1,4 @@
-#include "Probability.h"
+#include "ValueIndex.h"
 
 namespace mimir {
 namespace models {

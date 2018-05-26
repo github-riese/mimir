@@ -20,11 +20,17 @@ SOURCES += \
     models/Sample.cpp \
     services/Sampler.cpp \
     models/SampleStore.cpp \
-    models/ValueCounter.cpp
+    models/ValueCounter.cpp \
+    models/ValueIndex.cpp \
+    services/NameResolver.cpp \
+    services/Probabilator.cpp
 
 HEADERS += \
     models/Probability.h \
     models/Sample.h \
     services/Sampler.h \
     models/SampleStore.h \
-    models/ValueCounter.h
+    models/ValueCounter.h \
+    models/ValueIndex.h \
+    services/NameResolver.h \
+    services/Probabilator.h

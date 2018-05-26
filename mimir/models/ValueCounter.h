@@ -4,17 +4,27 @@
 #include <vector>
 #include <utility>
 
-using std::pair;
+#include "ValueIndex.h"
 
-class ValueCounter : public pair<size_t, unsigned>
+namespace mimir {
+namespace models {
+
+class ValueCounter
 {
 public:
     explicit ValueCounter();
-    ValueCounter(size_t value, unsigned count = 1);
-    inline size_t value() const { return first; }
-    inline unsigned count() const { return second; }
-    ValueCounter &operator +=(unsigned);
-    inline operator unsigned() const { return second; }
+    explicit ValueCounter(ValueIndex valueIndex, unsigned long count);
+    inline ValueIndex valueIndex() const { return _valueIndex; }
+    inline unsigned count() const { return _count; }
+    inline ValueCounter &operator +=(unsigned long add) { _count += add; return *this; }
+    inline void operator +(unsigned long add) { _count += add; }
+    inline operator unsigned() const { return _count; }
+private:
+    ValueIndex _valueIndex;
+    unsigned long _count;
 };
+
+} // namespace models
+} // namespace mimir
 
 #endif // VALUECOUNTER_H

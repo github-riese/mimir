@@ -3,24 +3,24 @@
 namespace mimir {
 namespace models {
 
-Sample::Sample(size_t classifier, size_t value, unsigned count) :
+Sample::Sample(ValueIndex classifier, ValueIndex valueIndex, unsigned long count) :
     _classifier(classifier),
-    _value(value),
+    _valueIndex(valueIndex),
     _count(count)
 {
 }
 
-size_t Sample::classifier() const
+ValueIndex Sample::classifier() const
 {
     return _classifier;
 }
 
-size_t Sample::value() const
+ValueIndex Sample::valueIndex() const
 {
-    return _value;
+    return _valueIndex;
 }
 
-unsigned Sample::count() const
+unsigned long Sample::count() const
 {
     return _count;
 }
