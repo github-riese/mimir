@@ -85,6 +85,10 @@ void Models::testProbabilator()
     testSampler1.addSample(Sample{2_vi, 3_vi, 10});
     testSampler1.addSample(Sample{3_vi, 3_vi, 10});
 
+    Sampler testSampler2(nameResolve.indexFromName(NameResolver::NameSource::Sampler, "testSampler2"));
+    testSampler2.addSample(Sample(1_vi, 1_vi, 5));
+    testSampler2.addSample(Sample(2_vi, 1_vi, 2));
+
     Probabilator testee("testee");
     testee.addSampler(testSampler1);
 
@@ -94,6 +98,24 @@ void Models::testProbabilator()
     QCOMPARE(p.probability(), 1.l/3); // probability of a third to find 1 in class 1
     QCOMPARE(p.totalSamples(), 90U);
     QCOMPARE(p.samplers(), { testSamplerName });
+
+    testee.addSampler(testSampler2);
+
+    Evaluation e2 = testee.evaluate(1_vi);
+
+    Probability p2 = e2.probabilityByClassification(1_vi);
+    vector<ValueIndex> expectation2 = {1_vi, 2_vi };
+
+    long double combined = p2.probability();
+    QCOMPARE(p2.samplers(), expectation2);
+
+    Probabilator prob2("xx");
+    prob2.addSampler(testSampler2);
+    Evaluation prob2Evaluation = prob2.evaluate(1_vi);
+    Probability prob2P = prob2Evaluation.probabilityByClassification(1_vi);
+    Probability metacombined = testee.metaProbability({p, prob2P});
+    QCOMPARE(combined, metacombined.probability());
+    QCOMPARE(p2.samplers(), metacombined.samplers());
 }
 
 QTEST_APPLESS_MAIN(Models)
