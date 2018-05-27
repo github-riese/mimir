@@ -1,4 +1,5 @@
 QT -= gui
+QT += network
 
 CONFIG += c++1y console
 CONFIG -= app_bundle
@@ -23,7 +24,8 @@ SOURCES += \
     models/ValueCounter.cpp \
     models/ValueIndex.cpp \
     services/NameResolver.cpp \
-    services/Probabilator.cpp
+    services/Probabilator.cpp \
+    models/Evaluation.cpp
 
 HEADERS += \
     models/Probability.h \
@@ -33,4 +35,5 @@ HEADERS += \
     models/ValueCounter.h \
     models/ValueIndex.h \
     services/NameResolver.h \
-    services/Probabilator.h
+    services/Probabilator.h \
+    models/Evaluation.h

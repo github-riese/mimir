@@ -17,7 +17,8 @@ public:
     {
         Classification = 0U,
         Property = 1U,
-        Value = 2U
+        Value = 2U,
+        Sampler = 3U
     };
     NameResolver();
     std::string nameFromIndex(NameSource, const mimir::models::ValueIndex &) const;

@@ -34,3 +34,4 @@ SOURCES += \
         ../mimir/services/Sampler.cpp \
         ../mimir/services/NameResolver.cpp \
         ../mimir/services/Probabilator.cpp \
+        ../mimir/models/Evaluation.cpp \

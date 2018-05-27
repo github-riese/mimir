@@ -5,7 +5,7 @@
 using std::find_if;
 using std::accumulate;
 
-using std::string;
+using std::vector;
 
 using mimir::models::Sample;
 using mimir::models::SampleStore;
@@ -15,8 +15,8 @@ using mimir::models::ValueIndex;
 namespace mimir {
 namespace services {
 
-Sampler::Sampler(string name) :
-    _name(name)
+Sampler::Sampler(ValueIndex nameIndex) :
+    _nameIndex(nameIndex)
 {
 
 }
@@ -70,6 +70,15 @@ unsigned long Sampler::count(ValueIndex classifier, ValueIndex value) const
         }
     }
     return total;
+}
+
+std::vector<models::ValueIndex> Sampler::allClasses() const
+{
+    vector<ValueIndex> result;
+    for (auto v : _samples) {
+        result.push_back(v.first);
+    }
+    return result;
 }
 
 } // namespace services

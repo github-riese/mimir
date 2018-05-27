@@ -5,11 +5,13 @@
 #include "../mimir/services/Probabilator.h"
 #include "../mimir/services/Sampler.h"
 
+using mimir::models::Evaluation;
+using mimir::models::Probability;
 using mimir::models::Sample;
+using mimir::models::ValueIndex;
 using mimir::services::NameResolver;
 using mimir::services::Sampler;
 using mimir::services::Probabilator;
-using mimir::models::ValueIndex;
 
 class Models : public QObject
 {
@@ -30,7 +32,9 @@ Models::Models()
 
 void Models::testSamplerBasics()
 {
-    Sampler testee("testee");
+    NameResolver resolver;
+    ValueIndex testeeNameIndex = resolver.indexFromName(NameResolver::NameSource::Sampler, "testee");
+    Sampler testee(testeeNameIndex);
     testee.addSample(Sample{ValueIndex(1), ValueIndex(2)});
     testee.addSample(Sample{ValueIndex(1), ValueIndex(2), 3});
     testee.addSample(Sample{ValueIndex(2), ValueIndex(2), 99});
@@ -67,7 +71,10 @@ void Models::testNameLookup()
 
 void Models::testProbabilator()
 {
-    Sampler testSampler1("testsampler1");
+    NameResolver nameResolve;
+    nameResolve.indexFromName(NameResolver::NameSource::Sampler, "a totally unused sampler name");
+    ValueIndex testSamplerName = nameResolve.indexFromName(NameResolver::NameSource::Sampler, "testsampler1");
+    Sampler testSampler1(testSamplerName);
     testSampler1.addSample(Sample{1_vi, 1_vi, 10});
     testSampler1.addSample(Sample{2_vi, 1_vi, 10});
     testSampler1.addSample(Sample{3_vi, 1_vi, 10});
@@ -81,7 +88,12 @@ void Models::testProbabilator()
     Probabilator testee("testee");
     testee.addSampler(testSampler1);
 
-    QCOMPARE(testee.evaluate(1_vi, 1_vi).probability(), 1.l/3);
+    Evaluation e1 = testee.evaluate(1_vi);
+
+    Probability p = e1.probabilityByClassification(1_vi);
+    QCOMPARE(p.probability(), 1.l/3); // probability of a third to find 1 in class 1
+    QCOMPARE(p.totalSamples(), 90U);
+    QCOMPARE(p.samplers(), { testSamplerName });
 }
 
 QTEST_APPLESS_MAIN(Models)
