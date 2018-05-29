@@ -35,3 +35,11 @@ SOURCES += \
         ../mimir/services/NameResolver.cpp \
         ../mimir/services/Probabilator.cpp \
         ../mimir/models/Evaluation.cpp \
+    test-runner.cpp \
+    TestListener.cpp \
+    TestRunner.cpp
+
+HEADERS += \
+    tst_Models.h \
+    TestListener.h \
+    TestRunner.h

@@ -31,6 +31,8 @@ public:
         return (*p).second;
     }
 
+    std::vector<mimir::models::ValueIndex> probableClassifications() const;
+
     inline long double average() const { return _average; }
 
 private:

@@ -1,6 +1,10 @@
 #include <QString>
 #include <QtTest>
 
+#include "TestListener.h"
+
+#include "tst_Models.h"
+
 #include "../mimir/services/NameResolver.h"
 #include "../mimir/services/Probabilator.h"
 #include "../mimir/services/Sampler.h"
@@ -13,18 +17,7 @@ using mimir::services::NameResolver;
 using mimir::services::Sampler;
 using mimir::services::Probabilator;
 
-class Models : public QObject
-{
-    Q_OBJECT
-
-public:
-    Models();
-
-private Q_SLOTS:
-    void testSamplerBasics();
-    void testNameLookup();
-    void testProbabilator();
-};
+REGISTER_TEST(Models)
 
 Models::Models()
 {
@@ -87,31 +80,25 @@ void Models::testProbabilator()
     s2.addSample({2_vi, 4_vi, 2L});
     s2.addSample({3_vi, 4_vi, 2L});
 
-    Probabilator probS1("s1probabilator");
-    probS1.setSampler(s1);
-    Evaluation eS1 = probS1.evaluateSampler(1_vi);
-    QCOMPARE(eS1.mostProbableClass(), 1_vi);
-    Probability pS1 = eS1.mostProbable();
+    Probabilator probS1;
+    Evaluation eS1 = probS1.evaluate(s1, 1_vi);
+    QVERIFY2(eS1.mostProbableClass() == 1_vi, QStringLiteral("Expected 1 to be the more probable class.").toUtf8().data());
 
+    Probability pS1 = eS1.mostProbable();
     QCOMPARE(pS1.probability(), 5.L/8);
 
-    Probabilator probS2("s2probabilator");
-    probS2.setSampler(s2);
-    Evaluation eS2 = probS2.evaluateSampler(3_vi);
+    Evaluation eS2 = Probabilator::evaluate(s2, 3_vi);
     QCOMPARE(eS2.mostProbableClass(), 1_vi);
-    Probability pS2 = eS2.mostProbable();
+    Probability pS2 = eS2.probabilityByClassification(1_vi);
 
     QCOMPARE(pS2.probability(), 4.L/5);
 
-    Probabilator combineP1P2("p1p2Combinator");
-    Probability combinedP1P2 = combineP1P2.combineProbabilities({pS1, pS2});
-    qDebug() << "Prob: " << static_cast<double>(combinedP1P2.probability()) << "Expected: 20/32 ->" << 20./32;
-    QCOMPARE(combinedP1P2.probability(), 20./32);
+    Evaluation combinedP1P2 = Probabilator::evaluate({eS1, eS2});
+    QCOMPARE(combinedP1P2.mostProbable().probability(), 20./32);
 
     auto expectedSamplerIndices = vector<vector<ValueIndex>>{{1_vi}, {2_vi}};
-    QCOMPARE(combinedP1P2.samplers(), expectedSamplerIndices);
+    QCOMPARE(combinedP1P2.mostProbable().samplers(), expectedSamplerIndices);
+
+    Evaluation pS1_2S2 = probS1.evaluate({combinedP1P2, eS2});
+    QVERIFY2((pS1_2S2.mostProbable().samplers() == vector<vector<ValueIndex>>{{1_vi, 2_vi}, {2_vi}}), "SamplerCombination mismatch");
 }
-
-QTEST_APPLESS_MAIN(Models)
-
-#include "tst_Models.moc"

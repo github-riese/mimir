@@ -14,21 +14,16 @@ namespace services {
 class Probabilator
 {
 public:
-    Probabilator(const std::string&);
+    static mimir::models::Evaluation evaluate(const mimir::services::Sampler &sampler, mimir::models::ValueIndex value);
 
-    void setSampler(const mimir::services::Sampler &);
+    static mimir::models::Evaluation evaluate(const std::vector<mimir::models::Evaluation> &);
 
-    mimir::models::Evaluation evaluateSampler(mimir::models::ValueIndex value) const;
-
-    mimir::models::Probability combineProbabilities(const std::vector<mimir::models::Probability>&) const;
+    static std::vector<mimir::models::ValueIndex> combineSamplerIDs(const std::vector<std::vector<mimir::models::ValueIndex>>&);
 private:
-    mimir::models::Probability calculate(const mimir::services::Sampler &, mimir::models::ValueIndex, mimir::models::ValueIndex) const;
+    static mimir::models::Probability combineProbabilities(const std::vector<mimir::models::Probability>&);
 
-    long double bayes(unsigned long countInClassAndValue, unsigned long totalInClass, unsigned long totalInValue, unsigned long totalSamples) const;
-    long double bayes(long double pBonConditionA, long double pA, long double pB) const;
-private:
-    std::string _name;
-    mimir::services::Sampler _sampler;
+    static mimir::models::Probability calculate(const mimir::services::Sampler &, mimir::models::ValueIndex, mimir::models::ValueIndex);
+
 };
 
 } // namespace services

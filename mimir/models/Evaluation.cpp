@@ -4,8 +4,8 @@
 #include <numeric>
 
 using std::pair;
+using std::vector;
 
-using std::accumulate;
 using std::max_element;
 
 namespace mimir {
@@ -28,6 +28,15 @@ void Evaluation::addProbability(ValueIndex classification, const Probability &pr
     }
     _mostProbable = (*max).first;
     _average = sum / static_cast<long double>(_probabilities.size());
+}
+
+std::vector<ValueIndex> Evaluation::probableClassifications() const
+{
+    vector<ValueIndex> classifications;
+    for (auto element : _probabilities) {
+        classifications.push_back(element.first);
+    }
+    return  classifications;
 }
 
 } // namespace models

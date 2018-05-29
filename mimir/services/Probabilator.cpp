@@ -2,6 +2,8 @@
 
 #include <numeric>
 
+#include "BayesCalculator.h"
+
 using std::accumulate;
 using std::move;
 
@@ -17,26 +19,15 @@ using mimir::models::Evaluation;
 namespace mimir {
 namespace services {
 
-Probabilator::Probabilator(const string &name) :
-    _name(name),
-    _sampler(InvalidIndex())
-{
-}
-
-void Probabilator::setSampler(const Sampler &sampler)
-{
-    _sampler = sampler;
-}
-
-Evaluation Probabilator::evaluateSampler(ValueIndex value) const
+Evaluation Probabilator::evaluate(const Sampler &sampler, ValueIndex value)
 {
     Evaluation result;
     map<ValueIndex, vector<Probability>> probabilities;
-    for (auto classification : _sampler.allClasses()) {
-        if (!_sampler.total() || !_sampler.countInClass(classification)) {
+    for (auto classification : sampler.allClasses()) {
+        if (!sampler.total() || !sampler.countInClass(classification)) {
             continue;
         }
-        probabilities[classification].push_back(calculate(_sampler, classification, value));
+        probabilities[classification].push_back(calculate(sampler, classification, value));
     }
     for (auto classification : probabilities) {
         result.addProbability(classification.first, combineProbabilities(classification.second));
@@ -44,7 +35,24 @@ Evaluation Probabilator::evaluateSampler(ValueIndex value) const
     return result;
 }
 
-models::Probability Probabilator::combineProbabilities(const std::vector<models::Probability> &p) const
+models::Evaluation Probabilator::evaluate(const std::vector<models::Evaluation> &sources)
+{
+    if (sources.size() == 1)
+        return sources[0];
+    map<ValueIndex, vector<Probability>> combinableProbabilities;
+    for (auto evaluation : sources) {
+        for (auto classification : evaluation.probableClassifications()) {
+            combinableProbabilities[classification].push_back(evaluation.probabilityByClassification(classification));
+        }
+    }
+    Evaluation result;
+    for (auto index : combinableProbabilities) {
+        result.addProbability(index.first, combineProbabilities(index.second));
+    }
+    return result;
+}
+
+models::Probability Probabilator::combineProbabilities(const std::vector<models::Probability> &p)
 {
     if (p.size() < 2) {
         return p[0];
@@ -60,18 +68,17 @@ models::Probability Probabilator::combineProbabilities(const std::vector<models:
         combinedProbability *= pN.probability();
         combinedClassProbailities *= pN.classProbability();
         combinedValueProbailities *= pN.valueProbability();
-        auto pNSamplers = pN.samplers();
-        usedSamplers.insert(usedSamplers.end(), pNSamplers.begin(), pNSamplers.end());
+        usedSamplers.push_back(combineSamplerIDs(pN.samplers()));
     }
     return Probability{
-            bayes(combinedProbability, combinedClassProbailities, combinedValueProbailities),
+            BayesCalculator::calculate(combinedProbability, combinedClassProbailities, combinedValueProbailities),
             combinedClassProbailities,
             combinedValueProbailities,
             move(usedSamplers)
     };
 }
 
-Probability Probabilator::calculate(const Sampler &sampler, ValueIndex classification, ValueIndex value) const
+Probability Probabilator::calculate(const Sampler &sampler, ValueIndex classification, ValueIndex value)
 {
     // P(class|value) = (P(value|class) * P(value))/(P(class))
     // P(value|class) = count of class in value / count in value
@@ -82,26 +89,20 @@ Probability Probabilator::calculate(const Sampler &sampler, ValueIndex classific
     unsigned long countInClass = sampler.countInClass(classification);
     unsigned long total = sampler.total();
     return Probability{
-            bayes(countInClassInValue, countInClass, countInValue, total),
+            BayesCalculator::calculate(countInClassInValue, countInClass, countInValue, total),
             static_cast<long double>(countInClass)/static_cast<long double>(total),
             static_cast<long double>(countInValue)/static_cast<long double>(total),
             {{ sampler.nameIndex() }}
     };
 }
 
-long double Probabilator::bayes(unsigned long countInClassAndValue, unsigned long totalInClass, unsigned long totalInValue, unsigned long totalSamples) const
+std::vector<models::ValueIndex> Probabilator::combineSamplerIDs(const std::vector<std::vector<models::ValueIndex> > &sources)
 {
-    return
-            (
-                (static_cast<long double>(countInClassAndValue) / static_cast<long double>(totalInClass)) *
-                (static_cast<long double>(totalInClass) / static_cast<long double>(totalSamples))
-                ) /
-            (static_cast<long double>(totalInValue) / static_cast<long double>(totalSamples));
-}
-
-long double Probabilator::bayes(long double pBonConditionA, long double pA, long double pB) const
-{
-    return (pBonConditionA * pA) / pB;
+    vector<ValueIndex> combined;
+    for (auto source : sources) {
+        combined.insert(combined.end(), source.begin(), source.end());
+    }
+    return combined;
 }
 
 } // namespace services

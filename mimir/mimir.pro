@@ -25,7 +25,8 @@ SOURCES += \
     models/ValueIndex.cpp \
     services/NameResolver.cpp \
     services/Probabilator.cpp \
-    models/Evaluation.cpp
+    models/Evaluation.cpp \
+    services/BayesCalculator.cpp
 
 HEADERS += \
     models/Probability.h \
@@ -36,4 +37,5 @@ HEADERS += \
     models/ValueIndex.h \
     services/NameResolver.h \
     services/Probabilator.h \
-    models/Evaluation.h
+    models/Evaluation.h \
+    services/BayesCalculator.h
