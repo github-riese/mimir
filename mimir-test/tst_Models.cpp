@@ -71,51 +71,45 @@ void Models::testNameLookup()
 
 void Models::testProbabilator()
 {
-    NameResolver nameResolve;
-    nameResolve.indexFromName(NameResolver::NameSource::Sampler, "a totally unused sampler name");
-    ValueIndex testSamplerName = nameResolve.indexFromName(NameResolver::NameSource::Sampler, "testsampler1");
-    Sampler testSampler1(testSamplerName);
-    testSampler1.addSample(Sample{1_vi, 1_vi, 10});
-    testSampler1.addSample(Sample{2_vi, 1_vi, 10});
-    testSampler1.addSample(Sample{3_vi, 1_vi, 10});
-    testSampler1.addSample(Sample{1_vi, 2_vi, 10});
-    testSampler1.addSample(Sample{2_vi, 2_vi, 10});
-    testSampler1.addSample(Sample{3_vi, 2_vi, 10});
-    testSampler1.addSample(Sample{1_vi, 3_vi, 10});
-    testSampler1.addSample(Sample{2_vi, 3_vi, 10});
-    testSampler1.addSample(Sample{3_vi, 3_vi, 10});
 
-    Sampler testSampler2(nameResolve.indexFromName(NameResolver::NameSource::Sampler, "testSampler2"));
-    testSampler2.addSample(Sample(1_vi, 1_vi, 5));
-    testSampler2.addSample(Sample(2_vi, 1_vi, 2));
+    Sampler s1(1_vi);
+    Sampler s2(2_vi);
+    s1.addSample({1_vi, 1_vi, 5L});
+    s1.addSample({2_vi, 1_vi, 1L});
+    s1.addSample({3_vi, 1_vi, 2L});
+    s1.addSample({1_vi, 2_vi, 5L});
+    s1.addSample({2_vi, 2_vi, 1L});
+    s1.addSample({3_vi, 2_vi, 2L});
 
-    Probabilator testee("testee");
-    testee.addSampler(testSampler1);
+    s2.addSample({1_vi, 3_vi, 4L});
+    s2.addSample({3_vi, 3_vi, 1L});
+    s2.addSample({1_vi, 4_vi, 1L});
+    s2.addSample({2_vi, 4_vi, 2L});
+    s2.addSample({3_vi, 4_vi, 2L});
 
-    Evaluation e1 = testee.evaluate(1_vi);
+    Probabilator probS1("s1probabilator");
+    probS1.setSampler(s1);
+    Evaluation eS1 = probS1.evaluateSampler(1_vi);
+    QCOMPARE(eS1.mostProbableClass(), 1_vi);
+    Probability pS1 = eS1.mostProbable();
 
-    Probability p = e1.probabilityByClassification(1_vi);
-    QCOMPARE(p.probability(), 1.l/3); // probability of a third to find 1 in class 1
-    QCOMPARE(p.totalSamples(), 90U);
-    QCOMPARE(p.samplers(), { testSamplerName });
+    QCOMPARE(pS1.probability(), 5.L/8);
 
-    testee.addSampler(testSampler2);
+    Probabilator probS2("s2probabilator");
+    probS2.setSampler(s2);
+    Evaluation eS2 = probS2.evaluateSampler(3_vi);
+    QCOMPARE(eS2.mostProbableClass(), 1_vi);
+    Probability pS2 = eS2.mostProbable();
 
-    Evaluation e2 = testee.evaluate(1_vi);
+    QCOMPARE(pS2.probability(), 4.L/5);
 
-    Probability p2 = e2.probabilityByClassification(1_vi);
-    vector<ValueIndex> expectation2 = {1_vi, 2_vi };
+    Probabilator combineP1P2("p1p2Combinator");
+    Probability combinedP1P2 = combineP1P2.combineProbabilities({pS1, pS2});
+    qDebug() << "Prob: " << static_cast<double>(combinedP1P2.probability()) << "Expected: 20/32 ->" << 20./32;
+    QCOMPARE(combinedP1P2.probability(), 20./32);
 
-    long double combined = p2.probability();
-    QCOMPARE(p2.samplers(), expectation2);
-
-    Probabilator prob2("xx");
-    prob2.addSampler(testSampler2);
-    Evaluation prob2Evaluation = prob2.evaluate(1_vi);
-    Probability prob2P = prob2Evaluation.probabilityByClassification(1_vi);
-    Probability metacombined = testee.metaProbability({p, prob2P});
-    QCOMPARE(combined, metacombined.probability());
-    QCOMPARE(p2.samplers(), metacombined.samplers());
+    auto expectedSamplerIndices = vector<vector<ValueIndex>>{{1_vi}, {2_vi}};
+    QCOMPARE(combinedP1P2.samplers(), expectedSamplerIndices);
 }
 
 QTEST_APPLESS_MAIN(Models)

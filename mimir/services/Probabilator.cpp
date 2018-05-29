@@ -18,54 +18,55 @@ namespace mimir {
 namespace services {
 
 Probabilator::Probabilator(const string &name) :
-    _name(name)
+    _name(name),
+    _sampler(InvalidIndex())
 {
 }
 
-void Probabilator::addSampler(const Sampler &sampler)
+void Probabilator::setSampler(const Sampler &sampler)
 {
-    _samplers.push_back(sampler);
+    _sampler = sampler;
 }
 
-Evaluation Probabilator::evaluate(ValueIndex value) const
+Evaluation Probabilator::evaluateSampler(ValueIndex value) const
 {
     Evaluation result;
     map<ValueIndex, vector<Probability>> probabilities;
-    for (auto sampler : _samplers) {
-        for (auto classification : sampler.allClasses()) {
-            if (!sampler.total() || !sampler.countInClass(classification)) {
-                continue;
-            }
-            probabilities[classification].push_back(calculate(sampler, classification, value));
+    for (auto classification : _sampler.allClasses()) {
+        if (!_sampler.total() || !_sampler.countInClass(classification)) {
+            continue;
         }
+        probabilities[classification].push_back(calculate(_sampler, classification, value));
     }
     for (auto classification : probabilities) {
-        result.addProbability(classification.first, metaProbability(classification.second));
+        result.addProbability(classification.first, combineProbabilities(classification.second));
     }
     return result;
 }
 
-models::Probability Probabilator::metaProbability(const std::vector<models::Probability> &p) const
+models::Probability Probabilator::combineProbabilities(const std::vector<models::Probability> &p) const
 {
-    unsigned long totalSamples = 0;
-    unsigned long totalInClass = 0;
-    unsigned long totalInValue = 0;
-    unsigned long totalInClassAndValue = 0;
-    vector<ValueIndex> usedSamplers;
+    if (p.size() < 2) {
+        return p[0];
+    }
+    vector<vector<ValueIndex>> usedSamplers;
+    long double combinedProbability = 1.L;
+    long double combinedClassProbailities = 1.L;
+    long double combinedValueProbailities = 1.L;
     for (auto pN : p) {
-        totalSamples += pN.totalSamples();
-        totalInClass += pN.totalInClass();
-        totalInValue += pN.totalInValue();
-        totalInClassAndValue += pN.countInClassAndValue();
-        auto const &pNSamplers = pN.samplers();
+        if (!pN.valid() || pN.isZero()) {
+            continue;
+        }
+        combinedProbability *= pN.probability();
+        combinedClassProbailities *= pN.classProbability();
+        combinedValueProbailities *= pN.valueProbability();
+        auto pNSamplers = pN.samplers();
         usedSamplers.insert(usedSamplers.end(), pNSamplers.begin(), pNSamplers.end());
     }
     return Probability{
-            bayes(totalInClassAndValue, totalInClass, totalInValue, totalSamples),
-            totalSamples,
-            totalInClass,
-            totalInValue,
-            totalInClassAndValue,
+            bayes(combinedProbability, combinedClassProbailities, combinedValueProbailities),
+            combinedClassProbailities,
+            combinedValueProbailities,
             move(usedSamplers)
     };
 }
@@ -81,13 +82,26 @@ Probability Probabilator::calculate(const Sampler &sampler, ValueIndex classific
     unsigned long countInClass = sampler.countInClass(classification);
     unsigned long total = sampler.total();
     return Probability{
-        bayes(countInClassInValue, countInClass, countInValue, total),
-        total,
-        countInClass,
-        countInValue,
-        countInClassInValue,
-        { sampler.nameIndex() }
+            bayes(countInClassInValue, countInClass, countInValue, total),
+            static_cast<long double>(countInClass)/static_cast<long double>(total),
+            static_cast<long double>(countInValue)/static_cast<long double>(total),
+            {{ sampler.nameIndex() }}
     };
+}
+
+long double Probabilator::bayes(unsigned long countInClassAndValue, unsigned long totalInClass, unsigned long totalInValue, unsigned long totalSamples) const
+{
+    return
+            (
+                (static_cast<long double>(countInClassAndValue) / static_cast<long double>(totalInClass)) *
+                (static_cast<long double>(totalInClass) / static_cast<long double>(totalSamples))
+                ) /
+            (static_cast<long double>(totalInValue) / static_cast<long double>(totalSamples));
+}
+
+long double Probabilator::bayes(long double pBonConditionA, long double pA, long double pB) const
+{
+    return (pBonConditionA * pA) / pB;
 }
 
 } // namespace services

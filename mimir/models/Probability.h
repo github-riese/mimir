@@ -2,6 +2,7 @@
 #define PROBABILITY_H
 
 #include <cmath>
+#include <limits>
 #include <vector>
 
 #include "ValueIndex.h"
@@ -14,45 +15,37 @@ class Probability
 public:
     explicit Probability() {}
     inline explicit Probability(long double probability,
-                                unsigned long totalSamples,
-                                unsigned long totalInClass,
-                                unsigned long totalInValue,
-                                unsigned long countInClassAndValue,
-                                std::vector<ValueIndex> samplers) :
+                                long double classProbability,
+                                long double valueProbability,
+                                std::vector<std::vector<ValueIndex>> samplers) :
         _probability(probability),
-        _totalSamples(totalSamples),
-        _totalInClass(totalInClass),
-        _totalInValue(totalInValue),
-        _countInClassAndValue(countInClassAndValue),
+        _classProbability(classProbability),
+        _valueProbability(valueProbability),
         _samplers(samplers)
     {}
 
-    inline bool operator <(const Probability &rhs) { return _probability < rhs._probability; }
-    inline bool operator ==(const Probability &rhs) { return _probability == rhs._probability; }
+    inline bool operator <(const Probability &rhs) const { return _probability < rhs._probability; }
+    inline bool operator ==(const Probability &rhs) const { return std::fabsl(_probability - rhs._probability) * 1e13L < std::min(std::fabsl(_probability), std::fabsl(rhs._probability)); }
+
+    inline bool isZero() const { return std::fabsl(_probability) * 1e10L < 1.L; }
+
     inline operator bool() const { return valid(); }
     inline bool operator !() const { return !valid(); }
-    inline bool valid() const { return _probability != NAN; }
+    inline bool valid() const { return !std::isnan(_probability); }
 
     inline long double probability() const { return _probability; }
 
+    inline long double classProbability() const { return _classProbability; }
 
-    inline unsigned long totalSamples() const { return _totalSamples; }
+    inline long double valueProbability() const { return _valueProbability; }
 
-    inline unsigned long totalInClass() const { return _totalInClass; }
-
-    inline unsigned long totalInValue() const { return _totalInValue; }
-
-    inline unsigned long countInClassAndValue() const { return _countInClassAndValue; }
-
-    inline std::vector<ValueIndex> samplers() const { return _samplers; }
+    inline std::vector<std::vector<ValueIndex>> samplers() const { return _samplers; }
 
 private:
-    long double _probability = NAN;
-    unsigned long _totalSamples = 0L;
-    unsigned long _totalInClass = 0L;
-    unsigned long _totalInValue = 0L;
-    unsigned long _countInClassAndValue = 0L;
-    std::vector<ValueIndex> _samplers;
+    long double _probability = std::numeric_limits<long double>::quiet_NaN();
+    long double _classProbability = std::numeric_limits<long double>::quiet_NaN();
+    long double _valueProbability = std::numeric_limits<long double>::quiet_NaN();
+    std::vector<std::vector<ValueIndex>> _samplers;
 };
 
 } // namespace models

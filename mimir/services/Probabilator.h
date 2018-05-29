@@ -16,25 +16,19 @@ class Probabilator
 public:
     Probabilator(const std::string&);
 
-    void addSampler(const mimir::services::Sampler &);
+    void setSampler(const mimir::services::Sampler &);
 
-    mimir::models::Evaluation evaluate(mimir::models::ValueIndex value) const;
+    mimir::models::Evaluation evaluateSampler(mimir::models::ValueIndex value) const;
 
-    mimir::models::Probability metaProbability(const std::vector<mimir::models::Probability>&) const;
+    mimir::models::Probability combineProbabilities(const std::vector<mimir::models::Probability>&) const;
 private:
     mimir::models::Probability calculate(const mimir::services::Sampler &, mimir::models::ValueIndex, mimir::models::ValueIndex) const;
-    inline long double bayes(unsigned long countInClassAndValue, unsigned long totalInClass, unsigned long totalInValue, unsigned long totalSamples) const
-    {
-        return
-                (
-                    ((long double)countInClassAndValue / (long double) totalInClass) *
-                    ((long double)totalInClass / (long double) totalSamples)
-                ) /
-                ((long double) totalInValue / (long double) totalSamples);
-    }
+
+    long double bayes(unsigned long countInClassAndValue, unsigned long totalInClass, unsigned long totalInValue, unsigned long totalSamples) const;
+    long double bayes(long double pBonConditionA, long double pA, long double pB) const;
 private:
     std::string _name;
-    std::vector<mimir::services::Sampler> _samplers;
+    mimir::services::Sampler _sampler;
 };
 
 } // namespace services

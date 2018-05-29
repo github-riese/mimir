@@ -18,7 +18,7 @@ public:
 
     inline ValueIndex mostProbableClass() const { return _mostProbable; }
 
-    inline Probability mostProbableProbability() const
+    inline Probability mostProbable() const
     {
         if (_mostProbable == InvalidIndex()) return Probability();
         return _probabilities.at(_mostProbable);
@@ -31,9 +31,12 @@ public:
         return (*p).second;
     }
 
+    inline long double average() const { return _average; }
+
 private:
     std::map<ValueIndex, Probability> _probabilities;
     ValueIndex _mostProbable = InvalidIndex();
+    long double _average = .5L;
 };
 
 } // namespace models

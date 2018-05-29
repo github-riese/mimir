@@ -11,7 +11,7 @@ namespace models {
 class Sample
 {
 public:
-    explicit Sample(ValueIndex classifier, ValueIndex valueIndex, unsigned long count = 1);
+    Sample(ValueIndex classifier, ValueIndex valueIndex, unsigned long count = 1);
     ValueIndex classifier() const;
 
     ValueIndex valueIndex() const;
