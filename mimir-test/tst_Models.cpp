@@ -53,6 +53,9 @@ void Models::testNameLookup()
 
     ValueIndex vKept2 = testee.indexFromName(NameResolver::NameSource::Classification, "kept");
 
+    ValueIndex vSampler1 = testee.indexFromName(NameResolver::NameSource::Sampler, "Sampler1");
+    ValueIndex vColor = testee.indexFromName(NameResolver::NameSource::Sampler, "colour");
+
     QCOMPARE(vKept, ValueIndex(0));
     QCOMPARE(vKept2, ValueIndex(0));
     QCOMPARE(vCancelled, ValueIndex(1));
@@ -60,6 +63,10 @@ void Models::testNameLookup()
     QCOMPARE(vPropertyColour, ValueIndex(0));
     QCOMPARE(vPropertySize, ValueIndex(1));
     QCOMPARE(vValueBlue, ValueIndex(0));
+    QVERIFY(vSampler1 == 0_vi);
+    QVERIFY(vColor == 1_vi);
+
+    QVERIFY(testee.nameFromIndex(NameResolver::NameSource::Sampler, 1_vi) == "colour");
 }
 
 void Models::testProbabilator()
