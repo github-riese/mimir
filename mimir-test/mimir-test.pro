@@ -28,13 +28,6 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
         tst_Models.cpp \
-        ../mimir/models/SampleStore.cpp \
-        ../mimir/models/Sample.cpp \
-        ../mimir/models/ValueCounter.cpp \
-        ../mimir/services/Sampler.cpp \
-        ../mimir/services/NameResolver.cpp \
-        ../mimir/services/Probabilator.cpp \
-        ../mimir/models/Evaluation.cpp \
     test-runner.cpp \
     TestListener.cpp \
     TestRunner.cpp
@@ -43,3 +36,8 @@ HEADERS += \
     tst_Models.h \
     TestListener.h \
     TestRunner.h
+
+unix|win32: LIBS += -L$$OUT_PWD/../mimir/ -lmimir
+
+INCLUDEPATH += $$PWD/../mimir
+DEPENDPATH += $$PWD/../mimir

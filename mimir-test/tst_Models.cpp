@@ -5,17 +5,19 @@
 
 #include "tst_Models.h"
 
+#include "../mimir/models/ValueType.h"
 #include "../mimir/services/NameResolver.h"
-#include "../mimir/services/Probabilator.h"
+#include "../mimir/services/Evaluator.h"
 #include "../mimir/services/Sampler.h"
 
 using mimir::models::Evaluation;
 using mimir::models::Probability;
 using mimir::models::Sample;
+using mimir::models::ValueType;
 using mimir::models::ValueIndex;
 using mimir::services::NameResolver;
 using mimir::services::Sampler;
-using mimir::services::Probabilator;
+using mimir::services::Evaluator;
 
 REGISTER_TEST(Models)
 
@@ -87,25 +89,27 @@ void Models::testProbabilator()
     s2.addSample({2_vi, 4_vi, 2L});
     s2.addSample({3_vi, 4_vi, 2L});
 
-    Probabilator probS1;
-    Evaluation eS1 = probS1.evaluate(s1, 1_vi);
+    Evaluator evaluator;
+    Evaluation eS1 = evaluator.evaluate(s1, 1_vi);
     QVERIFY2(eS1.mostProbableClass() == 1_vi, QStringLiteral("Expected 1 to be the more probable class.").toUtf8().data());
 
     Probability pS1 = eS1.mostProbable();
     QCOMPARE(pS1.probability(), 5.L/8);
 
-    Evaluation eS2 = Probabilator::evaluate(s2, 3_vi);
+    Evaluation eS2 = evaluator.evaluate(s2, 3_vi);
     QCOMPARE(eS2.mostProbableClass(), 1_vi);
     Probability pS2 = eS2.probabilityByClassification(1_vi);
 
     QCOMPARE(pS2.probability(), 4.L/5);
 
-    Evaluation combinedP1P2 = Probabilator::evaluate({eS1, eS2});
+    Evaluation combinedP1P2 = evaluator.evaluate({eS1, eS2});
     QCOMPARE(combinedP1P2.mostProbable().probability(), 20./32);
 
     auto expectedSamplerIndices = vector<vector<ValueIndex>>{{1_vi}, {2_vi}};
     QCOMPARE(combinedP1P2.mostProbable().samplers(), expectedSamplerIndices);
 
-    Evaluation pS1_2S2 = probS1.evaluate({combinedP1P2, eS2});
+    Evaluation pS1_2S2 = evaluator.evaluate({combinedP1P2, eS2});
     QVERIFY2((pS1_2S2.mostProbable().samplers() == vector<vector<ValueIndex>>{{1_vi, 2_vi}, {2_vi}}), "SamplerCombination mismatch");
+    QCOMPARE(pS1_2S2.mostProbable().probability(), 20./32);
+    qDebug() << "evaluator did " << evaluator.opcount() << "operations";
 }

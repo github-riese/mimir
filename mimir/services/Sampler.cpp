@@ -7,6 +7,7 @@ using std::accumulate;
 
 using std::vector;
 
+using mimir::models::InterpolationStrategy;
 using mimir::models::Sample;
 using mimir::models::SampleStore;
 using mimir::models::ValueCounter;
@@ -15,10 +16,15 @@ using mimir::models::ValueIndex;
 namespace mimir {
 namespace services {
 
-Sampler::Sampler(ValueIndex nameIndex) :
-    _nameIndex(nameIndex)
+Sampler::Sampler() :
+    _nameIndex()
 {
+}
 
+Sampler::Sampler(ValueIndex nameIndex, InterpolationStrategy interpolationStrategy) :
+    _nameIndex(nameIndex),
+    _interpolationStrategy(interpolationStrategy)
+{
 }
 
 void Sampler::addSample(Sample sample)
@@ -30,7 +36,7 @@ unsigned long Sampler::total() const
 {
     unsigned long total(0);
     for (auto classes : _samples) {
-        total += accumulate(classes.second.cbegin(), classes.second.cend(), 0);
+        total += accumulate(classes.second.cbegin(), classes.second.cend(), 0UL);
     }
     return total;
 }
@@ -54,7 +60,7 @@ unsigned long Sampler::countInClass(ValueIndex classifier) const
     if (classPtr == _samples.end()) {
         return 0;
     }
-    return accumulate((*classPtr).second.begin(), (*classPtr).second.end(), 0);
+    return accumulate((*classPtr).second.begin(), (*classPtr).second.end(), 0UL);
 }
 
 unsigned long Sampler::count(ValueIndex classifier, ValueIndex value) const
@@ -79,6 +85,11 @@ std::vector<models::ValueIndex> Sampler::allClasses() const
         result.push_back(v.first);
     }
     return result;
+}
+
+mimir::models::InterpolationStrategy Sampler::interpolationStrategy() const
+{
+    return _interpolationStrategy;
 }
 
 } // namespace services

@@ -1,4 +1,4 @@
-#include "Probabilator.h"
+#include "Evaluator.h"
 
 #include <numeric>
 
@@ -10,7 +10,6 @@ using std::move;
 using std::string;
 using std::vector;
 
-using mimir::models::InvalidIndex;
 using mimir::models::Probability;
 using mimir::models::Sample;
 using mimir::models::ValueIndex;
@@ -19,7 +18,7 @@ using mimir::models::Evaluation;
 namespace mimir {
 namespace services {
 
-Evaluation Probabilator::evaluate(const Sampler &sampler, ValueIndex value)
+Evaluation Evaluator::evaluate(const Sampler &sampler, ValueIndex value)
 {
     Evaluation result;
     map<ValueIndex, vector<Probability>> probabilities;
@@ -27,21 +26,18 @@ Evaluation Probabilator::evaluate(const Sampler &sampler, ValueIndex value)
         if (!sampler.total() || !sampler.countInClass(classification)) {
             continue;
         }
-        probabilities[classification].push_back(calculate(sampler, classification, value));
-    }
-    for (auto classification : probabilities) {
-        result.addProbability(classification.first, combineProbabilities(classification.second));
+        result.addProbability(classification, calculate(sampler, classification, value));
     }
     return result;
 }
 
-models::Evaluation Probabilator::evaluate(const std::vector<models::Evaluation> &sources)
+models::Evaluation Evaluator::evaluate(const std::vector<models::Evaluation> &sources)
 {
     if (sources.size() == 1)
         return sources[0];
     map<ValueIndex, vector<Probability>> combinableProbabilities;
     for (auto evaluation : sources) {
-        for (auto classification : evaluation.probableClassifications()) {
+        for (auto classification : evaluation.classifications()) {
             combinableProbabilities[classification].push_back(evaluation.probabilityByClassification(classification));
         }
     }
@@ -52,7 +48,7 @@ models::Evaluation Probabilator::evaluate(const std::vector<models::Evaluation> 
     return result;
 }
 
-models::Probability Probabilator::combineProbabilities(const std::vector<models::Probability> &p)
+models::Probability Evaluator::combineProbabilities(const std::vector<models::Probability> &p)
 {
     if (p.size() < 2) {
         return p[0];
@@ -78,7 +74,7 @@ models::Probability Probabilator::combineProbabilities(const std::vector<models:
     };
 }
 
-Probability Probabilator::calculate(const Sampler &sampler, ValueIndex classification, ValueIndex value)
+Probability Evaluator::calculate(const Sampler &sampler, ValueIndex classification, ValueIndex value)
 {
     // P(class|value) = (P(value|class) * P(value))/(P(class))
     // P(value|class) = count of class in value / count in value
@@ -88,6 +84,7 @@ Probability Probabilator::calculate(const Sampler &sampler, ValueIndex classific
     unsigned long countInValue = sampler.countInValue(value);
     unsigned long countInClass = sampler.countInClass(classification);
     unsigned long total = sampler.total();
+    ++_opcount;
     return Probability{
             BayesCalculator::calculate(countInClassInValue, countInClass, countInValue, total),
             static_cast<long double>(countInClass)/static_cast<long double>(total),
@@ -96,7 +93,7 @@ Probability Probabilator::calculate(const Sampler &sampler, ValueIndex classific
     };
 }
 
-std::vector<models::ValueIndex> Probabilator::combineSamplerIDs(const std::vector<std::vector<models::ValueIndex> > &sources)
+std::vector<models::ValueIndex> Evaluator::combineSamplerIDs(const std::vector<std::vector<models::ValueIndex> > &sources)
 {
     vector<ValueIndex> combined;
     for (auto source : sources) {

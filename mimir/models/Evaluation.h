@@ -20,7 +20,7 @@ public:
 
     inline Probability mostProbable() const
     {
-        if (_mostProbable == InvalidIndex()) return Probability();
+        if (_mostProbable == ValueIndex::NoIndex) return Probability();
         return _probabilities.at(_mostProbable);
     }
 
@@ -31,14 +31,11 @@ public:
         return (*p).second;
     }
 
-    std::vector<mimir::models::ValueIndex> probableClassifications() const;
-
-    inline long double average() const { return _average; }
+    std::vector<mimir::models::ValueIndex> classifications() const;
 
 private:
     std::map<ValueIndex, Probability> _probabilities;
-    ValueIndex _mostProbable = InvalidIndex();
-    long double _average = .5L;
+    ValueIndex _mostProbable = ValueIndex();
 };
 
 } // namespace models

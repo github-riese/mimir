@@ -6,7 +6,6 @@ using std::string;
 using std::find_if;
 
 using mimir::models::ValueIndex;
-using mimir::models::InvalidIndex;
 
 namespace mimir {
 namespace services {
@@ -52,7 +51,7 @@ models::ValueIndex NameResolver::index(NameResolver::NameSource source, const st
 {
     auto theSet = _lookup.find(source);
     if (theSet == _lookup.end()) {
-        return InvalidIndex();
+        return ValueIndex();
     }
 
     size_t index = 0;
@@ -64,9 +63,9 @@ models::ValueIndex NameResolver::index(NameResolver::NameSource source, const st
         return false;
     });
     if (theIndex == (*theSet).second.end()) {
-        return InvalidIndex();
+        return ValueIndex();
     }
-    return ValueIndex(theIndex - (*theSet).second.begin());
+    return ValueIndex(static_cast<size_t>(theIndex - (*theSet).second.begin()));
 }
 
 } // namespace services

@@ -9,6 +9,7 @@ namespace models {
 class ValueIndex
 {
 public:
+    inline ValueIndex() : _idx(NoIndex) {}
     static const size_t NoIndex = (size_t) -1;
     inline bool isValid() const { return _idx != NoIndex; }
     inline explicit ValueIndex(size_t idx) : _idx(idx) {}
@@ -18,11 +19,6 @@ public:
     inline operator size_t() const { return _idx; }
 private:
     size_t _idx;
-};
-
-struct InvalidIndex : public ValueIndex
-{
-    inline explicit InvalidIndex() : ValueIndex(ValueIndex::NoIndex) {}
 };
 
 inline bool operator <= (size_t s, ValueIndex i) { return ValueIndex(s) <= i; }
