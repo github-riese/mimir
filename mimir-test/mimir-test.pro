@@ -8,7 +8,7 @@ QT       += testlib
 
 QT       -= gui
 
-TARGET = tst_Models
+TARGET = mimir-test
 CONFIG   += console
 CONFIG   -= app_bundle
 

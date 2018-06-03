@@ -19,7 +19,7 @@ TestPatternFind::TestPatternFind()
 
 }
 
-void TestPatternFind::initTest()
+void TestPatternFind::initTestCase()
 {
     ValueIndex kept = _nameResolver.indexFromName(NameResolver::NameSource::Classification, "kept");
     ValueIndex cancelled = _nameResolver.indexFromName(NameResolver::NameSource::Classification, "cancelled");

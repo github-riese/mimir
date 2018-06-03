@@ -17,7 +17,7 @@ class TestPatternFind : public QObject
 public:
     TestPatternFind();
 private Q_SLOTS:
-    void initTest();
+    void initTestCase();
     void testPreCheckAssumptionThatDataTurnOutAOne();
 private:
 private:
