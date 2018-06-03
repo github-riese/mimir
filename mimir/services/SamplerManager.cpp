@@ -25,5 +25,14 @@ Sampler &SamplerManager::createSampler(const string &name, ValueType valueType, 
     return knownSampler.sampler;
 }
 
+void SamplerManager::interpolate(Sampler s, ValueIndex left, ValueIndex right, long double distance)
+{
+    string name = _nameResolver.nameFromIndex(NameResolver::NameSource::Sampler, s.nameIndex());
+    KnownSampler &sampler = _samplers[name];
+    if (sampler.interpolationStrategy == InterpolationStrategy::CantInterpolate) {
+        return;
+    }
+}
+
 } // namespace services
 } // namespace mimir

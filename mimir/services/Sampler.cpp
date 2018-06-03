@@ -17,13 +17,16 @@ namespace mimir {
 namespace services {
 
 Sampler::Sampler() :
-    _nameIndex()
+    _nameIndex(),
+    _interpolationStrategy(),
+    _samples()
 {
 }
 
 Sampler::Sampler(ValueIndex nameIndex, InterpolationStrategy interpolationStrategy) :
     _nameIndex(nameIndex),
-    _interpolationStrategy(interpolationStrategy)
+    _interpolationStrategy(interpolationStrategy),
+    _samples()
 {
 }
 

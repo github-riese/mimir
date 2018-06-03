@@ -30,12 +30,14 @@ SOURCES += \
         tst_Models.cpp \
     test-runner.cpp \
     TestListener.cpp \
-    TestRunner.cpp
+    TestRunner.cpp \
+    TestPatternFind.cpp
 
 HEADERS += \
     tst_Models.h \
     TestListener.h \
-    TestRunner.h
+    TestRunner.h \
+    TestPatternFind.h
 
 unix|win32: LIBS += -L$$OUT_PWD/../mimir/ -lmimir
 
