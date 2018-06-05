@@ -26,7 +26,11 @@ SOURCES += \
     models/Evaluation.cpp \
     services/BayesCalculator.cpp \
     services/Evaluator.cpp \
-    services/SamplerManager.cpp
+    services/SamplerManager.cpp \
+    models/neurons/AbstractNeuron.cpp \
+    models/neurons/AbstractInput.cpp \
+    models/neurons/AbstractBias.cpp \
+    models/neurons/ActivationFunctionCombinedProbabilities.cpp
 
 HEADERS += \
     models/Probability.h \
@@ -41,4 +45,9 @@ HEADERS += \
     services/Evaluator.h \
     services/SamplerManager.h \
     models/ValueType.h \
-    models/InterpolationStrategy.h
+    models/InterpolationStrategy.h \
+    models/neurons/AbstractNeuron.h \
+    models/neurons/AbstractInput.h \
+    models/neurons/AbstractBias.h \
+    models/neurons/AbstractActivation.h \
+    models/neurons/ActivationFunctionCombinedProbabilities.h

@@ -19,6 +19,8 @@ public:
     Sampler();
     explicit Sampler(mimir::models::ValueIndex nameIndex, mimir::models::InterpolationStrategy interpolationStrategy = mimir::models::InterpolationStrategy::CantInterpolate);
     inline mimir::models::ValueIndex nameIndex() const { return _nameIndex; }
+    bool valid() const;
+    bool isNull() const;
     void addSample(mimir::models::Sample);
     unsigned long total() const;
     unsigned long countInValue(mimir::models::ValueIndex value) const;

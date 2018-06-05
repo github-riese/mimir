@@ -25,13 +25,26 @@ Sampler &SamplerManager::createSampler(const string &name, ValueType valueType, 
     return knownSampler.sampler;
 }
 
-void SamplerManager::interpolate(Sampler s, ValueIndex left, ValueIndex right, long double distance)
+bool SamplerManager::isKnownSampler(const std::string &name) const
 {
-    string name = _nameResolver.nameFromIndex(NameResolver::NameSource::Sampler, s.nameIndex());
-    KnownSampler &sampler = _samplers[name];
-    if (sampler.interpolationStrategy == InterpolationStrategy::CantInterpolate) {
-        return;
+    return _samplers.find(name) != _samplers.end();
+}
+
+Sampler &SamplerManager::sampler(const std::string &name)
+{
+    KnownSampler &known = _samplers[name];
+    return known.sampler;
+}
+
+const Sampler &SamplerManager::sampler(const std::string &name) const
+{
+    static Sampler inValidSampler;
+    auto knownSamplerPtr = _samplers.find(name);
+    if (knownSamplerPtr == _samplers.end()) {
+        inValidSampler = Sampler();
+        return inValidSampler;
     }
+    return knownSamplerPtr->second.sampler;
 }
 
 } // namespace services

@@ -17,7 +17,7 @@ namespace mimir {
 namespace services {
 
 Sampler::Sampler() :
-    _nameIndex(),
+    _nameIndex(ValueIndex::NoIndex),
     _interpolationStrategy(),
     _samples()
 {
@@ -28,6 +28,16 @@ Sampler::Sampler(ValueIndex nameIndex, InterpolationStrategy interpolationStrate
     _interpolationStrategy(interpolationStrategy),
     _samples()
 {
+}
+
+bool Sampler::valid() const
+{
+    return _nameIndex != ValueIndex::NoIndex;
+}
+
+bool Sampler::isNull() const
+{
+    return _samples.size() == 0;
 }
 
 void Sampler::addSample(Sample sample)

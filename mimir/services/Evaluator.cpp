@@ -21,12 +21,28 @@ namespace services {
 Evaluation Evaluator::evaluate(const Sampler &sampler, ValueIndex value)
 {
     Evaluation result;
-    map<ValueIndex, vector<Probability>> probabilities;
+    sampler.total();
+    if (!sampler.total()) {
+        return result;
+    }
+    auto total = static_cast<long double>(sampler.total());
+    auto inValueCount = static_cast<long double>(sampler.countInValue(value));
+
+    long double valueProbability = inValueCount/total;
     for (auto classification : sampler.allClasses()) {
-        if (!sampler.total() || !sampler.countInClass(classification)) {
+        if (!sampler.countInClass(classification)) {
             continue;
         }
-        result.addProbability(classification, calculate(sampler, classification, value));
+        auto classInValueCount = static_cast<long double>(sampler.count(classification, value));
+        auto inClassCount = static_cast<long double>(sampler.countInClass(classification));
+        auto aPrioriA = classInValueCount/inClassCount;
+        auto classProbability = inClassCount/total;
+        result.addProbability(classification, Probability(
+                                  (aPrioriA * classProbability)/valueProbability,
+                                  classProbability,
+                                  valueProbability,
+                                  {{sampler.nameIndex()}}));
+        ++_opcount;
     }
     return result;
 }
@@ -71,25 +87,6 @@ models::Probability Evaluator::combineProbabilities(const std::vector<models::Pr
             combinedClassProbailities,
             combinedValueProbailities,
             move(usedSamplers)
-    };
-}
-
-Probability Evaluator::calculate(const Sampler &sampler, ValueIndex classification, ValueIndex value)
-{
-    // P(class|value) = (P(value|class) * P(value))/(P(class))
-    // P(value|class) = count of class in value / count in value
-    // P(value) = count in value / count in total
-    // P(class) = count in class / count in total
-    unsigned long countInClassInValue = sampler.count(classification, value);
-    unsigned long countInValue = sampler.countInValue(value);
-    unsigned long countInClass = sampler.countInClass(classification);
-    unsigned long total = sampler.total();
-    ++_opcount;
-    return Probability{
-            BayesCalculator::calculate(countInClassInValue, countInClass, countInValue, total),
-            static_cast<long double>(countInClass)/static_cast<long double>(total),
-            static_cast<long double>(countInValue)/static_cast<long double>(total),
-            {{ sampler.nameIndex() }}
     };
 }
 
