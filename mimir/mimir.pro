@@ -24,13 +24,9 @@ SOURCES += \
     models/ValueIndex.cpp \
     services/NameResolver.cpp \
     models/Evaluation.cpp \
-    services/BayesCalculator.cpp \
     services/Evaluator.cpp \
     services/SamplerManager.cpp \
-    models/neurons/AbstractNeuron.cpp \
-    models/neurons/AbstractInput.cpp \
-    models/neurons/AbstractBias.cpp \
-    models/neurons/ActivationFunctionCombinedProbabilities.cpp
+    services/EvaluationCombiner.cpp
 
 HEADERS += \
     models/Probability.h \
@@ -41,13 +37,8 @@ HEADERS += \
     models/ValueIndex.h \
     services/NameResolver.h \
     models/Evaluation.h \
-    services/BayesCalculator.h \
     services/Evaluator.h \
     services/SamplerManager.h \
     models/ValueType.h \
     models/InterpolationStrategy.h \
-    models/neurons/AbstractNeuron.h \
-    models/neurons/AbstractInput.h \
-    models/neurons/AbstractBias.h \
-    models/neurons/AbstractActivation.h \
-    models/neurons/ActivationFunctionCombinedProbabilities.h
+    services/EvaluationCombiner.h

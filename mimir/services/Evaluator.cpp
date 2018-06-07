@@ -2,8 +2,6 @@
 
 #include <numeric>
 
-#include "BayesCalculator.h"
-
 using std::accumulate;
 using std::move;
 
@@ -83,7 +81,7 @@ models::Probability Evaluator::combineProbabilities(const std::vector<models::Pr
         usedSamplers.push_back(combineSamplerIDs(pN.samplers()));
     }
     return Probability{
-            BayesCalculator::calculate(combinedProbability, combinedClassProbailities, combinedValueProbailities),
+            (combinedProbability*combinedClassProbailities) / combinedValueProbailities,
             combinedClassProbailities,
             combinedValueProbailities,
             move(usedSamplers)

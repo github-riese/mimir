@@ -3,6 +3,7 @@
 
 #include "../mimir/services/Sampler.h"
 #include "../mimir/services/Evaluator.h"
+#include "../mimir/services/EvaluationCombiner.h"
 
 using std::vector;
 
@@ -11,6 +12,7 @@ using mimir::services::Sampler;
 using mimir::models::Sample;
 using mimir::models::Evaluation;
 using mimir::services::Evaluator;
+using mimir::services::EvaluationCombiner;
 using mimir::services::NameResolver;
 
 #define mkValueIndex(name) ValueIndex name = _nameResolver.indexFromName(NameResolver::NameSource::Value, #name);
@@ -76,5 +78,19 @@ void TestPatternFind::testPreCheckAssumptionThatDataTurnOutAOne()
 
     Evaluation crossRingGreen = e.evaluate({typeEvaluation, colourEvaluation});
     QVERIFY(crossRingGreen.probabilityByClassification(ValueIndex(0)) == 1.L);
+}
+
+void TestPatternFind::testPredict()
+{
+    EvaluationCombiner combiner;
+    Evaluator e;
+    Evaluation typeEvaluation = e.evaluate(_testSamplers[0], _nameResolver.indexFromName(NameResolver::NameSource::Value, "ring"));
+    Evaluation colourEvaluation = e.evaluate(_testSamplers[1], _nameResolver.indexFromName(NameResolver::NameSource::Value, "green"));
+    Evaluation ccContact = e.evaluate(_testSamplers[2], _nameResolver.indexFromName(NameResolver::NameSource::Value, "hadContact"));
+    Evaluation hostSex = e.evaluate(_testSamplers[3], _nameResolver.indexFromName(NameResolver::NameSource::Value, "hostFemale"));
+
+    combiner.addEvaluations({typeEvaluation, colourEvaluation, ccContact, hostSex});
+    unsigned passesUsed = combiner.findClusters(5);
+    QVERIFY(passesUsed <= 5);
 }
 

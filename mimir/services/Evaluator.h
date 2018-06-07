@@ -18,7 +18,6 @@ public:
 
     mimir::models::Evaluation evaluate(const std::vector<mimir::models::Evaluation> &);
 
-
     mimir::models::Probability combineProbabilities(const std::vector<mimir::models::Probability>&);
 
     inline unsigned long long opcount() const { return _opcount; }

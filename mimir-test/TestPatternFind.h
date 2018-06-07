@@ -19,7 +19,7 @@ public:
 private Q_SLOTS:
     void initTestCase();
     void testPreCheckAssumptionThatDataTurnOutAOne();
-    void testPreCheckOnEvaluator();
+    void testPredict();
 private:
 private:
     mimir::services::NameResolver _nameResolver;

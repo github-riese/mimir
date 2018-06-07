@@ -2,6 +2,7 @@
 #define EVALUATION_H
 
 #include <map>
+#include <tuple>
 
 #include "Probability.h"
 #include "ValueIndex.h"
@@ -31,11 +32,15 @@ public:
         return (*p).second;
     }
 
+    inline long double mean() const { return _mean; }
+    inline long double deviation() const { return _deviation; }
     std::vector<mimir::models::ValueIndex> classifications() const;
 
 private:
     std::map<ValueIndex, Probability> _probabilities;
     ValueIndex _mostProbable = ValueIndex();
+    long double _mean;
+    long double _deviation;
 };
 
 } // namespace models
