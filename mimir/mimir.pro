@@ -26,7 +26,8 @@ SOURCES += \
     models/Evaluation.cpp \
     services/Evaluator.cpp \
     services/SamplerManager.cpp \
-    services/EvaluationCombiner.cpp
+    services/EvaluationCombiner.cpp \
+    helpers/helpers.cpp
 
 HEADERS += \
     models/Probability.h \
@@ -41,4 +42,5 @@ HEADERS += \
     services/SamplerManager.h \
     models/ValueType.h \
     models/InterpolationStrategy.h \
-    services/EvaluationCombiner.h
+    services/EvaluationCombiner.h \
+    helpers/helpers.h

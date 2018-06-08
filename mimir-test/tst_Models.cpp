@@ -1,6 +1,8 @@
 #include <QString>
 #include <QtTest>
 
+#include <deque>
+
 #include "TestListener.h"
 
 #include "tst_Models.h"
@@ -9,6 +11,8 @@
 #include "../mimir/services/NameResolver.h"
 #include "../mimir/services/Evaluator.h"
 #include "../mimir/services/Sampler.h"
+
+#include "../mimir/helpers/helpers.h"
 
 using mimir::models::Evaluation;
 using mimir::models::Probability;
@@ -112,4 +116,22 @@ void Models::testProbabilator()
     QVERIFY2((pS1_2S2.mostProbable().samplers() == vector<vector<ValueIndex>>{{1_vi, 2_vi}, {2_vi}}), "SamplerCombination mismatch");
     QCOMPARE(pS1_2S2.mostProbable().probability(), 20./32);
     qDebug() << "evaluator did " << evaluator.opcount() << "operations";
+}
+
+void Models::testHelpers()
+{
+    vector<Probability> v1 = {
+        Probability(.1, .1, .1, {{1_vi}}),
+        Probability(.2, .1, .1, {{1_vi}}),
+        Probability(.3, .1, .1, {{1_vi}}),
+        Probability(.4, .1, .1, {{1_vi}}),
+        Probability(.5, .1, .1, {{1_vi}}),
+    };
+    long double mean = mimir::helpers::mean(v1);
+    QCOMPARE(static_cast<double>(mean), ((.1 + .2 + .3 + .4 + .5)/5.));
+
+    std::deque<Probability> d1;
+    d1.insert(d1.end(), v1.begin(), v1.end());
+    auto deviation = mimir::helpers::deviation(d1);
+    QCOMPARE(static_cast<double>(deviation), .6/5.);
 }

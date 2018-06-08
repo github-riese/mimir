@@ -48,5 +48,17 @@ std::vector<ValueIndex> Evaluation::classifications() const
     return  classifications;
 }
 
+bool Evaluation::operator<(const Evaluation &rhs) const
+{
+    if (_probabilities.size() < rhs._probabilities.size())
+        return true;
+    return _probabilities.at(_mostProbable).probability() < rhs._probabilities.at(rhs._mostProbable).probability();
+}
+
+bool Evaluation::operator==(const Evaluation &rhs) const
+{
+    return _probabilities == rhs._probabilities;
+}
+
 } // namespace models
 } // namespace mimir

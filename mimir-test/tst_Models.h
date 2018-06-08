@@ -14,6 +14,7 @@ private Q_SLOTS:
     void testSamplerBasics();
     void testNameLookup();
     void testProbabilator();
+    void testHelpers();
 };
 
 #endif // TST_MODELS_H

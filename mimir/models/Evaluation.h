@@ -36,6 +36,9 @@ public:
     inline long double deviation() const { return _deviation; }
     std::vector<mimir::models::ValueIndex> classifications() const;
 
+    bool operator<(const Evaluation &rhs) const;
+    bool operator==(const Evaluation &rhs) const;
+
 private:
     std::map<ValueIndex, Probability> _probabilities;
     ValueIndex _mostProbable = ValueIndex();
