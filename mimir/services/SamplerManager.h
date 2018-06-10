@@ -23,7 +23,7 @@ class SamplerManager
     };
 public:
     SamplerManager(NameResolver &resolver);
-    Sampler &createSampler(const std::string& name, mimir::models::ValueType valueType, mimir::models::InterpolationStrategy interpolationStrategy = mimir::models::InterpolationStrategy::CantInterpolate);
+    Sampler &createSampler(const std::string& name, mimir::models::ValueType valueType);
     bool isKnownSampler(const std::string &name) const;
     Sampler &sampler(const std::string &name);
     const Sampler &sampler(const std::string &name) const;

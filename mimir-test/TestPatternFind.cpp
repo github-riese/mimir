@@ -15,7 +15,7 @@ using mimir::services::Evaluator;
 using mimir::services::EvaluationCombiner;
 using mimir::services::NameResolver;
 
-#define mkValueIndex(name) ValueIndex name = _nameResolver.indexFromName(NameResolver::NameSource::Value, #name);
+#define mkValueIndex(name) ValueIndex name = _nameResolver.indexFromName(#name);
 TestPatternFind::TestPatternFind()
 {
 
@@ -23,9 +23,9 @@ TestPatternFind::TestPatternFind()
 
 void TestPatternFind::initTestCase()
 {
-    ValueIndex kept = _nameResolver.indexFromName(NameResolver::NameSource::Classification, "kept");
-    ValueIndex cancelled = _nameResolver.indexFromName(NameResolver::NameSource::Classification, "cancelled");
-    ValueIndex returned = _nameResolver.indexFromName(NameResolver::NameSource::Classification, "returned");
+    ValueIndex kept = _nameResolver.indexFromName("kept");
+    ValueIndex cancelled = _nameResolver.indexFromName("cancelled");
+    ValueIndex returned = _nameResolver.indexFromName("returned");
 
     mkValueIndex(ring);
     mkValueIndex(collier);
@@ -55,10 +55,10 @@ void TestPatternFind::initTestCase()
     };
 
     _testSamplers.reserve(4);
-    _testSamplers.push_back(Sampler(_nameResolver.indexFromName(NameResolver::NameSource::Sampler, "type")));
-    _testSamplers.push_back(Sampler(_nameResolver.indexFromName(NameResolver::NameSource::Sampler, "colour")));
-    _testSamplers.push_back(Sampler(_nameResolver.indexFromName(NameResolver::NameSource::Sampler, "agentContact")));
-    _testSamplers.push_back(Sampler(_nameResolver.indexFromName(NameResolver::NameSource::Sampler, "presenterSex")));
+    _testSamplers.push_back(Sampler(_nameResolver.indexFromName("type")));
+    _testSamplers.push_back(Sampler(_nameResolver.indexFromName("colour")));
+    _testSamplers.push_back(Sampler(_nameResolver.indexFromName("agentContact")));
+    _testSamplers.push_back(Sampler(_nameResolver.indexFromName("presenterSex")));
 
     for (auto row : testData) {
         for (size_t i = 1; i < row.size(); ++i) {
@@ -70,8 +70,8 @@ void TestPatternFind::initTestCase()
 void TestPatternFind::testPreCheckAssumptionThatDataTurnOutAOne()
 {
     Evaluator e;
-    Evaluation typeEvaluation = e.evaluate(_testSamplers[0], _nameResolver.indexFromName(NameResolver::NameSource::Value, "ring"));
-    Evaluation colourEvaluation = e.evaluate(_testSamplers[1], _nameResolver.indexFromName(NameResolver::NameSource::Value, "green"));
+    Evaluation typeEvaluation = e.evaluate(_testSamplers[0], _nameResolver.indexFromName("ring"));
+    Evaluation colourEvaluation = e.evaluate(_testSamplers[1], _nameResolver.indexFromName("green"));
 
     QVERIFY(typeEvaluation.probabilityByClassification(ValueIndex(0)).probability() < 1.L);
     QVERIFY(colourEvaluation.probabilityByClassification(ValueIndex(0)).probability() < 1.L);
@@ -88,10 +88,10 @@ void TestPatternFind::testPredict()
 {
     EvaluationCombiner combiner;
     Evaluator e;
-    Evaluation typeEvaluation = e.evaluate(_testSamplers[0], _nameResolver.indexFromName(NameResolver::NameSource::Value, "ring"));
-    Evaluation colourEvaluation = e.evaluate(_testSamplers[1], _nameResolver.indexFromName(NameResolver::NameSource::Value, "green"));
-    Evaluation ccContact = e.evaluate(_testSamplers[2], _nameResolver.indexFromName(NameResolver::NameSource::Value, "hadContact"));
-    Evaluation hostSex = e.evaluate(_testSamplers[3], _nameResolver.indexFromName(NameResolver::NameSource::Value, "hostFemale"));
+    Evaluation typeEvaluation = e.evaluate(_testSamplers[0], _nameResolver.indexFromName("ring"));
+    Evaluation colourEvaluation = e.evaluate(_testSamplers[1], _nameResolver.indexFromName("green"));
+    Evaluation ccContact = e.evaluate(_testSamplers[2], _nameResolver.indexFromName("hadContact"));
+    Evaluation hostSex = e.evaluate(_testSamplers[3], _nameResolver.indexFromName("hostFemale"));
 
     combiner.addEvaluations({typeEvaluation, colourEvaluation, ccContact, hostSex});
     unsigned passesUsed = combiner.findClusters();

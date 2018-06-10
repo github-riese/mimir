@@ -4,7 +4,6 @@
 #include <map>
 #include <vector>
 
-#include "../models/InterpolationStrategy.h"
 #include "../models/Sample.h"
 #include "../models/SampleStore.h"
 #include "../models/ValueType.h"
@@ -17,7 +16,7 @@ class Sampler
 {
 public:
     Sampler();
-    explicit Sampler(mimir::models::ValueIndex nameIndex, mimir::models::InterpolationStrategy interpolationStrategy = mimir::models::InterpolationStrategy::CantInterpolate);
+    explicit Sampler(mimir::models::ValueIndex nameIndex);
     inline mimir::models::ValueIndex nameIndex() const { return _nameIndex; }
     bool valid() const;
     bool isNull() const;
@@ -27,11 +26,9 @@ public:
     unsigned long countInClass(mimir::models::ValueIndex classifier) const;
     unsigned long count(mimir::models::ValueIndex classifier, mimir::models::ValueIndex value) const;
     std::vector<mimir::models::ValueIndex> allClasses() const;
-    mimir::models::InterpolationStrategy interpolationStrategy() const;
 
 private:
     mimir::models::ValueIndex _nameIndex;
-    mimir::models::InterpolationStrategy _interpolationStrategy;
     mimir::models::SampleStore _samples;
 };
 

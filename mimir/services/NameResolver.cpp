@@ -14,58 +14,35 @@ NameResolver::NameResolver()
 {
 }
 
-string NameResolver::nameFromIndex(NameSource source, const ValueIndex &index) const
+string NameResolver::nameFromIndex(const ValueIndex &index) const
 {
-    auto theSet = _lookup.find(source);
-    if (theSet == _lookup.end()) {
+    if (index > _lookup.size()) {
         return string();
     }
-    if ((*theSet).second.size() <= index) {
-        return string();
-    }
-
-    size_t i = index;
-    auto iterator = (*theSet).second.begin();
-    while (i--) {
-        ++iterator;
-    }
-    return *iterator;
+    return _lookup.at(index);
 }
 
-ValueIndex NameResolver::indexFromName(NameSource source, const string &value)
+ValueIndex NameResolver::indexFromName(const string &value)
 {
-    ValueIndex idx = index(source, value);
-    if (idx.isValid()) {
-        return idx;
-    }
-    _lookup[source].push_back(value);
-    return ValueIndex(_lookup[source].size() -1);
-}
-
-ValueIndex NameResolver::indexFromName(NameResolver::NameSource source, const std::string &value) const
-{
-    return index(source, value);
-}
-
-models::ValueIndex NameResolver::index(NameResolver::NameSource source, const std::string &value) const
-{
-    auto theSet = _lookup.find(source);
-    if (theSet == _lookup.end()) {
-        return ValueIndex();
-    }
-
-    size_t index = 0;
-    auto theIndex = find_if((*theSet).second.begin(), (*theSet).second.end(), [&value, &index](const string &current) {
-        if (current == value) {
-            return true;
-        }
-        ++index;
-        return false;
+    auto existing = find_if(_lookup.begin(), _lookup.end(), [value](const string &item){
+        return item == value;
     });
-    if (theIndex == (*theSet).second.end()) {
+    if (existing == _lookup.end()) {
+        _lookup.push_back(value);
+        return ValueIndex(_lookup.size() -1);
+    }
+    return ValueIndex(static_cast<size_t>(existing - _lookup.begin()));
+}
+
+ValueIndex NameResolver::indexFromName(const std::string &value) const
+{
+    auto existing = find_if(_lookup.begin(), _lookup.end(), [&value](const string &item) {
+        return item == value;
+    });
+    if (existing == _lookup.end()) {
         return ValueIndex();
     }
-    return ValueIndex(static_cast<size_t>(theIndex - (*theSet).second.begin()));
+    return ValueIndex(static_cast<size_t>(existing - _lookup.begin()));
 }
 
 } // namespace services

@@ -8,8 +8,9 @@
 #include "tst_Models.h"
 
 #include "../mimir/models/ValueType.h"
-#include "../mimir/services/NameResolver.h"
+#include "../mimir/services/DataStore.h"
 #include "../mimir/services/Evaluator.h"
+#include "../mimir/services/NameResolver.h"
 #include "../mimir/services/Sampler.h"
 
 #include "../mimir/helpers/helpers.h"
@@ -20,9 +21,10 @@ using mimir::models::ProbabilityWithAPrioris;
 using mimir::models::Sample;
 using mimir::models::ValueType;
 using mimir::models::ValueIndex;
+using mimir::services::DataStore;
+using mimir::services::Evaluator;
 using mimir::services::NameResolver;
 using mimir::services::Sampler;
-using mimir::services::Evaluator;
 
 REGISTER_TEST(Models)
 
@@ -33,7 +35,7 @@ Models::Models()
 void Models::testSamplerBasics()
 {
     NameResolver resolver;
-    ValueIndex testeeNameIndex = resolver.indexFromName(NameResolver::NameSource::Sampler, "testee");
+    ValueIndex testeeNameIndex = resolver.indexFromName("testee");
     Sampler testee(testeeNameIndex);
     testee.addSample(Sample{ValueIndex(1), ValueIndex(2)});
     testee.addSample(Sample{ValueIndex(1), ValueIndex(2), 3});
@@ -46,34 +48,103 @@ void Models::testSamplerBasics()
     QCOMPARE(testee.countInClass(ValueIndex(2)), 99U);
 }
 
+void Models::testDataStore()
+{
+    NameResolver nameResolver;
+    #define mkValueIndex(name) ValueIndex name = nameResolver.indexFromName(#name);
+    ValueIndex kept = nameResolver.indexFromName("kept");
+    ValueIndex cancelled = nameResolver.indexFromName("cancelled");
+    ValueIndex returned = nameResolver.indexFromName("returned");
+
+    mkValueIndex(ring);
+    mkValueIndex(collier);
+    mkValueIndex(brooch);
+
+    mkValueIndex(blue);
+    mkValueIndex(red);
+    mkValueIndex(green);
+    mkValueIndex(yellow);
+
+    mkValueIndex(hadContact);
+    mkValueIndex(noContact);
+
+    mkValueIndex(hostMale);
+    mkValueIndex(hostFemale);
+
+    mkValueIndex(classification);
+    mkValueIndex(type);
+    mkValueIndex(colour);
+    mkValueIndex(ccContact);
+    mkValueIndex(hostSex);
+
+    #undef mkValueIndex
+
+    vector<vector<ValueIndex>> testData = {
+        {cancelled, ring, blue, noContact, hostMale},
+        {kept, ring, green, hadContact, hostFemale},
+        {kept, ring, green, noContact, hostMale},
+        {kept, brooch, red, hadContact, hostFemale},
+        {kept, brooch, blue, noContact, hostMale},
+        {returned, collier, green, hadContact, hostFemale},
+        {returned, ring, red, noContact, hostMale},
+        {cancelled, brooch, green, hadContact, hostFemale},
+        {kept, ring, green, noContact, hostMale},
+        {cancelled, ring, yellow, hadContact, hostFemale}
+    };
+
+    DataStore dataStore(nameResolver);
+    QVERIFY(dataStore.columnCount() == 0);
+    QVERIFY(dataStore.rowCount() == 0);
+    dataStore.createDataSet({classification, type, colour, ccContact, hostSex});
+    QVERIFY(dataStore.columnCount() == 5);
+    QVERIFY(dataStore.rowCount() == 0);
+
+    for (auto row : testData)
+        dataStore.addRow(row);
+    QVERIFY(dataStore.columnCount() == 5);
+    QVERIFY(dataStore.rowCount() == 10);
+
+    Sampler s1 = dataStore.createSampler(classification, type);
+    QCOMPARE(s1.total(), 10ul);
+    QCOMPARE(s1.allClasses().size(), 3ul);
+    QCOMPARE(s1.count(kept, ring), 3ul);
+    QCOMPARE(s1.countInClass(returned), 2ul);
+    QCOMPARE(s1.countInValue(brooch), 3ul);
+
+    Sampler samplerToFindGreenRings = dataStore.createSampler(colour, type);
+    QCOMPARE(samplerToFindGreenRings.total(), 10ul);
+    QCOMPARE(samplerToFindGreenRings.allClasses().size(), 4ul);
+    QCOMPARE(samplerToFindGreenRings.count(green, ring), 3ul);
+}
+
 void Models::testNameLookup()
 {
     NameResolver testee;
-    ValueIndex vKept = testee.indexFromName(NameResolver::NameSource::Classification, "kept");
-    ValueIndex vCancelled = testee.indexFromName(NameResolver::NameSource::Classification, "cancelled");
-    ValueIndex vReturned = testee.indexFromName(NameResolver::NameSource::Classification, "returned");
+    ValueIndex vKept = testee.indexFromName("kept"); // #0
+    ValueIndex vCancelled = testee.indexFromName("cancelled"); // #1
+    ValueIndex vReturned = testee.indexFromName("returned"); // #2
 
-    ValueIndex vPropertyColour = testee.indexFromName(NameResolver::NameSource::Property, "colour");
-    ValueIndex vPropertySize = testee.indexFromName(NameResolver::NameSource::Property, "size");
+    ValueIndex vPropertyColour = testee.indexFromName("colour"); // #3
+    ValueIndex vPropertySize = testee.indexFromName("size"); // #4
 
-    ValueIndex vValueBlue = testee.indexFromName(NameResolver::NameSource::Value, "blue");
+    ValueIndex vValueBlue = testee.indexFromName("blue"); // #5
 
-    ValueIndex vKept2 = testee.indexFromName(NameResolver::NameSource::Classification, "kept");
+    ValueIndex vKept2 = testee.indexFromName("kept"); // #0 (created above)
 
-    ValueIndex vSampler1 = testee.indexFromName(NameResolver::NameSource::Sampler, "Sampler1");
-    ValueIndex vColor = testee.indexFromName(NameResolver::NameSource::Sampler, "colour");
+    ValueIndex vSampler1 = testee.indexFromName("Sampler1"); // #6
+    ValueIndex vColor = testee.indexFromName("colour"); // #3
 
     QCOMPARE(vKept, ValueIndex(0));
     QCOMPARE(vKept2, ValueIndex(0));
     QCOMPARE(vCancelled, ValueIndex(1));
     QCOMPARE(vReturned, ValueIndex(2));
-    QCOMPARE(vPropertyColour, ValueIndex(0));
-    QCOMPARE(vPropertySize, ValueIndex(1));
-    QCOMPARE(vValueBlue, ValueIndex(0));
-    QVERIFY(vSampler1 == 0_vi);
-    QVERIFY(vColor == 1_vi);
+    QCOMPARE(vPropertyColour, ValueIndex(3));
+    QCOMPARE(vPropertySize, ValueIndex(4));
+    QCOMPARE(vValueBlue, ValueIndex(5));
+    QVERIFY(vSampler1 == 6_vi);
+    QVERIFY(vColor == 3_vi);
 
-    QVERIFY(testee.nameFromIndex(NameResolver::NameSource::Sampler, 1_vi) == "colour");
+    QVERIFY(testee.nameFromIndex(3_vi) == "colour");
 }
 
 void Models::testProbabilator()

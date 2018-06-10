@@ -13,21 +13,12 @@ namespace services {
 class NameResolver
 {
 public:
-    enum class NameSource
-    {
-        Classification = 0U,
-        Property = 1U,
-        Value = 2U,
-        Sampler = 3U
-    };
     NameResolver();
-    std::string nameFromIndex(NameSource, const mimir::models::ValueIndex &) const;
-    mimir::models::ValueIndex indexFromName(NameSource, const std::string &);
-    mimir::models::ValueIndex indexFromName(NameSource, const std::string &) const;
+    std::string nameFromIndex(const mimir::models::ValueIndex &) const;
+    mimir::models::ValueIndex indexFromName(const std::string &);
+    mimir::models::ValueIndex indexFromName(const std::string &) const;
 private:
-    mimir::models::ValueIndex index(NameSource, const std::string&) const;
-private:
-    std::map<NameSource, std::vector<std::string>> _lookup;
+    std::vector<std::string> _lookup;
 };
 
 } // namespace services

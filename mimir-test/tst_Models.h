@@ -12,6 +12,7 @@ public:
 
 private Q_SLOTS:
     void testSamplerBasics();
+    void testDataStore();
     void testNameLookup();
     void testProbabilator();
     void testHelpers();

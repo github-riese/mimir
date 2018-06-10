@@ -27,7 +27,8 @@ SOURCES += \
     services/Evaluator.cpp \
     services/SamplerManager.cpp \
     services/EvaluationCombiner.cpp \
-    helpers/helpers.cpp
+    helpers/helpers.cpp \
+    services/DataStore.cpp
 
 HEADERS += \
     models/Probability.h \
@@ -44,4 +45,6 @@ HEADERS += \
     models/InterpolationStrategy.h \
     services/EvaluationCombiner.h \
     helpers/helpers.h \
-    models/ProbabilityWithAPrioris.h
+    models/ProbabilityWithAPrioris.h \
+    traits/Timing.h \
+    services/DataStore.h

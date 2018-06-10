@@ -7,7 +7,6 @@ using std::accumulate;
 
 using std::vector;
 
-using mimir::models::InterpolationStrategy;
 using mimir::models::Sample;
 using mimir::models::SampleStore;
 using mimir::models::ValueCounter;
@@ -18,14 +17,12 @@ namespace services {
 
 Sampler::Sampler() :
     _nameIndex(ValueIndex::NoIndex),
-    _interpolationStrategy(),
     _samples()
 {
 }
 
-Sampler::Sampler(ValueIndex nameIndex, InterpolationStrategy interpolationStrategy) :
+Sampler::Sampler(ValueIndex nameIndex) :
     _nameIndex(nameIndex),
-    _interpolationStrategy(interpolationStrategy),
     _samples()
 {
 }
@@ -100,10 +97,6 @@ std::vector<models::ValueIndex> Sampler::allClasses() const
     return result;
 }
 
-mimir::models::InterpolationStrategy Sampler::interpolationStrategy() const
-{
-    return _interpolationStrategy;
-}
 
 } // namespace services
 } // namespace mimir

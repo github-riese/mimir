@@ -17,10 +17,10 @@ SamplerManager::SamplerManager(NameResolver &resolver) :
 {
 }
 
-Sampler &SamplerManager::createSampler(const string &name, ValueType valueType, InterpolationStrategy interpolationStrategy)
+Sampler &SamplerManager::createSampler(const string &name, ValueType valueType)
 {
     KnownSampler &knownSampler = _samplers[name];
-    knownSampler.sampler = Sampler(_nameResolver.indexFromName(NameResolver::NameSource::Sampler, name), interpolationStrategy);
+    knownSampler.sampler = Sampler(_nameResolver.indexFromName(name));
     knownSampler.valueType = valueType;
     return knownSampler.sampler;
 }
