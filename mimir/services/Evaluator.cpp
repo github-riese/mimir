@@ -37,10 +37,10 @@ Evaluation Evaluator::evaluate(const Sampler &sampler, ValueIndex value)
         }
         auto classInValueCount = static_cast<long double>(sampler.count(classification, value));
         auto inClassCount = static_cast<long double>(sampler.countInClass(classification));
-        auto aPrioriA = classInValueCount/inClassCount;
+        auto classInValueProbability = classInValueCount/inClassCount;
         auto classProbability = inClassCount/total;
         result.addProbability(classification, {
-                                  {(aPrioriA * classProbability)/valueProbability},
+                                  {(classInValueProbability * classProbability)/valueProbability},
                                   classProbability,
                                   valueProbability
                               });
