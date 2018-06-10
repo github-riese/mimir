@@ -18,12 +18,14 @@ public:
 
     mimir::models::Evaluation evaluate(const std::vector<mimir::models::Evaluation> &);
 
-    mimir::models::Probability combineProbabilities(const std::vector<mimir::models::Probability>&);
-
     inline unsigned long long opcount() const { return _opcount; }
+
 private:
+    mimir::models::ProbabilityWithAPrioris combineProbabilities(const std::vector<mimir::models::ProbabilityWithAPrioris>&);
 
     std::vector<mimir::models::ValueIndex> combineSamplerIDs(const std::vector<std::vector<mimir::models::ValueIndex>>&);
+
+    std::vector<std::vector<models::ValueIndex> > combineSamplerIDs(const std::vector<mimir::models::Evaluation> &);
 
     mimir::models::Probability calculate(const mimir::services::Sampler &, mimir::models::ValueIndex, mimir::models::ValueIndex);
 

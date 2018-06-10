@@ -16,6 +16,7 @@
 
 using mimir::models::Evaluation;
 using mimir::models::Probability;
+using mimir::models::ProbabilityWithAPrioris;
 using mimir::models::Sample;
 using mimir::models::ValueType;
 using mimir::models::ValueIndex;
@@ -107,25 +108,25 @@ void Models::testProbabilator()
     QCOMPARE(pS2.probability(), 4.L/5);
 
     Evaluation combinedP1P2 = evaluator.evaluate({eS1, eS2});
-    QCOMPARE(combinedP1P2.mostProbable().probability(), 20./32);
+    QCOMPARE(static_cast<double>(combinedP1P2.mostProbable().probability()), 5./8.);
 
     auto expectedSamplerIndices = vector<vector<ValueIndex>>{{1_vi}, {2_vi}};
-    QCOMPARE(combinedP1P2.mostProbable().samplers(), expectedSamplerIndices);
+    QCOMPARE(combinedP1P2.samplers(), expectedSamplerIndices);
 
     Evaluation pS1_2S2 = evaluator.evaluate({combinedP1P2, eS2});
-    QVERIFY2((pS1_2S2.mostProbable().samplers() == vector<vector<ValueIndex>>{{1_vi, 2_vi}, {2_vi}}), "SamplerCombination mismatch");
-    QCOMPARE(pS1_2S2.mostProbable().probability(), 20./32);
+    QVERIFY2((pS1_2S2.samplers() == vector<vector<ValueIndex>>{{1_vi, 2_vi}, {2_vi}}), "SamplerCombination mismatch");
+    QCOMPARE(pS1_2S2.mostProbable().probability(), 5./8.);
     qDebug() << "evaluator did " << evaluator.opcount() << "operations";
 }
 
 void Models::testHelpers()
 {
     vector<Probability> v1 = {
-        Probability(.1, .1, .1, {{1_vi}}),
-        Probability(.2, .1, .1, {{1_vi}}),
-        Probability(.3, .1, .1, {{1_vi}}),
-        Probability(.4, .1, .1, {{1_vi}}),
-        Probability(.5, .1, .1, {{1_vi}}),
+        (.1_p),
+        (.2_p),
+        (.3_p),
+        (.4_p),
+        (.5_p),
     };
     long double mean = mimir::helpers::mean(v1);
     QCOMPARE(static_cast<double>(mean), ((.1 + .2 + .3 + .4 + .5)/5.));

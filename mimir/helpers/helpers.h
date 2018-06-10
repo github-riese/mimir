@@ -16,6 +16,8 @@ long double mean(const std::vector<mimir::models::Probability>&);
 long double deviation(const std::deque<mimir::models::Probability> &);
 long double deviation(const std::vector<mimir::models::Probability> &);
 
+long double deviation(long double mean, const std::vector<models::Probability> &probabilities);
+
 } // namespace helpers
 } // namespace mimir
 

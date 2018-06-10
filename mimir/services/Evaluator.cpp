@@ -2,13 +2,17 @@
 
 #include <numeric>
 
+#include "../models/ProbabilityWithAPrioris.h"
+
 using std::accumulate;
 using std::move;
 
 using std::string;
+using std::tuple;
 using std::vector;
 
 using mimir::models::Probability;
+using mimir::models::ProbabilityWithAPrioris;
 using mimir::models::Sample;
 using mimir::models::ValueIndex;
 using mimir::models::Evaluation;
@@ -18,7 +22,7 @@ namespace services {
 
 Evaluation Evaluator::evaluate(const Sampler &sampler, ValueIndex value)
 {
-    Evaluation result;
+    Evaluation result({{sampler.nameIndex()}});
     sampler.total();
     if (!sampler.total()) {
         return result;
@@ -35,11 +39,11 @@ Evaluation Evaluator::evaluate(const Sampler &sampler, ValueIndex value)
         auto inClassCount = static_cast<long double>(sampler.countInClass(classification));
         auto aPrioriA = classInValueCount/inClassCount;
         auto classProbability = inClassCount/total;
-        result.addProbability(classification, Probability(
-                                  (aPrioriA * classProbability)/valueProbability,
+        result.addProbability(classification, {
+                                  {(aPrioriA * classProbability)/valueProbability},
                                   classProbability,
-                                  valueProbability,
-                                  {{sampler.nameIndex()}}));
+                                  valueProbability
+                              });
         ++_opcount;
     }
     return result;
@@ -49,42 +53,39 @@ models::Evaluation Evaluator::evaluate(const std::vector<models::Evaluation> &so
 {
     if (sources.size() == 1)
         return sources[0];
-    map<ValueIndex, vector<Probability>> combinableProbabilities;
+    map<ValueIndex, vector<ProbabilityWithAPrioris>> combinableProbabilities;
     for (auto evaluation : sources) {
         for (auto classification : evaluation.classifications()) {
-            combinableProbabilities[classification].push_back(evaluation.probabilityByClassification(classification));
+            combinableProbabilities[classification].push_back(evaluation.probabilityByClassificationEx(classification));
         }
     }
-    Evaluation result;
+    Evaluation result(combineSamplerIDs(sources));
     for (auto index : combinableProbabilities) {
         result.addProbability(index.first, combineProbabilities(index.second));
     }
     return result;
 }
 
-models::Probability Evaluator::combineProbabilities(const std::vector<models::Probability> &p)
+models::ProbabilityWithAPrioris Evaluator::combineProbabilities(const std::vector<models::ProbabilityWithAPrioris> &p)
 {
     if (p.size() < 2) {
         return p[0];
     }
-    vector<vector<ValueIndex>> usedSamplers;
     long double combinedProbability = 1.L;
     long double combinedClassProbailities = 1.L;
     long double combinedValueProbailities = 1.L;
     for (auto pN : p) {
-        if (!pN.valid() || pN.isZero()) {
+        if (!pN.probability().valid() || pN.probability().isZero()) {
             continue;
         }
-        combinedProbability *= pN.probability();
-        combinedClassProbailities *= pN.classProbability();
-        combinedValueProbailities *= pN.valueProbability();
-        usedSamplers.push_back(combineSamplerIDs(pN.samplers()));
+        combinedProbability *= pN.probability().probability();
+        combinedClassProbailities *= pN.aPrioryA().probability();
+        combinedValueProbailities *= pN.aPrioryB().probability();
     }
-    return Probability{
+    return ProbabilityWithAPrioris{
             (combinedProbability*combinedClassProbailities) / combinedValueProbailities,
             combinedClassProbailities,
             combinedValueProbailities,
-            move(usedSamplers)
     };
 }
 
@@ -93,6 +94,15 @@ std::vector<models::ValueIndex> Evaluator::combineSamplerIDs(const std::vector<s
     vector<ValueIndex> combined;
     for (auto source : sources) {
         combined.insert(combined.end(), source.begin(), source.end());
+    }
+    return combined;
+}
+
+vector<vector<ValueIndex>> Evaluator::combineSamplerIDs(const vector<Evaluation> &evaluations)
+{
+    vector<vector<ValueIndex>> combined;
+    for (auto e : evaluations) {
+        combined.push_back(combineSamplerIDs(e.samplers()));
     }
     return combined;
 }

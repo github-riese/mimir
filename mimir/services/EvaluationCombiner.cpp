@@ -69,7 +69,7 @@ unsigned EvaluationCombiner::findClusters(int maxDepth)
     uniqPicked.insert(uniqPicked.end(), picked.begin(), lastUnique);
     for_each(_candidats.begin(), _candidats.end(), [&uniqPicked, &result](Evaluation e) {
         if (uniqPicked.end() != find_if(uniqPicked.begin(), uniqPicked.end(), [e](const Evaluation &p){
-            return (p.mostProbable().samplers() == e.mostProbable().samplers());
+            return (p.samplers() == e.samplers());
         })) {
             result.push_back(e);
         }

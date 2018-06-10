@@ -77,23 +77,11 @@ void TestPatternFind::testPreCheckAssumptionThatDataTurnOutAOne()
     QVERIFY(colourEvaluation.probabilityByClassification(ValueIndex(0)).probability() < 1.L);
 
     Evaluation crossRingGreen = e.evaluate({typeEvaluation, colourEvaluation});
-    QVERIFY(crossRingGreen.probabilityByClassification(ValueIndex(0)) == 1.L);
-}
-
-void TestPatternFind::testIfAB_C_eq_ABC()
-{
-    EvaluationCombiner combiner;
-    Evaluator e;
-    Evaluation typeEvaluation = e.evaluate(_testSamplers[0], _nameResolver.indexFromName(NameResolver::NameSource::Value, "ring"));
-    Evaluation colourEvaluation = e.evaluate(_testSamplers[1], _nameResolver.indexFromName(NameResolver::NameSource::Value, "green"));
-    Evaluation ccContact = e.evaluate(_testSamplers[2], _nameResolver.indexFromName(NameResolver::NameSource::Value, "hadContact"));
-
-    auto typeAndColour = e.evaluate({typeEvaluation, colourEvaluation});
-    auto typeAndColourAndccContact = e.evaluate({typeAndColour, ccContact});
-
-    auto typeColourAndccContact = e.evaluate({typeEvaluation, colourEvaluation, ccContact});
-    qDebug() << static_cast<double>(typeAndColourAndccContact.mostProbable().probability()) << ":" << static_cast<double>(typeColourAndccContact.mostProbable().probability());
-    QVERIFY(typeAndColourAndccContact.mostProbable() != typeColourAndccContact.mostProbable());
+    long double totalProb = crossRingGreen.probabilityByClassification(0_vi).probability() +
+            crossRingGreen.probabilityByClassification(1_vi).probability() +
+            crossRingGreen.probabilityByClassification(2_vi).probability();
+    QCOMPARE(static_cast<double>(totalProb), 1.);
+    QVERIFY(crossRingGreen.probabilityByClassification(ValueIndex(0)) == 1._p);
 }
 
 void TestPatternFind::testPredict()

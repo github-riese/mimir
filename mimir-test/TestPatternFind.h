@@ -19,7 +19,6 @@ public:
 private Q_SLOTS:
     void initTestCase();
     void testPreCheckAssumptionThatDataTurnOutAOne();
-    void testIfAB_C_eq_ABC();
     void testPredict();
 private:
 private:

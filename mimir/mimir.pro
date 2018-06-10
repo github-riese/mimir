@@ -43,4 +43,5 @@ HEADERS += \
     models/ValueType.h \
     models/InterpolationStrategy.h \
     services/EvaluationCombiner.h \
-    helpers/helpers.h
+    helpers/helpers.h \
+    models/ProbabilityWithAPrioris.h
