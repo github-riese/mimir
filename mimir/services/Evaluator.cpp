@@ -20,7 +20,7 @@ using mimir::models::Evaluation;
 namespace mimir {
 namespace services {
 
-Evaluation Evaluator::evaluate(const Sampler &sampler, ValueIndex value)
+Evaluation Evaluator::evaluate(const Sampler &sampler, ValueIndex value, vector<ValueIndex> classes)
 {
     Evaluation result({{sampler.nameIndex()}});
     sampler.total();
@@ -31,7 +31,10 @@ Evaluation Evaluator::evaluate(const Sampler &sampler, ValueIndex value)
     auto inValueCount = static_cast<long double>(sampler.countInValue(value));
 
     long double valueProbability = inValueCount/total;
-    for (auto classification : sampler.allClasses()) {
+    if (classes.empty()) {
+        classes = sampler.allClasses();
+    }
+    for (auto classification : classes) {
         if (!sampler.countInClass(classification)) {
             continue;
         }
@@ -49,11 +52,15 @@ Evaluation Evaluator::evaluate(const Sampler &sampler, ValueIndex value)
     return result;
 }
 
-models::Evaluation Evaluator::evaluate(const std::vector<models::Evaluation> &sources)
+models::Evaluation Evaluator::evaluate(const std::vector<models::Evaluation> &sources, std::vector<ValueIndex> classes)
 {
     if (sources.size() == 1)
         return sources[0];
     map<ValueIndex, vector<ProbabilityWithAPrioris>> combinableProbabilities;
+
+    if (classes.empty()) {
+        classes = sources.at(0).classifications();
+    }
     for (auto evaluation : sources) {
         for (auto classification : evaluation.classifications()) {
             combinableProbabilities[classification].push_back(evaluation.probabilityByClassificationEx(classification));

@@ -8,6 +8,14 @@
 namespace mimir {
 namespace traits {
 
+template<class Duration>
+inline const char* unit();
+
+template<>inline const char* unit<std::chrono::nanoseconds>() { return "ns"; }
+template<>inline const char* unit<std::chrono::microseconds>() { return "us"; }
+template<>inline const char* unit<std::chrono::milliseconds>() { return "ms"; }
+template<>inline const char* unit<std::chrono::seconds>() { return "s"; }
+
 class Timing
 {
 public:
@@ -15,30 +23,19 @@ public:
         _started = std::chrono::steady_clock::now();
     }
 
-    std::chrono::milliseconds millisecsSinceStart() const
+    template<typename Duration = std::chrono::microseconds>
+    Duration sinceStart() const
     {
-        return std::chrono::duration_cast<std::chrono::milliseconds>(
+        return std::chrono::duration_cast<Duration>(
                     std::chrono::steady_clock::now() - _started
                 );
     }
 
-    std::chrono::microseconds microsecsSinceStart() const
-    {
-        return std::chrono::duration_cast<std::chrono::microseconds>(
-                    std::chrono::steady_clock::now() - _started
-        );
-    }
-
-    std::chrono::nanoseconds nanosecsSinceStart() const
-    {
-        return std::chrono::duration_cast<std::chrono::nanoseconds>(
-                    std::chrono::steady_clock::now() - _started
-        );
-    }
 private:
     std::chrono::steady_clock::time_point _started = std::chrono::steady_clock::now();
 };
 
+template<typename Duration = std::chrono::milliseconds>
 class VerboseTiming : public Timing
 {
 public:
@@ -47,8 +44,8 @@ public:
         _name(name),
         _stream(stream) {}
     inline void report() const {
-        auto millis = microsecsSinceStart();
-        _stream << "[Timer] \"" << _name << "\": " << millis.count() << "us elapsed." << std::endl;
+        auto duration = sinceStart<Duration>();
+        _stream << "[Timer] \"" << _name << "\": " << duration.count() << unit<Duration>() << " elapsed." << std::endl;
     }
     inline ~VerboseTiming() {
         report();

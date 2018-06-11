@@ -21,7 +21,7 @@ public:
 private:
     ValueIndex _classifier;
     ValueIndex _valueIndex;
-    unsigned _count;
+    unsigned long _count;
 };
 
 } // namespace models

@@ -7,6 +7,7 @@
 
 using std::find_if;
 
+using std::string;
 using std::vector;
 
 using mimir::models::Sample;
@@ -21,23 +22,30 @@ DataStore::DataStore(NameResolver &nameResolver) :
 
 }
 
+void DataStore::createDataSet(std::vector<std::string> columnNames)
+{
+    vector<ValueIndex> columnNameIndices;
+    for_each(columnNames.begin(), columnNames.end(), [&columnNameIndices, this](const string &name){
+        columnNameIndices.push_back(_nameResolver.indexFromName(name));
+    });
+    createDataSet(columnNameIndices);
+}
+
 void DataStore::createDataSet(const vector<ValueIndex> &columnNames)
 {
     _rawData.clear();
     _columNames.clear();
     _columNames = columnNames;
-    _rawData.resize(_columNames.size());
+    _stride = _columNames.size();
 }
 
 void DataStore::addRow(vector<ValueIndex> row)
 {
-    auto inColumns = row.begin();
-    auto storeColumns = _rawData.begin();
-    while (inColumns != row.end() && storeColumns != _rawData.end()) {
-        storeColumns->push_back(*inColumns);
-        ++inColumns;
-        ++storeColumns;
+    if (row.size() != _stride) {
+        throw "Bad data size";
     }
+    _rawData.insert(_rawData.end(), row.begin(), row.end());
+    ++_rows;
 }
 
 Sampler DataStore::createSampler(ValueIndex classifier, ValueIndex value) const
@@ -48,19 +56,23 @@ Sampler DataStore::createSampler(ValueIndex classifier, ValueIndex value) const
     if (classIndex == -1 || valIndex == -1) {
         return Sampler();
     }
-    traits::VerboseTiming t(std::string("create sampler ") + _nameResolver.nameFromIndex(classifier) + "-" + _nameResolver.nameFromIndex(value));
-    auto &classifications = _rawData.at(static_cast<size_t>(classIndex));
-    auto &values = _rawData.at(static_cast<size_t>(valIndex));
+    auto classClmnIdx = _rawData.begin() + classIndex;
+    auto valClmnIdx = _rawData.begin() + valIndex;
 
-    auto classClmnIdx = classifications.begin();
-    auto valClmnIdx = values.begin();
-
-    while (classClmnIdx != classifications.end() && valClmnIdx != values.end()) {
+    int stride = static_cast<int>(_stride);
+    size_t samplesToCreate = _rows;
+    traits::VerboseTiming<std::chrono::nanoseconds> t(std::string("create sampler ") + _nameResolver.nameFromIndex(classifier) + "-" + _nameResolver.nameFromIndex(value));
+    while (samplesToCreate-- > 0) {
         sampler.addSample(Sample(*classClmnIdx, *valClmnIdx));
-        ++classClmnIdx;
-        ++valClmnIdx;
+        classClmnIdx += stride;
+        valClmnIdx += stride;
     }
     return sampler;
+}
+
+Sampler DataStore::createSampler(const std::string &classifier, const std::string &value) const
+{
+    return createSampler(_nameResolver.indexFromName(classifier), _nameResolver.indexFromName(value));
 }
 
 size_t DataStore::columnCount() const
@@ -71,7 +83,7 @@ size_t DataStore::columnCount() const
 size_t DataStore::rowCount() const
 {
     return _rawData.size() == 0 ? 0 :
-                 (*(_rawData.begin())).size();
+                 _rawData.size() / _stride;
 }
 
 long DataStore::columnByName(ValueIndex name) const

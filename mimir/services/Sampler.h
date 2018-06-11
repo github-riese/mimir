@@ -26,6 +26,7 @@ public:
     unsigned long countInClass(mimir::models::ValueIndex classifier) const;
     unsigned long count(mimir::models::ValueIndex classifier, mimir::models::ValueIndex value) const;
     std::vector<mimir::models::ValueIndex> allClasses() const;
+    std::vector<mimir::models::ValueIndex> allValues() const;
 
 private:
     mimir::models::ValueIndex _nameIndex;

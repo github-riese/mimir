@@ -1,11 +1,13 @@
 #include "Sampler.h"
 #include <algorithm>
 #include <numeric>
+#include <set>
 
 using std::find_if;
 using std::accumulate;
 
 using std::vector;
+using std::set;
 
 using mimir::models::Sample;
 using mimir::models::SampleStore;
@@ -88,13 +90,26 @@ unsigned long Sampler::count(ValueIndex classifier, ValueIndex value) const
     return total;
 }
 
-std::vector<models::ValueIndex> Sampler::allClasses() const
+vector<ValueIndex> Sampler::allClasses() const
 {
     vector<ValueIndex> result;
     for (auto v : _samples) {
         result.push_back(v.first);
     }
     return result;
+}
+
+vector<ValueIndex> Sampler::allValues() const
+{
+    set<ValueIndex> tmp;
+    for (auto v : _samples) {
+        for (auto name : v.second) {
+            tmp.insert(name.valueIndex());
+        }
+    }
+    vector<ValueIndex> values;
+    values.insert(values.begin(), tmp.begin(), tmp.end());
+    return values;
 }
 
 

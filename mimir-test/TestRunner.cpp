@@ -1,6 +1,7 @@
 #include "TestRunner.h"
-#include <QElapsedTimer>
 #include <QDebug>
+
+#include "../mimir/traits/Timing.h"
 
 TestRunner::TestRunner(const TestListener &listener) :
     _listener(listener)
@@ -10,17 +11,17 @@ TestRunner::TestRunner(const TestListener &listener) :
 bool TestRunner::runAll(int argc, char** argv)
 {
     bool succeeded = true;
-    QElapsedTimer timer;
     auto available = _listener.availableTests();
     auto iterator = available.begin();
-    timer.start();
+    mimir::traits::VerboseTiming<std::chrono::milliseconds> timer("All Tests");
     unsigned testCount = 0;
     while (iterator != available.end()) {
+        mimir::traits::VerboseTiming<std::chrono::microseconds> testTimer(std::string("test: ") + iterator.key().toUtf8().data());
         succeeded &= run(iterator.key(), argc, argv);
         ++iterator;
         ++testCount;
     }
-    qDebug() << "Ran" << testCount << "tests in" << timer.elapsed() << "ms";
+    qDebug() << "Ran" << testCount << "tests";
     return succeeded;
 }
 

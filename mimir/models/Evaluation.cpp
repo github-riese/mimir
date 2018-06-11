@@ -50,6 +50,12 @@ bool Evaluation::operator<(const Evaluation &rhs) const
 {
     if (_probabilities.size() < rhs._probabilities.size())
         return true;
+    if (rhs._probabilities.empty()) {
+        return false;
+    }
+    if (_probabilities.empty()) {
+        return true;
+    }
     return _probabilities.at(_mostProbable).p < rhs._probabilities.at(rhs._mostProbable).p;
 }
 

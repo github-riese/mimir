@@ -6,8 +6,8 @@
 #include <QObject>
 
 #include "../mimir/models/ValueType.h"
+#include "../mimir/services/DataStore.h"
 #include "../mimir/services/NameResolver.h"
-#include "../mimir/services/Sampler.h"
 
 #include "TestListener.h"
 
@@ -23,7 +23,7 @@ private Q_SLOTS:
 private:
 private:
     mimir::services::NameResolver _nameResolver;
-    std::vector<mimir::services::Sampler> _testSamplers;
+    mimir::services::DataStore _dataStore;
 };
 
 REGISTER_TEST(TestPatternFind)

@@ -10,13 +10,13 @@ class ValueIndex
 {
 public:
     inline ValueIndex() : _idx(NoIndex) {}
-    static const size_t NoIndex = (size_t) -1;
+    static const size_t NoIndex = -1ul;
     inline bool isValid() const { return _idx != NoIndex; }
     inline explicit ValueIndex(size_t idx) : _idx(idx) {}
     inline bool operator  <(const ValueIndex &rhs) const { return _idx < rhs._idx; }
     inline bool operator <=(const ValueIndex &rhs) const { return _idx <= rhs._idx; }
     inline bool operator ==(const ValueIndex &rhs) const { return _idx == rhs._idx; }
-    inline operator size_t() const { return _idx; }
+    inline constexpr operator size_t() const { return _idx; }
 private:
     size_t _idx;
 };
