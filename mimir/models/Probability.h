@@ -23,6 +23,7 @@ public:
     inline Probability operator/(const Probability &rhs) { return _probability / rhs._probability; }
     inline Probability operator+(const Probability &rhs) { return _probability + rhs._probability; }
     inline Probability &operator *=(const Probability &rhs) { _probability *= rhs._probability; return  *this; }
+    inline Probability &operator /=(const Probability &rhs) { _probability /= rhs._probability; return  *this; }
     inline Probability &operator +=(const Probability &rhs) { _probability += rhs._probability; return  *this; }
 
     inline bool operator !() const { return !valid(); }
@@ -33,7 +34,7 @@ public:
     inline bool isZero() const { return std::fabsl(_probability) * 1e10L < 1.L; }
     inline bool valid() const { return !std::isnan(_probability); }
 
-    inline constexpr long double probability() const { return _probability; }
+    inline constexpr long double value() const { return _probability; }
 
 private:
     long double _probability = std::numeric_limits<long double>::quiet_NaN();

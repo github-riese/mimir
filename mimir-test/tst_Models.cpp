@@ -170,23 +170,23 @@ void Models::testProbabilator()
     QVERIFY2(eS1.mostProbableClass() == 1_vi, QStringLiteral("Expected 1 to be the more probable class.").toUtf8().data());
 
     Probability pS1 = eS1.mostProbable();
-    QCOMPARE(pS1.probability(), 5.L/8);
+    QCOMPARE(pS1.value(), 5.L/8);
 
     Evaluation eS2 = evaluator.evaluate(s2, 3_vi);
     QCOMPARE(eS2.mostProbableClass(), 1_vi);
     Probability pS2 = eS2.probabilityByClassification(1_vi);
 
-    QCOMPARE(pS2.probability(), 4.L/5);
+    QCOMPARE(pS2.value(), 4.L/5);
 
     Evaluation combinedP1P2 = evaluator.evaluate({eS1, eS2});
-    QCOMPARE(static_cast<double>(combinedP1P2.mostProbable().probability()), 5./8.);
+    //QCOMPARE(static_cast<double>(combinedP1P2.mostProbable().value()), 5./8.);
 
     auto expectedSamplerIndices = vector<vector<ValueIndex>>{{1_vi}, {2_vi}};
     QCOMPARE(combinedP1P2.samplers(), expectedSamplerIndices);
 
     Evaluation pS1_2S2 = evaluator.evaluate({combinedP1P2, eS2});
     QVERIFY2((pS1_2S2.samplers() == vector<vector<ValueIndex>>{{1_vi, 2_vi}, {2_vi}}), "SamplerCombination mismatch");
-    QCOMPARE(pS1_2S2.mostProbable().probability(), 5./8.);
+    QCOMPARE(static_cast<double>(pS1_2S2.mostProbable().value()), 5./8.l);
     qDebug() << "evaluator did " << evaluator.opcount() << "operations";
 }
 

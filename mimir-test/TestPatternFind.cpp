@@ -26,6 +26,19 @@ TestPatternFind::TestPatternFind() :
 
 }
 
+Probability recalcB_in_A(ProbabilityWithAPrioris pris)
+{
+    return pris.likelyHood();
+    // p = (p(b|a) * p(a)) / p(b)     | / p(b|a)
+    // (p / p(b|a) = p(a) / p(b)      | / p
+    // 1 / p(b|a) = p(a) / p(b) * p
+    // p(b|a) = (p(b) * p) / p(a)
+//    if (pris.probOfClass().isZero()) {
+//        return 0;
+//    }
+//    return (pris.probOfValue() * pris.probability()) / pris.probOfClass();
+}
+
 void TestPatternFind::initTestCase()
 {
     ValueIndex kept = _nameResolver.indexFromName("kept");
@@ -66,14 +79,25 @@ void TestPatternFind::initTestCase()
     }
 }
 
+QString dumpProb(const char*name, ProbabilityWithAPrioris const &prob)
+{
+    QString txt(name);
+    txt = txt.left(6);
+    txt += QString().fill(' ', 7 - txt.length());
+    txt += QString().append("p(class|val): %1 p(class): %2 p(val): %3 p(val|class): %4").
+            arg(static_cast<double>(prob.probability().value()), 8, 'f', 6).
+            arg(static_cast<double>(prob.probOfClass().value()), 8, 'f', 6).
+            arg(static_cast<double>(prob.probOfValue().value()), 8, 'f', 6).
+            arg(static_cast<double>(recalcB_in_A(prob).value()), 8, 'f', 6);
+    return txt;
+}
+
 void TestPatternFind::testPreCheckAssumptionThatDataTurnOutAOne()
 {
     Evaluator e;
     ValueIndex kept = _nameResolver.indexFromName("kept");
     Sampler typeSampler = _dataStore.createSampler("status", "type");
     Sampler colourSampler = _dataStore.createSampler("status", "colour");
-    Sampler hostSex = _dataStore.createSampler("status", "presenterSex");
-    Sampler contactSampler = _dataStore.createSampler("status", "agentContact");
 
     Sampler colourInTypeSampler = _dataStore.createSampler("colour", "type");
 
@@ -81,46 +105,53 @@ void TestPatternFind::testPreCheckAssumptionThatDataTurnOutAOne()
 
     Evaluation typeEvaluation = e.evaluate(typeSampler, _nameResolver.indexFromName("ring"));
     Evaluation colourEvaluation = e.evaluate(colourSampler, _nameResolver.indexFromName("green"));
-    Evaluation hostSexEvaluation = e.evaluate(hostSex, _nameResolver.indexFromName("hostMale"));
-    Evaluation contactEvaluation = e.evaluate(contactSampler, _nameResolver.indexFromName("hadContact"));
     Evaluation combColourType = e.evaluate({ typeEvaluation, colourEvaluation });
-    Evaluation combColourHostSex = e.evaluate({colourEvaluation, hostSexEvaluation });
-    Evaluation combContactHostSex = e.evaluate({contactEvaluation, hostSexEvaluation});
 
     ProbabilityWithAPrioris greenInRingProb = classColourInRingEvaluation.probabilityByClassificationEx(_nameResolver.indexFromName("green"));
 
     ProbabilityWithAPrioris ringProb = typeEvaluation.probabilityByClassificationEx(kept);
     ProbabilityWithAPrioris greenProb = colourEvaluation.probabilityByClassificationEx(kept);
-    ProbabilityWithAPrioris maleProb = hostSexEvaluation.probabilityByClassificationEx(kept);
-    ProbabilityWithAPrioris contactProb = contactEvaluation.probabilityByClassificationEx(kept);
     ProbabilityWithAPrioris combColourTypeProb = combColourType.probabilityByClassificationEx(kept);
-    ProbabilityWithAPrioris combColourHostSexProb = combColourHostSex.probabilityByClassificationEx(kept);
-    ProbabilityWithAPrioris combContactHostSexProb = combColourHostSex.probabilityByClassificationEx(kept);
 
-    qDebug("ring:    p: %Lf    pA: %Lf    pB: %Lf", ringProb.probability().probability(), ringProb.aPrioryA().probability(), ringProb.aPrioryB().probability());
-    qDebug("green:   p: %Lf    pA: %Lf    pB: %Lf", greenProb.probability().probability(), greenProb.aPrioryA().probability(), greenProb.aPrioryB().probability());
-    qDebug("comb:    p: %Lf    pA: %Lf    pB: %Lf", combColourTypeProb.probability().probability(), combColourTypeProb.aPrioryA().probability(), combColourTypeProb.aPrioryB().probability());
-    qDebug("resamp:  p: %Lf    pA: %Lf    pB: %Lf", greenInRingProb.probability().probability(), greenInRingProb.aPrioryA().probability(), greenInRingProb.aPrioryB().probability());
-    Probability greenRing = (ringProb.aPrioryA() * greenInRingProb.probability() * greenProb.aPrioryA()) /
-            (greenInRingProb.aPrioryB());
-    qDebug("Prob that kept when green given it was a ring: %Lf, green: %Lf, ring: %Lf",
-           greenRing.probability(),
-           greenProb.probability().probability(),
-           ringProb.probability().probability());
 
-    Probability greenByMaleHost = (maleProb.aPrioryB() * ringProb.aPrioryA())/combColourHostSexProb.aPrioryA();
-    qDebug("Prob that kept when a male presented given it was green: %Lf, host: %Lf",
-           greenByMaleHost.probability(),
-           maleProb.probability().probability());
-    qDebug("Size of subgroup was %Lf", combColourHostSexProb.aPrioryA().probability());
+    qDebug() << dumpProb("ring", ringProb);
+    qDebug() << dumpProb("green", greenProb);
+    qDebug() << dumpProb("comb", combColourTypeProb);
+    qDebug() << dumpProb("resamp", greenInRingProb);
+    qDebug();
 
-    Probability maleHostAndContact = (maleProb.aPrioryA() * contactProb.aPrioryB())/combContactHostSexProb.aPrioryB();
-    qDebug("HostMale: %Lf, had contact: %Lf, combined: %Lf, graphed: %Lf",
-           maleProb.probability().probability(),
-           contactProb.probability().probability(),
-           combContactHostSexProb.probability().probability(),
-           maleHostAndContact.probability());
-
+    qDebug("Doing: P(V1|C) * P(V1|V2) * P(C|V1) * P(V2|V1)");
+    qDebug("       ---------------------------------------");
+    qDebug("                 P(C) * P(V2)");
+    qDebug();
+    qDebug("with");
+    qDebug("        %Lf * %Lf * %Lf * %Lf",
+           recalcB_in_A(ringProb).value(),
+           recalcB_in_A(greenInRingProb).value(),
+           ringProb.probability().value(),
+           greenInRingProb.probability().value());
+    qDebug("        --------------------------------------");
+    qDebug("               %Lf * %Lf",
+           ringProb.probOfClass().value(),
+           greenProb.probOfValue().value());
+    qDebug();
+    Probability combined = recalcB_in_A(ringProb) * recalcB_in_A(greenInRingProb) * ringProb.probability() * greenInRingProb.probability();
+    combined /= ringProb.probOfClass() * greenProb.probOfValue();
+    qDebug("P(V1 | C, V2): %.9Lf", combined.value());
+    qDebug() << "and now: P(V1|C,V2) * P(C|V2)";
+    qDebug() << "         --------------------";
+    qDebug() << "               P(V1|V2)";
+    qDebug();
+    Probability result = (combined * greenProb.probability()) / greenInRingProb.probability();
+    qDebug(" with: (%Lf * %Lf) / %Lf",
+           combined.value(),
+           greenProb.probability().value(),
+           (1- greenInRingProb.probability().value()));
+    qDebug();
+    qDebug("results in %Lf", result.value());
+    qDebug("or simpler: P(keep|ring)/P(green|ring): %Lf",
+           (ringProb.probability()/
+           greenInRingProb.probability()).value());
 }
 
 void TestPatternFind::testPredict()

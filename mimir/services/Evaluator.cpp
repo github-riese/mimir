@@ -35,15 +35,17 @@ Evaluation Evaluator::evaluate(const Sampler &sampler, ValueIndex value, vector<
         classes = sampler.allClasses();
     }
     for (auto classification : classes) {
-        if (!sampler.countInClass(classification)) {
+        if (!sampler.countInClass(classification) || valueProbability < 1e-10l) {
+            result.addProbability(classification, { 0, 0, 0, valueProbability});
             continue;
         }
-        auto classInValueCount = static_cast<long double>(sampler.count(classification, value));
         auto inClassCount = static_cast<long double>(sampler.countInClass(classification));
-        auto classInValueProbability = classInValueCount/inClassCount;
+        auto classInValueCount = static_cast<long double>(sampler.count(classification, value));
+        auto likelyhood = classInValueCount/inClassCount;
         auto classProbability = inClassCount/total;
         result.addProbability(classification, {
-                                  {(classInValueProbability * classProbability)/valueProbability},
+                                  {(likelyhood * classProbability)/valueProbability},
+                                  likelyhood,
                                   classProbability,
                                   valueProbability
                               });
@@ -78,21 +80,31 @@ models::ProbabilityWithAPrioris Evaluator::combineProbabilities(const std::vecto
     if (p.size() < 2) {
         return p[0];
     }
+    long double mod = static_cast<long double>(p.size());
     long double combinedProbability = 1.L;
-    long double combinedClassProbailities = 1.L;
-    long double combinedValueProbailities = 1.L;
+    long double combinedLikelyhood = 1.L;
+    long double combinedClassProbabilities = 0.L;
+    long double combinedValueProbabilities = 1.L;
+    long double avgValProb = 0.l;
     for (auto pN : p) {
         if (!pN.probability().valid() || pN.probability().isZero()) {
             continue;
         }
-        combinedProbability *= pN.probability().probability();
-        combinedClassProbailities *= pN.aPrioryA().probability();
-        combinedValueProbailities *= pN.aPrioryB().probability();
+        combinedLikelyhood *= pN.likelyHood().value();
+        combinedClassProbabilities += pN.probOfClass().value();
+        combinedValueProbabilities *= pN.probOfValue().value();
+        avgValProb += pN.probOfValue().value();
     }
+    combinedProbability = (combinedLikelyhood * combinedClassProbabilities)/combinedValueProbabilities;
+
+    combinedClassProbabilities /= mod;
+    avgValProb /= mod;
+
     return ProbabilityWithAPrioris{
-            (combinedProbability*combinedClassProbailities) / combinedValueProbailities,
-            combinedClassProbailities,
-            combinedValueProbailities,
+            combinedProbability,
+            combinedLikelyhood,
+            combinedClassProbabilities,
+            avgValProb,
     };
 }
 

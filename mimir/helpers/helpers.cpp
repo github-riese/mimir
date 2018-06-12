@@ -19,7 +19,7 @@ inline long double mean(Iterator first, Iterator last)
     long double result = 0;
     auto tmp = first;
     while (first != last) {
-        result += (*(first++)).probability();
+        result += (*(first++)).value();
     }
     return result / static_cast<long double>(last - tmp);
 }
@@ -30,7 +30,7 @@ inline long double deviation(long double mean, Iterator first, Iterator last)
     long double deviation = 0;
     auto tmp = first;
     while (first != last) {
-        deviation += fabsl((*(first++)).probability()-mean);
+        deviation += fabsl((*(first++)).value()-mean);
     }
     return deviation / static_cast<long double>(last - tmp);
 }
