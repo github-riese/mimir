@@ -84,10 +84,10 @@ QString dumpProb(const char*name, ProbabilityWithAPrioris const &prob)
     QString txt(name);
     txt = txt.left(6);
     txt += QString().fill(' ', 7 - txt.length());
-    txt += QString().append("p(class|val): %1 p(class): %2 p(val): %3 p(val|class): %4").
+    txt += QString().append("p(class|val): %1 p(class): %2 p(val): %3 likelyhood: %4").
             arg(static_cast<double>(prob.probability().value()), 8, 'f', 6).
-            arg(static_cast<double>(prob.probOfClass().value()), 8, 'f', 6).
-            arg(static_cast<double>(prob.probOfValue().value()), 8, 'f', 6).
+            arg(static_cast<double>(prob.classProbability().value()), 8, 'f', 6).
+            arg(static_cast<double>(prob.valueProbability().value()), 8, 'f', 6).
             arg(static_cast<double>(recalcB_in_A(prob).value()), 8, 'f', 6);
     return txt;
 }
@@ -116,6 +116,8 @@ void TestPatternFind::testPreCheckAssumptionThatDataTurnOutAOne()
 
     qDebug() << dumpProb("ring", ringProb);
     qDebug() << dumpProb("green", greenProb);
+
+
     qDebug() << dumpProb("comb", combColourTypeProb);
     qDebug() << dumpProb("resamp", greenInRingProb);
     qDebug();
@@ -132,11 +134,11 @@ void TestPatternFind::testPreCheckAssumptionThatDataTurnOutAOne()
            greenInRingProb.probability().value());
     qDebug("        --------------------------------------");
     qDebug("               %Lf * %Lf",
-           ringProb.probOfClass().value(),
-           greenProb.probOfValue().value());
+           ringProb.classProbability().value(),
+           greenProb.valueProbability().value());
     qDebug();
     Probability combined = recalcB_in_A(ringProb) * recalcB_in_A(greenInRingProb) * ringProb.probability() * greenInRingProb.probability();
-    combined /= ringProb.probOfClass() * greenProb.probOfValue();
+    combined /= ringProb.classProbability() * greenProb.valueProbability();
     qDebug("P(V1 | C, V2): %.9Lf", combined.value());
     qDebug() << "and now: P(V1|C,V2) * P(C|V2)";
     qDebug() << "         --------------------";
@@ -152,6 +154,7 @@ void TestPatternFind::testPreCheckAssumptionThatDataTurnOutAOne()
     qDebug("or simpler: P(keep|ring)/P(green|ring): %Lf",
            (ringProb.probability()/
            greenInRingProb.probability()).value());
+    qDebug() << static_cast<double>((greenProb.likelyHood() * greenProb.classProbability()) / (greenInRingProb.likelyHood() * greenInRingProb.classProbability()));
 }
 
 void TestPatternFind::testPredict()

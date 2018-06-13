@@ -10,22 +10,22 @@ class ProbabilityWithAPrioris
 {
 public:
     inline explicit ProbabilityWithAPrioris() {}
-    inline ProbabilityWithAPrioris(Probability probability, Probability likelyhood, Probability probOfClass, Probability probOfValue) :
+    inline ProbabilityWithAPrioris(Probability probability, Probability likelyhood, Probability classProbability, Probability valueProbability) :
         _probability(probability),
         _likelyHood(likelyhood),
-        _probOfClass(probOfClass),
-        _probOfValue(probOfValue)
+        _classProbability(classProbability),
+        _valueProbability(valueProbability)
     {}
     inline operator Probability() { return  _probability; }
     inline Probability probability() const { return _probability; }
-    inline Probability probOfClass() const { return _probOfClass; }
-    inline Probability probOfValue() const { return _probOfValue; }
+    inline Probability classProbability() const { return _classProbability; }
+    inline Probability valueProbability() const { return _valueProbability; }
     inline Probability likelyHood() const { return _likelyHood; }
 private:
     Probability _probability;
     Probability _likelyHood;
-    Probability _probOfClass;
-    Probability _probOfValue;
+    Probability _classProbability;
+    Probability _valueProbability;
 };
 
 }

@@ -15,8 +15,8 @@ class Evaluation
 {
     struct ProbabilityEx {
         Probability p;
-        Probability classP;
         Probability likelyhood;
+        Probability classP;
         bool operator ==(const ProbabilityEx &) const;
     };
 public:

@@ -25,9 +25,9 @@ Evaluation::Evaluation(std::vector<std::vector<ValueIndex>> samplers) :
 
 void Evaluation::addProbability(ValueIndex classification, const ProbabilityWithAPrioris &probability)
 {
-    _probabilities[classification] = { probability.probability(), probability.likelyHood(), probability.probOfClass() };
+    _probabilities[classification] = { probability.probability(), probability.likelyHood(), probability.classProbability() };
     if (!_valueProbability.valid()) {
-        _valueProbability = probability.probOfValue();
+        _valueProbability = probability.valueProbability();
     }
     evaluate();
 }

@@ -75,36 +75,41 @@ models::Evaluation Evaluator::evaluate(const std::vector<models::Evaluation> &so
     return result;
 }
 
+/**
+ * @brief Evaluator::combineProbabilities
+ * Create P(C|V1,...Vn) from P(C|V1), ..., P(C|Vn)
+ * @param p P(C|V1), ..., P(C|Vn)
+ * @return
+ */
 models::ProbabilityWithAPrioris Evaluator::combineProbabilities(const std::vector<models::ProbabilityWithAPrioris> &p)
 {
+
     if (p.size() < 2) {
         return p[0];
     }
     long double mod = static_cast<long double>(p.size());
-    long double combinedProbability = 1.L;
     long double combinedLikelyhood = 1.L;
     long double combinedClassProbabilities = 0.L;
-    long double combinedValueProbabilities = 1.L;
-    long double avgValProb = 0.l;
+    long double combinedValueProbabilities = 0.L;
     for (auto pN : p) {
         if (!pN.probability().valid() || pN.probability().isZero()) {
             continue;
         }
         combinedLikelyhood *= pN.likelyHood().value();
-        combinedClassProbabilities += pN.probOfClass().value();
-        combinedValueProbabilities *= pN.probOfValue().value();
-        avgValProb += pN.probOfValue().value();
+        combinedClassProbabilities += pN.classProbability().value();
+        combinedValueProbabilities += (pN.classProbability() * pN.likelyHood()).value();
     }
-    combinedProbability = (combinedLikelyhood * combinedClassProbabilities)/combinedValueProbabilities;
+    long double combinedProbability = 1.L;
+    combinedClassProbabilities /= mod;
+    combinedProbability = 1.l/combinedValueProbabilities * combinedClassProbabilities * combinedLikelyhood;
 
     combinedClassProbabilities /= mod;
-    avgValProb /= mod;
 
     return ProbabilityWithAPrioris{
             combinedProbability,
             combinedLikelyhood,
             combinedClassProbabilities,
-            avgValProb,
+            combinedValueProbabilities
     };
 }
 

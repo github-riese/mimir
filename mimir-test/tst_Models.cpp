@@ -171,22 +171,29 @@ void Models::testProbabilator()
 
     Probability pS1 = eS1.mostProbable();
     QCOMPARE(pS1.value(), 5.L/8);
+    ProbabilityWithAPrioris pES1 = eS1.probabilityByClassificationEx(eS1.mostProbableClass());
+    QCOMPARE(static_cast<double>(pES1.likelyHood().value()), 1./2.);
+    QCOMPARE(static_cast<double>(pES1.classProbability().value()), 5./8.);
+    QCOMPARE(static_cast<double>(pES1.valueProbability().value()), 1./2.);
 
     Evaluation eS2 = evaluator.evaluate(s2, 3_vi);
     QCOMPARE(eS2.mostProbableClass(), 1_vi);
-    Probability pS2 = eS2.probabilityByClassification(1_vi);
-
-    QCOMPARE(pS2.value(), 4.L/5);
+    ProbabilityWithAPrioris pES2 = eS2.probabilityByClassificationEx(1_vi);
+    QCOMPARE(static_cast<double>(pES2.probability().value()), 4./5.);
+    QCOMPARE(static_cast<double>(pES2.likelyHood().value()), 4./5.);
+    QCOMPARE(static_cast<double>(pES2.classProbability().value()), 5./10.);
+    QCOMPARE(static_cast<double>(pES2.valueProbability().value()), 5./10.);
 
     Evaluation combinedP1P2 = evaluator.evaluate({eS1, eS2});
-    //QCOMPARE(static_cast<double>(combinedP1P2.mostProbable().value()), 5./8.);
+    ProbabilityWithAPrioris pC = combinedP1P2.probabilityByClassificationEx(1_vi);
+    QCOMPARE(static_cast<double>(pC.probability().value()), 18./65.);
 
     auto expectedSamplerIndices = vector<vector<ValueIndex>>{{1_vi}, {2_vi}};
     QCOMPARE(combinedP1P2.samplers(), expectedSamplerIndices);
 
     Evaluation pS1_2S2 = evaluator.evaluate({combinedP1P2, eS2});
     QVERIFY2((pS1_2S2.samplers() == vector<vector<ValueIndex>>{{1_vi, 2_vi}, {2_vi}}), "SamplerCombination mismatch");
-    QCOMPARE(static_cast<double>(pS1_2S2.mostProbable().value()), 5./8.l);
+    QCOMPARE(static_cast<double>(pS1_2S2.mostProbable().value()), 5./8.);
     qDebug() << "evaluator did " << evaluator.opcount() << "operations";
 }
 
