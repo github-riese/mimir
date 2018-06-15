@@ -2,7 +2,7 @@
 
 #include <numeric>
 
-#include "../models/ProbabilityWithAPrioris.h"
+#include "../models/ProbabilityWithPriors.h"
 
 using std::accumulate;
 using std::move;
@@ -12,7 +12,7 @@ using std::tuple;
 using std::vector;
 
 using mimir::models::Probability;
-using mimir::models::ProbabilityWithAPrioris;
+using mimir::models::ProbabilityWithPriors;
 using mimir::models::Sample;
 using mimir::models::ValueIndex;
 using mimir::models::Evaluation;
@@ -31,47 +31,52 @@ Evaluation Evaluator::evaluate(const Sampler &sampler, ValueIndex value, vector<
     auto inValueCount = static_cast<long double>(sampler.countInValue(value));
 
     long double valueProbability = inValueCount/total;
+    result.setValueProbability(valueProbability);
     if (classes.empty()) {
         classes = sampler.allClasses();
     }
     for (auto classification : classes) {
         if (!sampler.countInClass(classification) || valueProbability < 1e-10l) {
-            result.addProbability(classification, { 0, 0, 0, valueProbability});
+            result.addProbability(classification, 0, 0, 0);
             continue;
         }
         auto inClassCount = static_cast<long double>(sampler.countInClass(classification));
         auto classInValueCount = static_cast<long double>(sampler.count(classification, value));
         auto likelyhood = classInValueCount/inClassCount;
         auto classProbability = inClassCount/total;
-        result.addProbability(classification, {
+        result.addProbability(classification,
                                   {(likelyhood * classProbability)/valueProbability},
                                   likelyhood,
-                                  classProbability,
-                                  valueProbability
-                              });
+                                  classProbability
+                              );
         ++_opcount;
     }
+    result.evaluate();
     return result;
 }
 
-models::Evaluation Evaluator::evaluate(const std::vector<models::Evaluation> &sources, std::vector<ValueIndex> classes)
+models::Evaluation Evaluator::classify(const std::vector<models::Evaluation> &sources)
 {
     if (sources.size() == 1)
         return sources[0];
-    map<ValueIndex, vector<ProbabilityWithAPrioris>> combinableProbabilities;
+    map<ValueIndex, vector<Probability>> combinableProbabilities;
+    map<ValueIndex, Probability> classProbabilities;
 
-    if (classes.empty()) {
-        classes = sources.at(0).classifications();
-    }
+    Probability evidence(0);
     for (auto evaluation : sources) {
         for (auto classification : evaluation.classifications()) {
-            combinableProbabilities[classification].push_back(evaluation.probabilityByClassificationEx(classification));
+            ProbabilityWithPriors p = evaluation.probabilityByClassificationEx(classification);
+            evidence += p.likelyhood() * p.classProbability();
+            combinableProbabilities[classification].push_back(p.likelyhood());
+            classProbabilities[classification] = p.classProbability();
         }
     }
     Evaluation result(combineSamplerIDs(sources));
-    for (auto index : combinableProbabilities) {
-        result.addProbability(index.first, combineProbabilities(index.second));
+    result.setValueProbability(evidence);
+    for (auto classification : combinableProbabilities) {
+        result.addProbability(classification.first, combineProbabilities(classification.second, classProbabilities[classification.first], evidence));
     }
+    result.evaluate();
     return result;
 }
 
@@ -81,35 +86,39 @@ models::Evaluation Evaluator::evaluate(const std::vector<models::Evaluation> &so
  * @param p P(C|V1), ..., P(C|Vn)
  * @return
  */
-models::ProbabilityWithAPrioris Evaluator::combineProbabilities(const std::vector<models::ProbabilityWithAPrioris> &p)
+models::ProbabilityWithPriors Evaluator::combineProbabilities(const std::vector<models::Probability> &p, models::Probability classProbability, models::Probability evidence)
 {
 
-    if (p.size() < 2) {
-        return p[0];
+    if (p.size() == 0) {
+        return ProbabilityWithPriors{};
     }
-    long double mod = static_cast<long double>(p.size());
-    long double combinedLikelyhood = 1.L;
-    long double combinedClassProbabilities = 0.L;
-    long double combinedValueProbabilities = 0.L;
+    if (p.size() < 2) {
+        return {
+            p.at(0).value(),
+            classProbability.isZero() ? Probability{0} : (evidence * p.at(0))/classProbability,
+            classProbability,
+            evidence
+        };
+    }
+    Probability joinedLikelyhood(1.l);
     for (auto pN : p) {
-        if (!pN.probability().valid() || pN.probability().isZero()) {
+        if (!pN.valid() || pN.isZero()) {
             continue;
         }
-        combinedLikelyhood *= pN.likelyHood().value();
-        combinedClassProbabilities += pN.classProbability().value();
-        combinedValueProbabilities += (pN.classProbability() * pN.likelyHood()).value();
+        joinedLikelyhood *= pN;
+        ++_opcount;
     }
-    long double combinedProbability = 1.L;
-    combinedClassProbabilities /= mod;
-    combinedProbability = 1.l/combinedValueProbabilities * combinedClassProbabilities * combinedLikelyhood;
+    long double joinedProbability(0);
+    if (!evidence.isZero()) {
+        joinedProbability = classProbability * joinedLikelyhood/evidence;
+        ++_opcount;
+    }
 
-    combinedClassProbabilities /= mod;
-
-    return ProbabilityWithAPrioris{
-            combinedProbability,
-            combinedLikelyhood,
-            combinedClassProbabilities,
-            combinedValueProbabilities
+    return ProbabilityWithPriors{
+            joinedProbability,
+            joinedLikelyhood,
+            classProbability,
+            evidence
     };
 }
 

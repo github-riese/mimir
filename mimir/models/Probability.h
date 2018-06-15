@@ -20,10 +20,10 @@ public:
 
     inline constexpr operator long double() const {return _probability; }
     inline Probability operator*(const Probability &rhs) { return _probability * rhs._probability; }
-    inline Probability operator/(const Probability &rhs) { return _probability / rhs._probability; }
+    inline Probability operator/(const Probability &rhs) { if (rhs.isZero()) return Probability{0}; return _probability / rhs._probability; }
     inline Probability operator+(const Probability &rhs) { return _probability + rhs._probability; }
     inline Probability &operator *=(const Probability &rhs) { _probability *= rhs._probability; return  *this; }
-    inline Probability &operator /=(const Probability &rhs) { _probability /= rhs._probability; return  *this; }
+    inline Probability &operator /=(const Probability &rhs) { if(rhs.isZero()) _probability = 0.l; else  _probability /= rhs._probability; return  *this; }
     inline Probability &operator +=(const Probability &rhs) { _probability += rhs._probability; return  *this; }
 
     inline bool operator !() const { return !valid(); }

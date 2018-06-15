@@ -9,12 +9,12 @@ namespace mimir {
 namespace traits {
 
 template<class Duration>
-inline const char* unit();
+inline constexpr const char* unit();
 
-template<>inline const char* unit<std::chrono::nanoseconds>() { return "ns"; }
-template<>inline const char* unit<std::chrono::microseconds>() { return "us"; }
-template<>inline const char* unit<std::chrono::milliseconds>() { return "ms"; }
-template<>inline const char* unit<std::chrono::seconds>() { return "s"; }
+template<>inline constexpr const char* unit<std::chrono::nanoseconds>() { return "ns"; }
+template<>inline constexpr const char* unit<std::chrono::microseconds>() { return "us"; }
+template<>inline constexpr const char* unit<std::chrono::milliseconds>() { return "ms"; }
+template<>inline constexpr const char* unit<std::chrono::seconds>() { return "s"; }
 
 class Timing
 {

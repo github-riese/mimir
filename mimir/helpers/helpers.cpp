@@ -60,6 +60,5 @@ long double deviation(long double mean, const std::vector<models::Probability> &
     return deviation(mean, probabilities.begin(), probabilities.end());
 }
 
-
 } // namespace helpers
 } // namespace mimir

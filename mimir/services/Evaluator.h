@@ -16,12 +16,12 @@ class Evaluator
 public:
     mimir::models::Evaluation evaluate(const mimir::services::Sampler &sampler, mimir::models::ValueIndex value, std::vector<models::ValueIndex> classes = std::vector<models::ValueIndex>());
 
-    mimir::models::Evaluation evaluate(const std::vector<mimir::models::Evaluation> &, std::vector<models::ValueIndex> classes = std::vector<models::ValueIndex>());
+    mimir::models::Evaluation classify(const std::vector<mimir::models::Evaluation> &);
 
     inline unsigned long long opcount() const { return _opcount; }
 
 private:
-    mimir::models::ProbabilityWithAPrioris combineProbabilities(const std::vector<mimir::models::ProbabilityWithAPrioris>&);
+    mimir::models::ProbabilityWithPriors combineProbabilities(const std::vector<mimir::models::Probability>&, models::Probability classProbability, models::Probability evidence);
 
     std::vector<mimir::models::ValueIndex> combineSamplerIDs(const std::vector<std::vector<mimir::models::ValueIndex>>&);
 

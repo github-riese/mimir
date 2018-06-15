@@ -45,6 +45,6 @@ HEADERS += \
     models/InterpolationStrategy.h \
     services/EvaluationCombiner.h \
     helpers/helpers.h \
-    models/ProbabilityWithAPrioris.h \
     traits/Timing.h \
-    services/DataStore.h
+    services/DataStore.h \
+    models/ProbabilityWithPriors.h

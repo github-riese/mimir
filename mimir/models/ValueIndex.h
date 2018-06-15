@@ -17,6 +17,7 @@ public:
     inline bool operator <=(const ValueIndex &rhs) const { return _idx <= rhs._idx; }
     inline bool operator ==(const ValueIndex &rhs) const { return _idx == rhs._idx; }
     inline constexpr operator size_t() const { return _idx; }
+    inline constexpr size_t value() const { return _idx; }
 private:
     size_t _idx;
 };

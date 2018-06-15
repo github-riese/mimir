@@ -1,16 +1,16 @@
-#ifndef PROBABILITY_WITH_APRIORIS
-#define PROBABILITY_WITH_APRIORIS
+#ifndef PROBABILITY_WITH_PRIORS
+#define PROBABILITY_WITH_PRIORS
 
 #include "Probability.h"
 
 namespace mimir {
 namespace models {
 
-class ProbabilityWithAPrioris
+class ProbabilityWithPriors
 {
 public:
-    inline explicit ProbabilityWithAPrioris() {}
-    inline ProbabilityWithAPrioris(Probability probability, Probability likelyhood, Probability classProbability, Probability valueProbability) :
+    inline explicit ProbabilityWithPriors() {}
+    inline ProbabilityWithPriors(Probability probability, Probability likelyhood, Probability classProbability, Probability valueProbability) :
         _probability(probability),
         _likelyHood(likelyhood),
         _classProbability(classProbability),
@@ -20,7 +20,7 @@ public:
     inline Probability probability() const { return _probability; }
     inline Probability classProbability() const { return _classProbability; }
     inline Probability valueProbability() const { return _valueProbability; }
-    inline Probability likelyHood() const { return _likelyHood; }
+    inline Probability likelyhood() const { return _likelyHood; }
 private:
     Probability _probability;
     Probability _likelyHood;
@@ -30,4 +30,4 @@ private:
 
 }
 }
-#endif // PROBABILITY_WITH_APRIORIS
+#endif // PROBABILITY_WITH_PRIORS

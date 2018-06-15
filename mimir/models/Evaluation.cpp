@@ -23,18 +23,16 @@ Evaluation::Evaluation(std::vector<std::vector<ValueIndex>> samplers) :
 }
 
 
-void Evaluation::addProbability(ValueIndex classification, const ProbabilityWithAPrioris &probability)
+
+void Evaluation::addProbability(ValueIndex classification, const ProbabilityWithPriors &probability)
 {
-    _probabilities[classification] = { probability.probability(), probability.likelyHood(), probability.classProbability() };
-    if (!_valueProbability.valid()) {
-        _valueProbability = probability.valueProbability();
-    }
-    evaluate();
+    addProbability(classification, probability.probability(), probability.likelyhood(), probability.classProbability());
 }
 
 void Evaluation::addProbability(ValueIndex classification, const Probability &probability, const Probability &likelyhood, const Probability &classProbability)
 {
-    addProbability(classification, {probability, likelyhood, classProbability, _valueProbability});
+    _probabilities[classification] = { probability, likelyhood, classProbability };
+    _dirty = true;
 }
 
 std::vector<ValueIndex> Evaluation::classifications() const
@@ -66,6 +64,10 @@ bool Evaluation::operator==(const Evaluation &rhs) const
 
 void Evaluation::evaluate()
 {
+    if (!_dirty) {
+        return;
+    }
+    _dirty = false;
     if (_probabilities.size() == 1) {
         auto ptr = _probabilities.begin();
         _mean = (*ptr).second.p;

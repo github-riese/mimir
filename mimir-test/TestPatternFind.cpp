@@ -1,7 +1,7 @@
 #include "TestPatternFind.h"
 #include <QDebug>
 
-#include "../mimir/models/ProbabilityWithAPrioris.h"
+#include "../mimir/models/ProbabilityWithPriors.h"
 #include "../mimir/services/Evaluator.h"
 #include "../mimir/services/EvaluationCombiner.h"
 #include "../mimir/services/Sampler.h"
@@ -10,7 +10,7 @@ using std::vector;
 
 using mimir::models::Evaluation;
 using mimir::models::Probability;
-using mimir::models::ProbabilityWithAPrioris;
+using mimir::models::ProbabilityWithPriors;
 using mimir::models::Sample;
 using mimir::models::ValueIndex;
 
@@ -26,9 +26,9 @@ TestPatternFind::TestPatternFind() :
 
 }
 
-Probability recalcB_in_A(ProbabilityWithAPrioris pris)
+Probability recalcB_in_A(ProbabilityWithPriors pris)
 {
-    return pris.likelyHood();
+    return pris.likelyhood();
     // p = (p(b|a) * p(a)) / p(b)     | / p(b|a)
     // (p / p(b|a) = p(a) / p(b)      | / p
     // 1 / p(b|a) = p(a) / p(b) * p
@@ -79,11 +79,13 @@ void TestPatternFind::initTestCase()
     }
 }
 
-QString dumpProb(const char*name, ProbabilityWithAPrioris const &prob)
+QString dumpProb(const char*name, ProbabilityWithPriors const &prob)
 {
     QString txt(name);
-    txt = txt.left(6);
-    txt += QString().fill(' ', 7 - txt.length());
+    if (txt.length()) {
+        txt = txt.left(6);
+        txt += QString().fill(' ', 7 - txt.length());
+    }
     txt += QString().append("p(class|val): %1 p(class): %2 p(val): %3 likelyhood: %4").
             arg(static_cast<double>(prob.probability().value()), 8, 'f', 6).
             arg(static_cast<double>(prob.classProbability().value()), 8, 'f', 6).
@@ -92,10 +94,17 @@ QString dumpProb(const char*name, ProbabilityWithAPrioris const &prob)
     return txt;
 }
 
+QDebug &operator<<(QDebug &debug, const ProbabilityWithPriors &p){
+    debug << dumpProb("", p);
+    return debug;
+}
+
 void TestPatternFind::testPreCheckAssumptionThatDataTurnOutAOne()
 {
     Evaluator e;
     ValueIndex kept = _nameResolver.indexFromName("kept");
+    ValueIndex cancelled = _nameResolver.indexFromName("cancelled");
+    ValueIndex returned = _nameResolver.indexFromName("returned");
     Sampler typeSampler = _dataStore.createSampler("status", "type");
     Sampler colourSampler = _dataStore.createSampler("status", "colour");
 
@@ -105,56 +114,23 @@ void TestPatternFind::testPreCheckAssumptionThatDataTurnOutAOne()
 
     Evaluation typeEvaluation = e.evaluate(typeSampler, _nameResolver.indexFromName("ring"));
     Evaluation colourEvaluation = e.evaluate(colourSampler, _nameResolver.indexFromName("green"));
-    Evaluation combColourType = e.evaluate({ typeEvaluation, colourEvaluation });
+    Evaluation combColourType = e.classify({ typeEvaluation, colourEvaluation });
 
-    ProbabilityWithAPrioris greenInRingProb = classColourInRingEvaluation.probabilityByClassificationEx(_nameResolver.indexFromName("green"));
+    ProbabilityWithPriors greenInRingProb = classColourInRingEvaluation.probabilityByClassificationEx(_nameResolver.indexFromName("green"));
 
-    ProbabilityWithAPrioris ringProb = typeEvaluation.probabilityByClassificationEx(kept);
-    ProbabilityWithAPrioris greenProb = colourEvaluation.probabilityByClassificationEx(kept);
-    ProbabilityWithAPrioris combColourTypeProb = combColourType.probabilityByClassificationEx(kept);
+    ProbabilityWithPriors ringProb = typeEvaluation.probabilityByClassificationEx(kept);
+    ProbabilityWithPriors greenProb = colourEvaluation.probabilityByClassificationEx(kept);
 
 
     qDebug() << dumpProb("ring", ringProb);
     qDebug() << dumpProb("green", greenProb);
-
-
-    qDebug() << dumpProb("comb", combColourTypeProb);
     qDebug() << dumpProb("resamp", greenInRingProb);
-    qDebug();
 
-    qDebug("Doing: P(V1|C) * P(V1|V2) * P(C|V1) * P(V2|V1)");
-    qDebug("       ---------------------------------------");
-    qDebug("                 P(C) * P(V2)");
-    qDebug();
-    qDebug("with");
-    qDebug("        %Lf * %Lf * %Lf * %Lf",
-           recalcB_in_A(ringProb).value(),
-           recalcB_in_A(greenInRingProb).value(),
-           ringProb.probability().value(),
-           greenInRingProb.probability().value());
-    qDebug("        --------------------------------------");
-    qDebug("               %Lf * %Lf",
-           ringProb.classProbability().value(),
-           greenProb.valueProbability().value());
-    qDebug();
-    Probability combined = recalcB_in_A(ringProb) * recalcB_in_A(greenInRingProb) * ringProb.probability() * greenInRingProb.probability();
-    combined /= ringProb.classProbability() * greenProb.valueProbability();
-    qDebug("P(V1 | C, V2): %.9Lf", combined.value());
-    qDebug() << "and now: P(V1|C,V2) * P(C|V2)";
-    qDebug() << "         --------------------";
-    qDebug() << "               P(V1|V2)";
-    qDebug();
-    Probability result = (combined * greenProb.probability()) / greenInRingProb.probability();
-    qDebug(" with: (%Lf * %Lf) / %Lf",
-           combined.value(),
-           greenProb.probability().value(),
-           (1- greenInRingProb.probability().value()));
-    qDebug();
-    qDebug("results in %Lf", result.value());
-    qDebug("or simpler: P(keep|ring)/P(green|ring): %Lf",
-           (ringProb.probability()/
-           greenInRingProb.probability()).value());
-    qDebug() << static_cast<double>((greenProb.likelyHood() * greenProb.classProbability()) / (greenInRingProb.likelyHood() * greenInRingProb.classProbability()));
+    qDebug() << "kept in combined"  << combColourType.probabilityByClassificationEx(kept);
+    qDebug() << "cancelled in combined"  << combColourType.probabilityByClassificationEx(cancelled);
+    qDebug() << "returned in combined"  << combColourType.probabilityByClassificationEx(returned);
+    QCOMPARE(combColourType.probabilityByClassification(kept), Probability(1/8.));
+    qDebug() << e.opcount() << "operations";
 }
 
 void TestPatternFind::testPredict()
