@@ -10,22 +10,22 @@ class ProbabilityWithPriors
 {
 public:
     inline explicit ProbabilityWithPriors() {}
-    inline ProbabilityWithPriors(Probability probability, Probability likelyhood, Probability classProbability, Probability valueProbability) :
+    inline ProbabilityWithPriors(Probability probability, Probability likelyhood, Probability prior, Probability evidence) :
         _probability(probability),
-        _likelyHood(likelyhood),
-        _classProbability(classProbability),
-        _valueProbability(valueProbability)
+        _likelihood(likelyhood),
+        _prior(prior),
+        _evidence(evidence)
     {}
     inline operator Probability() { return  _probability; }
     inline Probability probability() const { return _probability; }
-    inline Probability classProbability() const { return _classProbability; }
-    inline Probability valueProbability() const { return _valueProbability; }
-    inline Probability likelyhood() const { return _likelyHood; }
+    inline Probability prior() const { return _prior; }
+    inline Probability evidence() const { return _evidence; }
+    inline Probability likelihood() const { return _likelihood; }
 private:
     Probability _probability;
-    Probability _likelyHood;
-    Probability _classProbability;
-    Probability _valueProbability;
+    Probability _likelihood;
+    Probability _prior;
+    Probability _evidence;
 };
 
 }

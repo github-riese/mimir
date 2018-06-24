@@ -1,19 +1,24 @@
 #include "EvaluationCombiner.h"
 
 #include <algorithm>
+#include <numeric>
 
 #include "Evaluator.h"
+#include "helpers/helpers.h"
 
 using std::deque;
+using std::multiplies;
 using std::pair;
 using std::vector;
 
+using std::accumulate;
 using std::find_if;
 using std::for_each;
 using std::sort;
 using std::unique;
 
 using mimir::models::Evaluation;
+using mimir::models::Probability;
 using mimir::models::ValueIndex;
 
 namespace mimir {
@@ -67,7 +72,10 @@ pair<Sampler, Sampler> EvaluationCombiner::buildNextSubSampler()
 
 bool EvaluationCombiner::isSignificant(const models::Evaluation &combined, const std::vector<models::Evaluation> &sources) const
 {
-    return true;
+    std::vector<Probability> mostProbables = mimir::helpers::fetchMostProbables(sources);
+
+    Probability mult = accumulate(mostProbables.begin(), mostProbables.end(), Probability(1), multiplies<Probability>());
+    return combined.mostProbable() == mult;
 }
 
 } // namespace services

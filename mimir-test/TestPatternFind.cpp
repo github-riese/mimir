@@ -26,19 +26,6 @@ TestPatternFind::TestPatternFind() :
 
 }
 
-Probability recalcB_in_A(ProbabilityWithPriors pris)
-{
-    return pris.likelyhood();
-    // p = (p(b|a) * p(a)) / p(b)     | / p(b|a)
-    // (p / p(b|a) = p(a) / p(b)      | / p
-    // 1 / p(b|a) = p(a) / p(b) * p
-    // p(b|a) = (p(b) * p) / p(a)
-//    if (pris.probOfClass().isZero()) {
-//        return 0;
-//    }
-//    return (pris.probOfValue() * pris.probability()) / pris.probOfClass();
-}
-
 void TestPatternFind::initTestCase()
 {
     ValueIndex kept = _nameResolver.indexFromName("kept");
@@ -59,7 +46,7 @@ void TestPatternFind::initTestCase()
     mkValueIndex(hostMale);
     mkValueIndex(hostFemale);
 
-    _dataStore.createDataSet({"status", "type", "colour", "agentContact", "presenterSex"});
+    _dataStore.createDataSet({"status", "type", "colour", "agentContact", "presenterSex"}, "status");
 
     vector<vector<ValueIndex>> testData = {
         {cancelled, ring,    red,   noContact,  hostMale},
@@ -88,9 +75,9 @@ QString dumpProb(const char*name, ProbabilityWithPriors const &prob)
     }
     txt += QString().append("p(class|val): %1 p(class): %2 p(val): %3 likelyhood: %4").
             arg(static_cast<double>(prob.probability().value()), 8, 'f', 6).
-            arg(static_cast<double>(prob.classProbability().value()), 8, 'f', 6).
-            arg(static_cast<double>(prob.valueProbability().value()), 8, 'f', 6).
-            arg(static_cast<double>(recalcB_in_A(prob).value()), 8, 'f', 6);
+            arg(static_cast<double>(prob.prior().value()), 8, 'f', 6).
+            arg(static_cast<double>(prob.evidence().value()), 8, 'f', 6).
+            arg(static_cast<double>(prob.likelihood().value()), 8, 'f', 6);
     return txt;
 }
 
@@ -129,7 +116,7 @@ void TestPatternFind::testPreCheckAssumptionThatDataTurnOutAOne()
     qDebug() << "kept in combined"  << combColourType.probabilityByClassificationEx(kept);
     qDebug() << "cancelled in combined"  << combColourType.probabilityByClassificationEx(cancelled);
     qDebug() << "returned in combined"  << combColourType.probabilityByClassificationEx(returned);
-    QCOMPARE(combColourType.probabilityByClassification(kept), Probability(1/8.));
+    QCOMPARE(static_cast<double>(combColourType.probabilityByClassification(kept)), static_cast<double>(Probability(2.l/3)));
     qDebug() << e.opcount() << "operations";
 }
 
@@ -137,6 +124,7 @@ void TestPatternFind::testPredict()
 {
     EvaluationCombiner combiner(_dataStore);
     Evaluator e;
+
     Sampler typeSampler = _dataStore.createSampler("status", "type");
     Sampler colourSampler = _dataStore.createSampler("status", "colour");
     Sampler ccContactSampler = _dataStore.createSampler("status", "agentContact");

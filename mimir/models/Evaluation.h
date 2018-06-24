@@ -27,9 +27,9 @@ public:
 
     void evaluate();
 
-    inline void setValueProbability(const Probability &p) { _valueProbability = p; }
+    inline void setEvidence(const Probability &p) { _evidence = p; }
 
-    inline Probability valueProbability() const { return _valueProbability; }
+    inline Probability evidence() const { return _evidence; }
     inline ValueIndex mostProbableClass() const { return _mostProbable; }
 
     inline Probability mostProbable() const
@@ -42,7 +42,7 @@ public:
     {
         if (_mostProbable == ValueIndex::NoIndex) return ProbabilityWithPriors();
         auto p = _probabilities.at(_mostProbable);
-        return { p.p, p.likelyhood, p.classP, _valueProbability };
+        return { p.p, p.likelyhood, p.classP, _evidence };
     }
 
     inline Probability probabilityByClassification(mimir::models::ValueIndex i) const
@@ -56,7 +56,7 @@ public:
     {
         auto p = _probabilities.find(i);
         if (p == _probabilities.end()) return ProbabilityWithPriors();
-        return { (*p).second.p, (*p).second.likelyhood, (*p).second.classP, _valueProbability };
+        return { (*p).second.p, (*p).second.likelyhood, (*p).second.classP, _evidence };
     }
 
     inline long double mean() const { return _mean; }
@@ -74,7 +74,7 @@ public:
 private:
     std::vector<std::vector<ValueIndex>> _samplers;
     std::map<ValueIndex, ProbabilityEx> _probabilities;
-    Probability _valueProbability = Probability();
+    Probability _evidence = Probability();
     ValueIndex _mostProbable = ValueIndex();
     long double _mean;
     long double _deviation;

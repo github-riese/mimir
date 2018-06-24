@@ -26,7 +26,7 @@ Evaluation::Evaluation(std::vector<std::vector<ValueIndex>> samplers) :
 
 void Evaluation::addProbability(ValueIndex classification, const ProbabilityWithPriors &probability)
 {
-    addProbability(classification, probability.probability(), probability.likelyhood(), probability.classProbability());
+    addProbability(classification, probability.probability(), probability.likelihood(), probability.prior());
 }
 
 void Evaluation::addProbability(ValueIndex classification, const Probability &probability, const Probability &likelyhood, const Probability &classProbability)
@@ -88,7 +88,7 @@ void Evaluation::evaluate()
     });
 
     _mean = helpers::mean(pS);
-    _deviation = helpers::deviation(_mean, pS);
+    _deviation = helpers::deviation(pS);
 }
 
 bool Evaluation::ProbabilityEx::operator ==(const Evaluation::ProbabilityEx &rhs) const

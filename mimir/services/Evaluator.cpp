@@ -31,7 +31,7 @@ Evaluation Evaluator::evaluate(const Sampler &sampler, ValueIndex value, vector<
     auto inValueCount = static_cast<long double>(sampler.countInValue(value));
 
     long double valueProbability = inValueCount/total;
-    result.setValueProbability(valueProbability);
+    result.setEvidence(valueProbability);
     if (classes.empty()) {
         classes = sampler.allClasses();
     }
@@ -59,22 +59,22 @@ models::Evaluation Evaluator::classify(const std::vector<models::Evaluation> &so
 {
     if (sources.size() == 1)
         return sources[0];
-    map<ValueIndex, vector<Probability>> combinableProbabilities;
-    map<ValueIndex, Probability> classProbabilities;
+    map<ValueIndex, vector<Probability>> likelihoods;
+    map<ValueIndex, Probability> classPriors;
 
-    Probability evidence(0);
+    Probability evidence(1);
     for (auto evaluation : sources) {
         for (auto classification : evaluation.classifications()) {
             ProbabilityWithPriors p = evaluation.probabilityByClassificationEx(classification);
-            evidence += p.likelyhood() * p.classProbability();
-            combinableProbabilities[classification].push_back(p.likelyhood());
-            classProbabilities[classification] = p.classProbability();
+            likelihoods[classification].push_back(p.likelihood());
+            classPriors[classification] = p.prior();
         }
+        evidence *= evaluation.evidence();
     }
     Evaluation result(combineSamplerIDs(sources));
-    result.setValueProbability(evidence);
-    for (auto classification : combinableProbabilities) {
-        result.addProbability(classification.first, combineProbabilities(classification.second, classProbabilities[classification.first], evidence));
+    result.setEvidence(evidence);
+    for (auto classification : likelihoods) {
+        result.addProbability(classification.first, combineProbabilities(classification.second, classPriors[classification.first], evidence));
     }
     result.evaluate();
     return result;
@@ -86,7 +86,7 @@ models::Evaluation Evaluator::classify(const std::vector<models::Evaluation> &so
  * @param p P(C|V1), ..., P(C|Vn)
  * @return
  */
-models::ProbabilityWithPriors Evaluator::combineProbabilities(const std::vector<models::Probability> &p, models::Probability classProbability, models::Probability evidence)
+models::ProbabilityWithPriors Evaluator::combineProbabilities(const std::vector<models::Probability> &p, models::Probability classPrior, models::Probability evidence)
 {
 
     if (p.size() == 0) {
@@ -95,29 +95,26 @@ models::ProbabilityWithPriors Evaluator::combineProbabilities(const std::vector<
     if (p.size() < 2) {
         return {
             p.at(0).value(),
-            classProbability.isZero() ? Probability{0} : (evidence * p.at(0))/classProbability,
-            classProbability,
+            classPrior.isZero() ? Probability{0} : (classPrior * p.at(0))/evidence,
+            classPrior,
             evidence
         };
     }
-    Probability joinedLikelyhood(1.l);
+    Probability joinedLikelyhood(1);
     for (auto pN : p) {
-        if (!pN.valid() || pN.isZero()) {
-            continue;
-        }
         joinedLikelyhood *= pN;
         ++_opcount;
     }
     long double joinedProbability(0);
     if (!evidence.isZero()) {
-        joinedProbability = classProbability * joinedLikelyhood/evidence;
+        joinedProbability = classPrior * joinedLikelyhood/evidence;
         ++_opcount;
     }
 
     return ProbabilityWithPriors{
             joinedProbability,
             joinedLikelyhood,
-            classProbability,
+            classPrior,
             evidence
     };
 }

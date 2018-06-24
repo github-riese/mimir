@@ -95,7 +95,7 @@ void Models::testDataStore()
     DataStore dataStore(nameResolver);
     QVERIFY(dataStore.columnCount() == 0);
     QVERIFY(dataStore.rowCount() == 0);
-    dataStore.createDataSet({classification, type, colour, ccContact, hostSex});
+    dataStore.createDataSet({classification, type, colour, ccContact, hostSex}, classification);
     QVERIFY(dataStore.columnCount() == 5);
     QVERIFY(dataStore.rowCount() == 0);
 
@@ -172,28 +172,24 @@ void Models::testProbabilator()
     Probability pS1 = eS1.mostProbable();
     QCOMPARE(pS1.value(), 5.L/8);
     ProbabilityWithPriors pES1 = eS1.probabilityByClassificationEx(eS1.mostProbableClass());
-    QCOMPARE(static_cast<double>(pES1.likelyhood().value()), 1./2.);
-    QCOMPARE(static_cast<double>(pES1.classProbability().value()), 5./8.);
-    QCOMPARE(static_cast<double>(pES1.valueProbability().value()), 1./2.);
+    QCOMPARE(static_cast<double>(pES1.likelihood().value()), 1./2.);
+    QCOMPARE(static_cast<double>(pES1.prior().value()), 5./8.);
+    QCOMPARE(static_cast<double>(pES1.evidence().value()), 1./2.);
 
     Evaluation eS2 = evaluator.evaluate(s2, 3_vi);
     QCOMPARE(eS2.mostProbableClass(), 1_vi);
     ProbabilityWithPriors pES2 = eS2.probabilityByClassificationEx(1_vi);
     QCOMPARE(static_cast<double>(pES2.probability().value()), 4./5.);
-    QCOMPARE(static_cast<double>(pES2.likelyhood().value()), 4./5.);
-    QCOMPARE(static_cast<double>(pES2.classProbability().value()), 5./10.);
-    QCOMPARE(static_cast<double>(pES2.valueProbability().value()), 5./10.);
+    QCOMPARE(static_cast<double>(pES2.likelihood().value()), 4./5.);
+    QCOMPARE(static_cast<double>(pES2.prior().value()), 5./10.);
+    QCOMPARE(static_cast<double>(pES2.evidence().value()), 5./10.);
 
-    Evaluation combinedP1P2 = evaluator.classify({eS1, eS2});
-    ProbabilityWithPriors pC = combinedP1P2.probabilityByClassificationEx(1_vi);
-    QCOMPARE(static_cast<double>(pC.probability().value()), 1/5.);
+    Evaluation combinedP1P1 = evaluator.classify({eS1, eS1});
+    ProbabilityWithPriors pC = combinedP1P1.probabilityByClassificationEx(1_vi);
+    QCOMPARE(static_cast<double>(pC.probability().value()), static_cast<double>(Probability(5/8.)));
 
-    auto expectedSamplerIndices = vector<vector<ValueIndex>>{{1_vi}, {2_vi}};
-    QCOMPARE(combinedP1P2.samplers(), expectedSamplerIndices);
-
-    Evaluation pS1_2S2 = evaluator.classify({combinedP1P2, eS2});
-    QVERIFY2((pS1_2S2.samplers() == vector<vector<ValueIndex>>{{1_vi, 2_vi}, {2_vi}}), "SamplerCombination mismatch");
-    qDebug() << "evaluator did " << evaluator.opcount() << "operations";
+    auto expectedSamplerIndices = vector<vector<ValueIndex>>{{1_vi}, {1_vi}};
+    QCOMPARE(combinedP1P1.samplers(), expectedSamplerIndices);
 }
 
 void Models::testHelpers()
@@ -211,5 +207,7 @@ void Models::testHelpers()
     std::deque<Probability> d1;
     d1.insert(d1.end(), v1.begin(), v1.end());
     auto deviation = mimir::helpers::deviation(d1);
-    QCOMPARE(static_cast<double>(deviation), .6/5.);
+    qDebug() << "deviation is " << static_cast<double>(deviation);
+    qDebug() << "mean squared deviation should be" << ((.1 *.1 + .2 * .2 + .3 *.3 +  .4 * .4 + .5 * .5) - ((.1 + .2 + .3 + .4 + .5)*(.1 + .2 + .3 + .4 + .5))/5) / 4;
+    QCOMPARE(static_cast<double>(deviation), std::sqrt(((.1 *.1 + .2 * .2 + .3 *.3 +  .4 * .4 + .5 * .5) - ((.1 + .2 + .3 + .4 + .5)*(.1 + .2 + .3 + .4 + .5))/5) / 4));
 }
