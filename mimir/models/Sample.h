@@ -1,9 +1,11 @@
 #ifndef SAMPLE_H
 #define SAMPLE_H
 
-#include <cstdlib>
+#include <utility>
+#include <vector>
 
 #include "ValueIndex.h"
+#include "ValueCounter.h"
 
 namespace mimir {
 namespace models {
@@ -11,16 +13,18 @@ namespace models {
 class Sample
 {
 public:
-    Sample(ValueIndex classifier, ValueIndex valueIndex, unsigned long count = 1);
+    Sample(ValueIndex classifier, std::vector<ValueCounter> values);
+    Sample(ValueIndex classifier, std::vector<ValueIndex> values);
+    Sample(ValueIndex classifer, ValueIndex, unsigned long);
     ValueIndex classifier() const;
 
-    ValueIndex valueIndex() const;
+    std::vector<ValueCounter> values() const;
 
     unsigned long count() const;
 
 private:
     ValueIndex _classifier;
-    ValueIndex _valueIndex;
+    std::vector<ValueCounter> _values;
     unsigned long _count;
 };
 

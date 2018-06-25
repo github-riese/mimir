@@ -10,50 +10,15 @@ using std::move;
 using std::string;
 using std::tuple;
 using std::vector;
+using std::map;
 
 using mimir::models::Probability;
 using mimir::models::ProbabilityWithPriors;
-using mimir::models::Sample;
 using mimir::models::ValueIndex;
 using mimir::models::Evaluation;
 
 namespace mimir {
 namespace services {
-
-Evaluation Evaluator::evaluate(const Sampler &sampler, ValueIndex value, vector<ValueIndex> classes)
-{
-    Evaluation result({{sampler.nameIndex()}});
-    sampler.total();
-    if (!sampler.total()) {
-        return result;
-    }
-    auto total = static_cast<long double>(sampler.total());
-    auto inValueCount = static_cast<long double>(sampler.countInValue(value));
-
-    long double valueProbability = inValueCount/total;
-    result.setEvidence(valueProbability);
-    if (classes.empty()) {
-        classes = sampler.allClasses();
-    }
-    for (auto classification : classes) {
-        if (!sampler.countInClass(classification) || valueProbability < 1e-10l) {
-            result.addProbability(classification, 0, 0, 0);
-            continue;
-        }
-        auto inClassCount = static_cast<long double>(sampler.countInClass(classification));
-        auto classInValueCount = static_cast<long double>(sampler.count(classification, value));
-        auto likelyhood = classInValueCount/inClassCount;
-        auto classProbability = inClassCount/total;
-        result.addProbability(classification,
-                                  {(likelyhood * classProbability)/valueProbability},
-                                  likelyhood,
-                                  classProbability
-                              );
-        ++_opcount;
-    }
-    result.evaluate();
-    return result;
-}
 
 models::Evaluation Evaluator::classify(const std::vector<models::Evaluation> &sources)
 {

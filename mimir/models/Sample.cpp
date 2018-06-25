@@ -1,13 +1,31 @@
 #include "Sample.h"
 
+using std::vector;
+using std::pair;
+
 namespace mimir {
 namespace models {
 
-Sample::Sample(ValueIndex classifier, ValueIndex valueIndex, unsigned long count) :
+Sample::Sample(ValueIndex classifier, std::vector<ValueCounter> vals) :
     _classifier(classifier),
-    _valueIndex(valueIndex),
-    _count(count)
+    _values(vals)
 {
+}
+
+Sample::Sample(ValueIndex classifier, vector<ValueIndex> values) :
+    _classifier(classifier),
+    _values()
+{
+    for (auto v : values) {
+        _values.push_back(ValueCounter{v, 1});
+    }
+}
+
+Sample::Sample(ValueIndex classifier, ValueIndex val, unsigned long count) :
+    _classifier(classifier),
+    _values(ValueCounter{val, count})
+{
+
 }
 
 ValueIndex Sample::classifier() const
@@ -15,15 +33,11 @@ ValueIndex Sample::classifier() const
     return _classifier;
 }
 
-ValueIndex Sample::valueIndex() const
+std::vector<ValueCounter> Sample::values() const
 {
-    return _valueIndex;
+    return _values;
 }
 
-unsigned long Sample::count() const
-{
-    return _count;
-}
 
 } // namespace models
 } // namespace mimir

@@ -18,33 +18,29 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     models/Probability.cpp \
     models/Sample.cpp \
-    services/Sampler.cpp \
-    models/SampleStore.cpp \
     models/ValueCounter.cpp \
     models/ValueIndex.cpp \
     services/NameResolver.cpp \
     models/Evaluation.cpp \
     services/Evaluator.cpp \
-    services/SamplerManager.cpp \
     services/EvaluationCombiner.cpp \
     helpers/helpers.cpp \
-    services/DataStore.cpp
+    services/DataStore.cpp \
+    models/Sampler.cpp
 
 HEADERS += \
     models/Probability.h \
     models/Sample.h \
-    services/Sampler.h \
-    models/SampleStore.h \
     models/ValueCounter.h \
     models/ValueIndex.h \
     services/NameResolver.h \
     models/Evaluation.h \
     services/Evaluator.h \
-    services/SamplerManager.h \
     models/ValueType.h \
     models/InterpolationStrategy.h \
     services/EvaluationCombiner.h \
     helpers/helpers.h \
     traits/Timing.h \
     services/DataStore.h \
-    models/ProbabilityWithPriors.h
+    models/ProbabilityWithPriors.h \
+    models/Sampler.h

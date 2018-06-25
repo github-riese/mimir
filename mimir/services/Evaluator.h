@@ -6,7 +6,6 @@
 
 #include "../models/Evaluation.h"
 #include "../models/ValueIndex.h"
-#include "Sampler.h"
 
 namespace mimir {
 namespace services {
@@ -14,7 +13,6 @@ namespace services {
 class Evaluator
 {
 public:
-    mimir::models::Evaluation evaluate(const mimir::services::Sampler &sampler, mimir::models::ValueIndex value, std::vector<models::ValueIndex> classes = std::vector<models::ValueIndex>());
 
     mimir::models::Evaluation classify(const std::vector<mimir::models::Evaluation> &);
 
@@ -27,7 +25,6 @@ private:
 
     std::vector<std::vector<models::ValueIndex> > combineSamplerIDs(const std::vector<mimir::models::Evaluation> &);
 
-    mimir::models::Probability calculate(const mimir::services::Sampler &, mimir::models::ValueIndex, mimir::models::ValueIndex);
 
     mimir::models::Probability calculate(unsigned long countInClass, unsigned long countInValue, unsigned long total);
 private:
