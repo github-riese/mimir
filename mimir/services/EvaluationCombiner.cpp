@@ -27,7 +27,6 @@ namespace services {
 EvaluationCombiner::EvaluationCombiner(DataStore &dataStore) :
     _dataStore(dataStore)
 {
-
 }
 
 

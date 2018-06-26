@@ -6,10 +6,13 @@
 #include "../traits/Timing.h"
 
 using std::find_if;
+using std::sort;
 
+using std::pair;
 using std::string;
 using std::vector;
 
+using mimir::models::CPT;
 using mimir::models::ValueIndex;
 
 namespace mimir {
@@ -18,7 +21,6 @@ namespace services {
 DataStore::DataStore(NameResolver &nameResolver) :
     _nameResolver(nameResolver)
 {
-
 }
 
 void DataStore::createDataSet(std::vector<std::string> columnNames, std::string classifiingColumn)
@@ -35,7 +37,7 @@ void DataStore::createDataSet(const vector<ValueIndex> &columnNames, ValueIndex 
     _rawData.clear();
     _columnNames.clear();
     _columnNames = columnNames;
-    _stride = _columnNames.size();
+    _stride = static_cast<long>(_columnNames.size());
     _classifyingColumn = classifiingColumn;
 }
 
@@ -48,31 +50,27 @@ void DataStore::addRow(vector<ValueIndex> row)
     ++_rows;
 }
 
-DataStore DataStore::intersect(const std::vector<models::ValueIndex> &columns, ValueIndex classifier, ValueIndex classValue) const
+
+
+CPT DataStore::createConditionalProbabilityTable(vector<ValueIndex> const &columns) const
 {
-    traits::VerboseTiming<std::chrono::microseconds> _timer("DataStore::intersect");
-    DataStore result(_nameResolver);
-    result.createDataSet(columns, classifier);
-    auto iterator = _rawData.begin();
-    auto classifierIndex = columnByName(classifier);
     vector<long> indices;
-    for (auto c : columns) {
-        indices.push_back(columnByName(c));
+    // indices (to find columns) and values to match
+    for (auto search : columns) {
+        indices.push_back(columnByName(search));
     }
-    while (iterator != _rawData.end()) {
-        if (*(iterator + classifierIndex) != classValue) {
-            iterator += _stride;
-            continue;
-        }
-        vector<ValueIndex> newRow;
-        newRow.reserve(columns.size());
+    vector<vector<ValueIndex>> rows;
+    auto cursor = _rawData.begin();
+    while (cursor != _rawData.end()) {
+        vector<ValueIndex> row;
         for (auto index : indices) {
-            newRow.push_back(*(iterator + index));
+            row.push_back(*(cursor + index));
         }
-        result.addRow(newRow);
-        iterator += _stride;
+        rows.push_back(row);
+        cursor += _stride;
     }
-    return result;
+    sort(rows.begin(), rows.end());
+    return CPT(rows);
 }
 
 size_t DataStore::columnCount() const

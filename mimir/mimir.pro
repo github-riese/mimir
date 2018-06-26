@@ -26,7 +26,7 @@ SOURCES += \
     services/EvaluationCombiner.cpp \
     helpers/helpers.cpp \
     services/DataStore.cpp \
-    models/Sampler.cpp
+    models/CPT.cpp
 
 HEADERS += \
     models/Probability.h \
@@ -43,4 +43,4 @@ HEADERS += \
     traits/Timing.h \
     services/DataStore.h \
     models/ProbabilityWithPriors.h \
-    models/Sampler.h
+    models/CPT.h

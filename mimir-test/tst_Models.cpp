@@ -16,6 +16,7 @@
 
 using std::vector;
 
+using mimir::models::CPT;
 using mimir::models::Evaluation;
 using mimir::models::Probability;
 using mimir::models::ProbabilityWithPriors;
@@ -29,12 +30,6 @@ REGISTER_TEST(Models)
 
 Models::Models()
 {
-}
-
-void Models::testSamplerBasics()
-{
-    NameResolver resolver;
-    ValueIndex testeeNameIndex = resolver.indexFromName("testee");
 }
 
 void Models::testDataStore()
@@ -93,16 +88,10 @@ void Models::testDataStore()
     QVERIFY(dataStore.columnCount() == 5);
     QVERIFY(dataStore.rowCount() == 10);
 
-    vector<vector<ValueIndex>> intersectExpectation = {
-        { ring, green, hadContact },
-        { ring, green, noContact },
-        { collier, green, hadContact },
-        { brooch, green, hadContact },
-        { ring, green, noContact}
-    };
-    DataStore intersection = dataStore.intersect({type, colour, ccContact}, colour, green);
-    QCOMPARE(intersection.rowCount(), 5ul);
-    QCOMPARE(intersection.columnCount(), 3ul);
+    CPT cpt = dataStore.createConditionalProbabilityTable({{type, colour, ccContact}});
+    cpt.dump(std::cout, nameResolver);
+    Probability probabilityOfRingGreenContact = cpt.probability({ring, green, noContact});
+    QVERIFY(probabilityOfRingGreenContact == .2_p);
 }
 
 void Models::testNameLookup()
@@ -133,11 +122,6 @@ void Models::testNameLookup()
     QVERIFY(vColor == 3_vi);
 
     QVERIFY(testee.nameFromIndex(3_vi) == "colour");
-}
-
-void Models::testProbabilator()
-{
-
 }
 
 void Models::testHelpers()

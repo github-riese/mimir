@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "../models/CPT.h"
 #include "../models/Probability.h"
 #include "../models/ValueIndex.h"
 #include "NameResolver.h"
@@ -20,7 +21,7 @@ public:
     void createDataSet(std::vector<std::string>, std::string classificatingColumn);
     void createDataSet(std::vector<models::ValueIndex> const &, models::ValueIndex classifiingColumn);
     void addRow(std::vector<models::ValueIndex>);
-    DataStore intersect(std::vector<models::ValueIndex> const &columns, models::ValueIndex classifier, models::ValueIndex classValue) const;
+    models::CPT createConditionalProbabilityTable(const std::vector<models::ValueIndex> &columns) const;
     size_t columnCount() const;
     size_t rowCount() const;
     models::ValueIndex classifyingColumn() const;
