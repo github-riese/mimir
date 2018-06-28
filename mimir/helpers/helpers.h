@@ -13,17 +13,28 @@ namespace mimir {
 namespace helpers {
 
 template <typename InputIterator>
-long double deviation(InputIterator first, InputIterator last)
+inline long double variance(InputIterator first, InputIterator last)
 {
     auto distance = std::distance(first, last);
-    struct DevVals {
+    if (distance < 2) {
+        return 0.l;
+    }
+    struct VarianceData {
         long double sums = 0; long double squares = 0;
     };
-    auto v = std::accumulate(first, last, DevVals(), [](DevVals const &left, mimir::models::Probability const&right) ->DevVals{
-                long double v = right.value();
-                return DevVals{left.sums + v, left.squares + v*v };
-    });
-    return std::sqrtl((v.squares - (v.sums * v.sums) / distance) / (distance - 1));
+    auto v = std::accumulate(first, last, VarianceData(),
+                            [](VarianceData const &left, mimir::models::Probability const&right) -> VarianceData {
+                                long double v = right.value();
+                                return VarianceData{left.sums + v, left.squares + v*v };
+                            }
+            );
+    return (v.squares - (v.sums * v.sums) / distance) / (distance - 1);
+}
+
+template <typename InputIterator>
+inline long double deviation(InputIterator first, InputIterator last)
+{
+    return std::sqrtl(variance(first, last));
 }
 
 long double mean(const std::deque<mimir::models::Probability> &);

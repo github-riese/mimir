@@ -5,9 +5,11 @@
 #include <utility>
 #include <vector>
 
-#include "../services/NameResolver.h"
 #include "Probability.h"
+#include "ProbabilityDistribution.h"
 #include "ValueIndex.h"
+
+#include "../services/NameResolver.h"
 
 namespace mimir {
 namespace models {
@@ -18,12 +20,18 @@ namespace models {
 class CPT
 {
 public:
-    CPT(std::vector<std::vector<ValueIndex>>);
-    Probability probability(std::vector<ValueIndex> const &);
+    CPT(std::vector<ValueIndex>, std::vector<std::vector<ValueIndex>>);
+    Probability probability(std::vector<ValueIndex> columns, std::vector<ValueIndex> values) const;
+    Probability evidence(std::vector<ValueIndex> const &);
+    ProbabilityDistribution classify(const std::vector<ValueIndex> &columns, std::vector<ValueIndex> const &, ValueIndex);
+    std::vector<ValueIndex> distinctValues(ValueIndex field) const;
     std::ostream &dump(std::ostream&, services::NameResolver &) const;
 private:
     void calculateProbabilities(std::vector<std::vector<ValueIndex>>);
+    long int fieldIndex(ValueIndex name) const;
+    std::vector<std::pair<long, ValueIndex> > buildMatchRule(std::vector<ValueIndex>, std::vector<ValueIndex>) const;
 private:
+    std::vector<ValueIndex> _fields;
     std::vector<std::pair<std::vector<ValueIndex>, Probability>> _proabilities;
 };
 

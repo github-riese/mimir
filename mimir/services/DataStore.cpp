@@ -50,10 +50,11 @@ void DataStore::addRow(vector<ValueIndex> row)
     ++_rows;
 }
 
-
-
-CPT DataStore::createConditionalProbabilityTable(vector<ValueIndex> const &columns) const
+CPT DataStore::createConditionalProbabilityTable(std::vector<models::ValueIndex> columns) const
 {
+    if (columns.size() == 0) {
+        columns = _columnNames;
+    }
     vector<long> indices;
     // indices (to find columns) and values to match
     for (auto search : columns) {
@@ -70,7 +71,7 @@ CPT DataStore::createConditionalProbabilityTable(vector<ValueIndex> const &colum
         cursor += _stride;
     }
     sort(rows.begin(), rows.end());
-    return CPT(rows);
+    return CPT(columns, rows);
 }
 
 size_t DataStore::columnCount() const

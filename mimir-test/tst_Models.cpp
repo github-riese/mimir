@@ -7,6 +7,7 @@
 
 #include "tst_Models.h"
 
+#include "../mimir/models/ProbabilityDistribution.h"
 #include "../mimir/models/ValueType.h"
 #include "../mimir/services/DataStore.h"
 #include "../mimir/services/Evaluator.h"
@@ -19,6 +20,7 @@ using std::vector;
 using mimir::models::CPT;
 using mimir::models::Evaluation;
 using mimir::models::Probability;
+using mimir::models::ProbabilityDistribution;
 using mimir::models::ProbabilityWithPriors;
 using mimir::models::ValueType;
 using mimir::models::ValueIndex;
@@ -28,17 +30,17 @@ using mimir::services::NameResolver;
 
 REGISTER_TEST(Models)
 
-Models::Models()
+Models::Models() :
+    _dataStore(_nameResolver)
 {
 }
 
-void Models::testDataStore()
+void Models::initTestCase()
 {
-    NameResolver nameResolver;
-    #define mkValueIndex(name) ValueIndex name = nameResolver.indexFromName(#name);
-    ValueIndex kept = nameResolver.indexFromName("kept");
-    ValueIndex cancelled = nameResolver.indexFromName("cancelled");
-    ValueIndex returned = nameResolver.indexFromName("returned");
+    #define mkValueIndex(name) ValueIndex name = _nameResolver.indexFromName(#name);
+    ValueIndex kept = _nameResolver.indexFromName("kept");
+    ValueIndex cancelled = _nameResolver.indexFromName("cancelled");
+    ValueIndex returned = _nameResolver.indexFromName("returned");
 
     mkValueIndex(ring);
     mkValueIndex(collier);
@@ -62,7 +64,6 @@ void Models::testDataStore()
     mkValueIndex(hostSex);
 
     #undef mkValueIndex
-
     vector<vector<ValueIndex>> testData = {
         {cancelled, ring, blue, noContact, hostMale},
         {kept, ring, green, hadContact, hostFemale},
@@ -75,22 +76,26 @@ void Models::testDataStore()
         {kept, ring, green, noContact, hostMale},
         {cancelled, ring, yellow, hadContact, hostFemale}
     };
-
-    DataStore dataStore(nameResolver);
-    QVERIFY(dataStore.columnCount() == 0);
-    QVERIFY(dataStore.rowCount() == 0);
-    dataStore.createDataSet({classification, type, colour, ccContact, hostSex}, classification);
-    QVERIFY(dataStore.columnCount() == 5);
-    QVERIFY(dataStore.rowCount() == 0);
-
+    _dataStore.createDataSet({classification, type, colour, ccContact, hostSex}, classification);
     for (auto row : testData)
-        dataStore.addRow(row);
-    QVERIFY(dataStore.columnCount() == 5);
-    QVERIFY(dataStore.rowCount() == 10);
+        _dataStore.addRow(row);
+}
 
-    CPT cpt = dataStore.createConditionalProbabilityTable({{type, colour, ccContact}});
-    cpt.dump(std::cout, nameResolver);
-    Probability probabilityOfRingGreenContact = cpt.probability({ring, green, noContact});
+void Models::testDataStore()
+{
+    ValueIndex type = _nameResolver.indexFromName("type");
+    ValueIndex colour = _nameResolver.indexFromName("colour");
+    ValueIndex ccContact = _nameResolver.indexFromName("ccContact");
+    ValueIndex ring = _nameResolver.indexFromName("ring");
+    ValueIndex green = _nameResolver.indexFromName("green");
+    ValueIndex noContact = _nameResolver.indexFromName("noContact");
+
+    QVERIFY(_dataStore.columnCount() == 5);
+    QVERIFY(_dataStore.rowCount() == 10);
+
+    CPT cpt = _dataStore.createConditionalProbabilityTable({{type, colour, ccContact}});
+    cpt.dump(std::cout, _nameResolver);
+    Probability probabilityOfRingGreenContact = cpt.evidence({ring, green, noContact});
     QVERIFY(probabilityOfRingGreenContact == .2_p);
 }
 
@@ -140,4 +145,29 @@ void Models::testHelpers()
     d1.insert(d1.end(), v1.begin(), v1.end());
     auto deviation = mimir::helpers::deviation(d1);
     QCOMPARE(static_cast<double>(deviation), std::sqrt(((.1 *.1 + .2 * .2 + .3 *.3 +  .4 * .4 + .5 * .5) - ((.1 + .2 + .3 + .4 + .5)*(.1 + .2 + .3 + .4 + .5))/5) / 4));
+}
+
+void Models::testCPT()
+{
+    ValueIndex classification = _nameResolver.indexFromName("classification");
+    ValueIndex type = _nameResolver.indexFromName("type");
+    ValueIndex colour = _nameResolver.indexFromName("colour");
+    ValueIndex ccContact = _nameResolver.indexFromName("ccContact");
+    ValueIndex ring = _nameResolver.indexFromName("ring");
+    ValueIndex green = _nameResolver.indexFromName("green");
+    ValueIndex noContact = _nameResolver.indexFromName("noContact");
+    ValueIndex kept = _nameResolver.indexFromName("kept");
+    ValueIndex cancelled = _nameResolver.indexFromName("cancelled");
+    ValueIndex returned = _nameResolver.indexFromName("returned");
+
+    CPT grandTable = _dataStore.createConditionalProbabilityTable();
+    Probability p = grandTable.probability({type, colour}, {ring, green});
+    QVERIFY(p == .3_p);
+
+    vector<ValueIndex> uniqueClasses = grandTable.distinctValues(classification);
+    QCOMPARE(uniqueClasses, (vector<ValueIndex>{ kept, cancelled, returned }));
+
+    ProbabilityDistribution distribution = grandTable.classify({ type, ccContact }, { ring, noContact }, classification);
+    QCOMPARE(distribution.mostProbable(), kept);
+    qDebug() << static_cast<double>(distribution.vectorLength());
 }

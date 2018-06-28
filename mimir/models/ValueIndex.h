@@ -11,6 +11,7 @@ class ValueIndex
 public:
     inline ValueIndex() : _idx(NoIndex) {}
     static const size_t NoIndex = -1ul;
+    static const size_t AnyIndex = -2ul;
     inline bool isValid() const { return _idx != NoIndex; }
     inline explicit ValueIndex(size_t idx) : _idx(idx) {}
     inline bool operator  <(const ValueIndex &rhs) const { return _idx < rhs._idx; }

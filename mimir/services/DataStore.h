@@ -21,7 +21,7 @@ public:
     void createDataSet(std::vector<std::string>, std::string classificatingColumn);
     void createDataSet(std::vector<models::ValueIndex> const &, models::ValueIndex classifiingColumn);
     void addRow(std::vector<models::ValueIndex>);
-    models::CPT createConditionalProbabilityTable(const std::vector<models::ValueIndex> &columns) const;
+    models::CPT createConditionalProbabilityTable(std::vector<models::ValueIndex> columns = std::vector<models::ValueIndex>()) const;
     size_t columnCount() const;
     size_t rowCount() const;
     models::ValueIndex classifyingColumn() const;
