@@ -115,6 +115,29 @@ vector<ValueIndex> ProbabilityDistribution::classifiers() const
     return _classifiers;
 }
 
+std::ostream &ProbabilityDistribution::dump(std::ostream &stream, services::NameResolver &resolver) const
+{
+    stream << "vectorLength: " << _vectorLength << std::endl;
+    stream << "classes: " << _probabilities.size() << std::endl;
+    auto prob = _probabilities.begin();
+    auto name = _classifiers.begin();
+    bool haveName = name != _classifiers.end();
+    while (prob != _probabilities.end()) {
+        if (haveName) {
+            stream << resolver.nameFromIndex(*(name++)) << ": ";
+        }
+        stream << *prob;
+        if (*prob == _maxProb) {
+            stream << " (max)";
+        } else if (*prob == _minProb) {
+            stream << " (min)";
+        }
+        stream << std::endl;
+        ++prob;
+    }
+    return stream;
+}
+
 vector<Probability> ProbabilityDistribution::probabilities() const
 {
     return _probabilities;

@@ -3,9 +3,11 @@
 
 #include <map>
 #include <utility>
+#include <ostream>
 
 #include "Probability.h"
 #include "ValueIndex.h"
+#include "../services/NameResolver.h"
 
 namespace mimir {
 namespace models {
@@ -28,6 +30,7 @@ public:
 
     std::vector<ValueIndex> classifiers() const;
 
+    std::ostream &dump(std::ostream &, services::NameResolver &) const;
 private:
     void analyze();
 private:

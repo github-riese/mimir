@@ -85,17 +85,24 @@ Probability CPT::evidence(const std::vector<ValueIndex> &row)
 
 ProbabilityDistribution CPT::classify(const vector<ValueIndex> &columns, const vector<ValueIndex> &values, ValueIndex classifier)
 {
+    traits::VerboseTiming<std::chrono::nanoseconds>("CPT::classify");
     auto matchRule = buildMatchRule(columns, values);
     auto classifierIndex = fieldIndex(classifier);
     map<ValueIndex, Probability> result;
+    Probability sumOfMatches;
     auto runner = [&](pair<vector<ValueIndex>, Probability> const &row) {
         if (!matches(row, matchRule)) {
                 return;
         }
+        sumOfMatches += row.second;
         result[row.first.at(static_cast<size_t>(classifierIndex))] += row.second;
         dumpRow(row);
     };
     for_each(_proabilities.begin(), _proabilities.end(), runner);
+    Probability scale = 1/sumOfMatches;
+    for_each(result.begin(), result.end(), [scale](auto &value) {
+        value.second *= scale;
+    });
     return ProbabilityDistribution(result);
 }
 
