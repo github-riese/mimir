@@ -30,14 +30,15 @@ public:
     CPT(std::vector<ValueIndex>, std::vector<std::vector<ValueIndex>>);
     std::vector<ValueIndex> fields() const;
     Probability probability(std::vector<ColumnNameValuePair> values) const;
+    Probability probability(std::vector<ColumnIndexValuePair> values) const;
 
     ProbabilityDistribution classify(std::vector<ColumnNameValuePair> const &, ValueIndex);
     ProbabilityDistribution classify(std::vector<ColumnIndexValuePair> const&, long);
     std::vector<ValueIndex> distinctValues(ValueIndex field) const;
     std::ostream &dump(std::ostream&, services::NameResolver &) const;
+    long int fieldIndex(ValueIndex name) const;
 private:
     void calculateProbabilities(std::vector<std::vector<ValueIndex>>);
-    long int fieldIndex(ValueIndex name) const;
     std::vector<ColumnIndexValuePair> buildMatchRule(std::vector<ColumnNameValuePair> const&values) const;
 private:
     std::vector<ValueIndex> _fields;

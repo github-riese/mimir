@@ -21,7 +21,7 @@ struct ColumnIndexValuePair
     ValueIndex value;
 };
 
-struct ValueProbabilityPair
+struct NamedProbability
 {
     ValueIndex name;
     Probability probability;

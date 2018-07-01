@@ -15,7 +15,7 @@ class DependencyDetector
 {
 public:
     DependencyDetector(models::CPT &cpt);
-    std::vector<std::vector<models::ValueIndex>> detectDependencies(const std::vector<models::ValueIndex> &values, models::ValueIndex classifiingColumn);
+    std::vector<std::vector<models::ValueIndex>> detectDependencies(const std::vector<models::ValueIndex> &values, models::ValueIndex classifiingColumn, NameResolver &ns);
 
 private:
     models::Probability conditionalProbability(models::ColumnIndexValuePair const&, std::vector<models::ColumnIndexValuePair>const &);

@@ -115,9 +115,9 @@ vector<ValueIndex> ProbabilityDistribution::classifiers() const
     return _classifiers;
 }
 
-vector<ColumnNameValuePair> ProbabilityDistribution::distribution() const
+vector<NamedProbability> ProbabilityDistribution::distribution() const
 {
-    vector<ColumnNameValuePair> result;
+    vector<NamedProbability> result;
     if (_classifiers.size() == 0) {
         return result;
     }

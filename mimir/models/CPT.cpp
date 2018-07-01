@@ -71,6 +71,11 @@ std::vector<ValueIndex> CPT::fields() const
 Probability CPT::probability(std::vector<ColumnNameValuePair> values) const
 {
     auto matchRules = buildMatchRule(values);
+    return probability(matchRules);
+}
+
+Probability CPT::probability(std::vector<ColumnIndexValuePair> matchRules) const
+{
     AccumulateHelper rowMatch{matchRules};
     Probability p = accumulate(_proabilities.begin(), _proabilities.end(), 0._p, rowMatch);
     return p;

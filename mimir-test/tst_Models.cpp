@@ -17,6 +17,7 @@
 
 using std::vector;
 
+using mimir::models::ColumnNameValuePair;
 using mimir::models::CPT;
 using mimir::models::Evaluation;
 using mimir::models::Probability;
@@ -95,7 +96,7 @@ void Models::testDataStore()
 
     CPT cpt = _dataStore.createConditionalProbabilityTable({{type, colour, ccContact}});
     cpt.dump(std::cout, _nameResolver);
-    Probability probabilityOfRingGreenContact = cpt.probability({{type, ring} , {colour, green}, {ccContact, noContact}});
+    Probability probabilityOfRingGreenContact = cpt.probability(vector<ColumnNameValuePair>{{type, ring} , {colour, green}, {ccContact, noContact}});
     QVERIFY(probabilityOfRingGreenContact == .2_p);
 }
 
@@ -161,7 +162,7 @@ void Models::testCPT()
     ValueIndex returned = _nameResolver.indexFromName("returned");
 
     CPT grandTable = _dataStore.createConditionalProbabilityTable();
-    Probability p = grandTable.probability({{type, ring}, {colour, green}});
+    Probability p = grandTable.probability(vector<ColumnNameValuePair>{{type, ring}, {colour, green}});
     QVERIFY(p == .3_p);
 
     vector<ValueIndex> uniqueClasses = grandTable.distinctValues(classification);

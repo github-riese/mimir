@@ -103,7 +103,7 @@ void TestPatternFind::testPreCheckAssumptionThatDataTurnOutAOne()
     classification.dump(std::cerr, _nameResolver);
 
     DependencyDetector detect(cpt);
-    detect.detectDependencies({ValueIndex(ValueIndex::AnyIndex), ring, green, noContact, hostMale}, status);
+    detect.detectDependencies({ValueIndex(ValueIndex::AnyIndex), ring, green, noContact, hostMale}, status, _nameResolver);
 
 }
 

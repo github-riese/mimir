@@ -13,6 +13,7 @@ using std::vector;
 using std::find_if;
 
 using mimir::models::CPT;
+using mimir::models::ColumnIndexValuePair;
 using mimir::models::NamedProbability;
 using mimir::models::Probability;
 using mimir::models::ValueIndex;
@@ -26,59 +27,45 @@ DependencyDetector::DependencyDetector(CPT &cpt) :
 
 }
 
-vector<vector<ValueIndex> > DependencyDetector::detectDependencies(vector<ValueIndex> const& values, ValueIndex classifiingColumn)
+vector<vector<ValueIndex> > DependencyDetector::detectDependencies(vector<ValueIndex> const& values, ValueIndex classifiingColumn, NameResolver&ns)
 {
     traits::VerboseTiming<std::chrono::microseconds> _timer("detectDependencies");
-    auto colums = _cpt.fields();
-    size_t valXnIdx = 0, valXn1Idx = 1;
-    vector<vector<ValueIndex>> result;
-    auto colXn = colums.begin();
-    auto colXn1 = colums.begin() + 1;
-    while (colXn != colums.end()) {
-        while (colXn1 != colums.end() && colXn != colums.end()) {
-            if ((*colXn) == classifiingColumn) {
-                ++valXnIdx;
-                ++colXn;
-                continue;
-            }
-            if ((*colXn1) == classifiingColumn) {
-                ++valXn1Idx;
-                ++colXn1;
-                continue;
-            }
-            if (colXn == colXn1) {
-                ++valXn1Idx;
-                ++colXn1;
-                continue;
-            }
-            Probability pXn = _cpt.probability({{*colXn, values.at(valXnIdx)}});
-            if (pXn.isZero()) {
-                qDebug() << "ignore column" << valXnIdx << " it's zero";
-                ++valXnIdx;
-                ++colXn;
-                continue;
-            }
-            Probability pXn1 = _cpt.probability({{*colXn1, values.at(valXn1Idx)}});
-            if (pXn1.isZero()) {
-                qDebug() << "ignore column" << valXn1Idx << " it's zero";
-                ++valXn1Idx;
-                ++colXn1;
-                continue;
-            }
-
-            Probability pXnIfpXn1 = _cpt.probability({{*colXn, values.at(valXnIdx)}, {*colXn1, values.at(valXn1Idx)}});
-            if (std::abs(pXn * pXn1 - pXnIfpXn1) <= .05001l) {
-                qDebug("Independed: columns %zu %zu (distance %.4Lf)", valXnIdx, valXn1Idx, ((pXn * pXn1) - pXnIfpXn1));
-            } else {
-                qDebug("dependend:  columns %zu %zu (distance %.4Lf)", valXnIdx, valXn1Idx, ((pXn * pXn1) - pXnIfpXn1));
-            }
-            ++valXn1Idx;
-            ++colXn1;
+    auto fields = _cpt.fields();
+    vector<ColumnIndexValuePair> independent;
+    auto classifyingIndex = _cpt.fieldIndex(classifiingColumn);
+    vector<ColumnIndexValuePair> candidates;
+    for (auto field : fields) {
+        auto idx = _cpt.fieldIndex(field);
+        if (idx == classifyingIndex) {
+            continue;
         }
-        colXn1 = colums.begin();
-        valXn1Idx = 0;
-        ++valXnIdx;
-        ++colXn;
+        candidates.push_back({idx, values.at(static_cast<size_t>(idx))});
+    }
+    vector<vector<ValueIndex>> result;
+    auto candidate = candidates.begin();
+    while (candidate != candidates.end()) {
+        auto partner = candidate + 1;
+        while (partner != candidates.end()) {
+            if (partner == candidate) {
+                ++partner;
+                continue;
+            }
+            Probability pThisGivenThat = conditionalProbability(*candidate, {*partner});
+            Probability pThatGivenThis = conditionalProbability(*partner, {*(candidate)});
+            Probability p1 = _cpt.probability({*candidate});
+            Probability p2 = _cpt.probability({*partner});
+            std::cerr << "P(" << ns.nameFromIndex(fields.at(candidate->columnIndex)) << '=' << ns.nameFromIndex(candidate->value) << '|'
+                      << ns.nameFromIndex(fields.at((partner)->columnIndex)) << '=' << ns.nameFromIndex((partner)->value) << "): "
+                      << pThisGivenThat
+                      << ", "
+                      << "P(" << ns.nameFromIndex(fields.at((partner)->columnIndex)) << '=' << ns.nameFromIndex((partner)->value) << '|'
+                      << ns.nameFromIndex(fields.at((candidate)->columnIndex)) << '=' << ns.nameFromIndex((candidate)->value) << "): "
+                      << pThatGivenThis
+                      << "\t P(a) * P(b): " << p1 * p2
+                      << std::endl;
+            ++partner;
+        }
+        ++candidate;
     }
     return result;
 }
