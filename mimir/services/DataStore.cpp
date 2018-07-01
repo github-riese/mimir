@@ -23,22 +23,21 @@ DataStore::DataStore(NameResolver &nameResolver) :
 {
 }
 
-void DataStore::createDataSet(std::vector<std::string> columnNames, std::string classifiingColumn)
+void DataStore::createDataSet(std::vector<std::string> columnNames)
 {
     vector<ValueIndex> columnNameIndices;
     for_each(columnNames.begin(), columnNames.end(), [&columnNameIndices, this](const string &name){
         columnNameIndices.push_back(_nameResolver.indexFromName(name));
     });
-    createDataSet(columnNameIndices, _nameResolver.indexFromName(classifiingColumn));
+    createDataSet(columnNameIndices);
 }
 
-void DataStore::createDataSet(const vector<ValueIndex> &columnNames, ValueIndex classifiingColumn)
+void DataStore::createDataSet(const vector<ValueIndex> &columnNames)
 {
     _rawData.clear();
     _columnNames.clear();
     _columnNames = columnNames;
     _stride = static_cast<long>(_columnNames.size());
-    _classifyingColumn = classifiingColumn;
 }
 
 void DataStore::addRow(vector<ValueIndex> row)
@@ -83,11 +82,6 @@ size_t DataStore::rowCount() const
 {
     return _rawData.size() == 0 ? 0 :
                                   _rawData.size() / _columnNames.size();
-}
-
-models::ValueIndex DataStore::classifyingColumn() const
-{
-    return _classifyingColumn;
 }
 
 long DataStore::columnByName(ValueIndex name) const

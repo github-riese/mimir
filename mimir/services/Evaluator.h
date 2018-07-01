@@ -21,9 +21,9 @@ public:
 private:
     mimir::models::ProbabilityWithPriors combineProbabilities(const std::vector<mimir::models::Probability>&, models::Probability classProbability, models::Probability evidence);
 
-    std::vector<mimir::models::ValueIndex> combineSamplerIDs(const std::vector<std::vector<mimir::models::ValueIndex>>&);
+    std::vector<mimir::models::ValueIndex> combineSources(const std::vector<std::vector<mimir::models::ValueIndex>>&);
 
-    std::vector<std::vector<models::ValueIndex> > combineSamplerIDs(const std::vector<mimir::models::Evaluation> &);
+    std::vector<std::vector<models::ValueIndex> > combineSources(const std::vector<mimir::models::Evaluation> &);
 
 
     mimir::models::Probability calculate(unsigned long countInClass, unsigned long countInValue, unsigned long total);

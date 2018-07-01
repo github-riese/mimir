@@ -23,11 +23,12 @@ SOURCES += \
     services/NameResolver.cpp \
     models/Evaluation.cpp \
     services/Evaluator.cpp \
-    services/EvaluationCombiner.cpp \
     helpers/helpers.cpp \
     services/DataStore.cpp \
     models/CPT.cpp \
-    models/ProbabilityDistribution.cpp
+    models/ProbabilityDistribution.cpp \
+    services/DependencyDetector.cpp \
+    models/KeyValuePair.cpp
 
 HEADERS += \
     models/Probability.h \
@@ -39,10 +40,11 @@ HEADERS += \
     services/Evaluator.h \
     models/ValueType.h \
     models/InterpolationStrategy.h \
-    services/EvaluationCombiner.h \
     helpers/helpers.h \
     traits/Timing.h \
     services/DataStore.h \
     models/ProbabilityWithPriors.h \
     models/CPT.h \
-    models/ProbabilityDistribution.h
+    models/ProbabilityDistribution.h \
+    services/DependencyDetector.h \
+    models/KeyValuePair.h

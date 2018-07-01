@@ -36,7 +36,7 @@ models::Evaluation Evaluator::classify(const std::vector<models::Evaluation> &so
         }
         evidence *= evaluation.evidence();
     }
-    Evaluation result(combineSamplerIDs(sources));
+    Evaluation result(combineSources(sources));
     result.setEvidence(evidence);
     for (auto classification : likelihoods) {
         result.addProbability(classification.first, combineProbabilities(classification.second, classPriors[classification.first], evidence));
@@ -84,7 +84,7 @@ models::ProbabilityWithPriors Evaluator::combineProbabilities(const std::vector<
     };
 }
 
-std::vector<models::ValueIndex> Evaluator::combineSamplerIDs(const std::vector<std::vector<models::ValueIndex> > &sources)
+std::vector<models::ValueIndex> Evaluator::combineSources(const std::vector<std::vector<models::ValueIndex> > &sources)
 {
     vector<ValueIndex> combined;
     for (auto source : sources) {
@@ -93,11 +93,11 @@ std::vector<models::ValueIndex> Evaluator::combineSamplerIDs(const std::vector<s
     return combined;
 }
 
-vector<vector<ValueIndex>> Evaluator::combineSamplerIDs(const vector<Evaluation> &evaluations)
+vector<vector<ValueIndex>> Evaluator::combineSources(const vector<Evaluation> &evaluations)
 {
     vector<vector<ValueIndex>> combined;
     for (auto e : evaluations) {
-        combined.push_back(combineSamplerIDs(e.samplers()));
+        combined.push_back(combineSources(e.sources()));
     }
     return combined;
 }

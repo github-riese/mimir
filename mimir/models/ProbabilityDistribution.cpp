@@ -115,6 +115,20 @@ vector<ValueIndex> ProbabilityDistribution::classifiers() const
     return _classifiers;
 }
 
+vector<ColumnNameValuePair> ProbabilityDistribution::distribution() const
+{
+    vector<ColumnNameValuePair> result;
+    if (_classifiers.size() == 0) {
+        return result;
+    }
+    auto prob = _probabilities.begin();
+    auto name = _classifiers.begin();
+    while (prob != _probabilities.end()) {
+        result.push_back({*(name++), *(prob++)});
+    }
+    return result;
+}
+
 std::ostream &ProbabilityDistribution::dump(std::ostream &stream, services::NameResolver &resolver) const
 {
     stream << "vectorLength: " << _vectorLength << std::endl;

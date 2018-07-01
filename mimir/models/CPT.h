@@ -5,6 +5,7 @@
 #include <utility>
 #include <vector>
 
+#include "KeyValuePair.h"
 #include "Probability.h"
 #include "ProbabilityDistribution.h"
 #include "ValueIndex.h"
@@ -20,19 +21,27 @@ namespace models {
 class CPT
 {
 public:
+    struct Row
+    {
+        std::vector<ValueIndex> values;
+        Probability probability;
+    };
+public:
     CPT(std::vector<ValueIndex>, std::vector<std::vector<ValueIndex>>);
-    Probability probability(std::vector<ValueIndex> columns, std::vector<ValueIndex> values) const;
-    Probability evidence(std::vector<ValueIndex> const &);
-    ProbabilityDistribution classify(const std::vector<ValueIndex> &columns, std::vector<ValueIndex> const &, ValueIndex);
+    std::vector<ValueIndex> fields() const;
+    Probability probability(std::vector<ColumnNameValuePair> values) const;
+
+    ProbabilityDistribution classify(std::vector<ColumnNameValuePair> const &, ValueIndex);
+    ProbabilityDistribution classify(std::vector<ColumnIndexValuePair> const&, long);
     std::vector<ValueIndex> distinctValues(ValueIndex field) const;
     std::ostream &dump(std::ostream&, services::NameResolver &) const;
 private:
     void calculateProbabilities(std::vector<std::vector<ValueIndex>>);
     long int fieldIndex(ValueIndex name) const;
-    std::vector<std::pair<long, ValueIndex> > buildMatchRule(std::vector<ValueIndex>, std::vector<ValueIndex>) const;
+    std::vector<ColumnIndexValuePair> buildMatchRule(std::vector<ColumnNameValuePair> const&values) const;
 private:
     std::vector<ValueIndex> _fields;
-    std::vector<std::pair<std::vector<ValueIndex>, Probability>> _proabilities;
+    std::vector<Row> _proabilities;
 };
 
 } // namespace models

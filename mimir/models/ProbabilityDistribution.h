@@ -5,6 +5,7 @@
 #include <utility>
 #include <ostream>
 
+#include "KeyValuePair.h"
 #include "Probability.h"
 #include "ValueIndex.h"
 #include "../services/NameResolver.h"
@@ -27,8 +28,8 @@ public:
     std::pair<ValueIndex, Probability> min() const;
     bool operator <(const ProbabilityDistribution &rhs) const;
     std::vector<Probability> probabilities() const;
-
     std::vector<ValueIndex> classifiers() const;
+    std::vector<NamedProbability> distribution() const;
 
     std::ostream &dump(std::ostream &, services::NameResolver &) const;
 private:

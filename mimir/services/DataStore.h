@@ -18,13 +18,12 @@ class DataStore
 {
 public:
     DataStore(NameResolver &);
-    void createDataSet(std::vector<std::string>, std::string classificatingColumn);
-    void createDataSet(std::vector<models::ValueIndex> const &, models::ValueIndex classifiingColumn);
+    void createDataSet(std::vector<std::string>);
+    void createDataSet(std::vector<models::ValueIndex> const &);
     void addRow(std::vector<models::ValueIndex>);
     models::CPT createConditionalProbabilityTable(std::vector<models::ValueIndex> columns = std::vector<models::ValueIndex>()) const;
     size_t columnCount() const;
     size_t rowCount() const;
-    models::ValueIndex classifyingColumn() const;
     inline std::vector<models::ValueIndex> const & columnNames() const { return _columnNames; }
 private:
     long columnByName(models::ValueIndex) const;
@@ -32,7 +31,6 @@ private:
     NameResolver &_nameResolver;
     std::vector<models::ValueIndex> _columnNames;
     std::deque<models::ValueIndex> _rawData;
-    models::ValueIndex _classifyingColumn;
     long _stride = 0;
     size_t _rows = 0;
 };

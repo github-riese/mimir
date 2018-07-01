@@ -18,7 +18,7 @@ namespace mimir {
 namespace models {
 
 Evaluation::Evaluation(std::vector<std::vector<ValueIndex>> samplers) :
-    _samplers(samplers)
+    _sources(samplers)
 {
 }
 

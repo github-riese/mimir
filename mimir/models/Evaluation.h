@@ -20,7 +20,7 @@ class Evaluation
         bool operator ==(const ProbabilityEx &) const;
     };
 public:
-    Evaluation(std::vector<std::vector<ValueIndex>> samplers);
+    Evaluation(std::vector<std::vector<ValueIndex>> sources);
 
     void addProbability(ValueIndex classification, const ProbabilityWithPriors &probability);
     void addProbability(ValueIndex classification, const Probability &probability, const Probability &likelyhood, const Probability &classProbability);
@@ -66,13 +66,13 @@ public:
     bool operator<(const Evaluation &rhs) const;
     bool operator==(const Evaluation &rhs) const;
 
-    inline std::vector<std::vector<ValueIndex>> const & samplers() const
+    inline std::vector<std::vector<ValueIndex>> const & sources() const
     {
-        return _samplers;
+        return _sources;
     }
 
 private:
-    std::vector<std::vector<ValueIndex>> _samplers;
+    std::vector<std::vector<ValueIndex>> _sources;
     std::map<ValueIndex, ProbabilityEx> _probabilities;
     Probability _evidence = Probability();
     ValueIndex _mostProbable = ValueIndex();

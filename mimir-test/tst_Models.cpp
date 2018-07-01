@@ -76,7 +76,7 @@ void Models::initTestCase()
         {kept, ring, green, noContact, hostMale},
         {cancelled, ring, yellow, hadContact, hostFemale}
     };
-    _dataStore.createDataSet({classification, type, colour, ccContact, hostSex}, classification);
+    _dataStore.createDataSet({classification, type, colour, ccContact, hostSex});
     for (auto row : testData)
         _dataStore.addRow(row);
 }
@@ -95,7 +95,7 @@ void Models::testDataStore()
 
     CPT cpt = _dataStore.createConditionalProbabilityTable({{type, colour, ccContact}});
     cpt.dump(std::cout, _nameResolver);
-    Probability probabilityOfRingGreenContact = cpt.evidence({ring, green, noContact});
+    Probability probabilityOfRingGreenContact = cpt.probability({{type, ring} , {colour, green}, {ccContact, noContact}});
     QVERIFY(probabilityOfRingGreenContact == .2_p);
 }
 
@@ -161,15 +161,15 @@ void Models::testCPT()
     ValueIndex returned = _nameResolver.indexFromName("returned");
 
     CPT grandTable = _dataStore.createConditionalProbabilityTable();
-    Probability p = grandTable.probability({type, colour}, {ring, green});
+    Probability p = grandTable.probability({{type, ring}, {colour, green}});
     QVERIFY(p == .3_p);
 
     vector<ValueIndex> uniqueClasses = grandTable.distinctValues(classification);
     QCOMPARE(uniqueClasses, (vector<ValueIndex>{ kept, cancelled, returned }));
 
-    ProbabilityDistribution distribution = grandTable.classify({ type, ccContact }, { ring, noContact }, classification);
+    ProbabilityDistribution distribution = grandTable.classify({ {type, ring}, {ccContact, noContact }}, classification);
     distribution.dump(std::cerr, _nameResolver);
-    ProbabilityDistribution dist2 = grandTable.classify({ classification, colour}, { kept, green }, type);
+    ProbabilityDistribution dist2 = grandTable.classify({ {classification, kept}, {colour, green} }, type);
     dist2.dump(std::cerr, _nameResolver);
     QCOMPARE(distribution.mostProbable(), kept);
     qDebug() << static_cast<double>(distribution.vectorLength());

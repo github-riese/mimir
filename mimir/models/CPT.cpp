@@ -24,20 +24,20 @@ using std::find_if;
 namespace mimir {
 namespace models {
 
-static void dumpRow(pair<vector<ValueIndex>, Probability> const &row)
+static void dumpRow(CPT::Row const &row)
 {
     std::cout << "| ";
-    for(auto v : row.first) {
+    for(auto v : row.values) {
         std::cout << v << "\t| ";
     }
-    std::cout << row.second << " |" << std::endl;
+    std::cout << row.probability << " |" << std::endl;
 }
-static inline bool matches(pair<vector<ValueIndex>, Probability> const &row, vector<pair<long int, ValueIndex>> const &rule)
+static inline bool matches(CPT::Row const &row, vector<ColumnIndexValuePair> const &rule)
 {
     auto match = rule.begin();
     while (match != rule.end()) {
-        ValueIndex search = match->second;
-        if (search != ValueIndex::AnyIndex && search != row.first.at(static_cast<size_t>(match->first))) {
+        ValueIndex search = (*match).value;
+        if (search != ValueIndex::AnyIndex && search != row.values.at(static_cast<size_t>((*match).columnIndex))) {
             return false;
         }
         ++match;
@@ -47,13 +47,13 @@ static inline bool matches(pair<vector<ValueIndex>, Probability> const &row, vec
 
 struct AccumulateHelper
 {
-    vector<pair<long int, ValueIndex>> matchRules;
-    Probability operator()(Probability p, pair<vector<ValueIndex>, Probability> row)
+    vector<ColumnIndexValuePair> matchRules;
+    Probability operator()(Probability p, CPT::Row const& row)
     {
         if (!matches(row, matchRules)) {
                 return p;
         }
-        return p + row.second;
+        return p + row.probability;
     }
 };
 
@@ -63,39 +63,37 @@ CPT::CPT(vector<ValueIndex> fields, vector<vector<ValueIndex>> table) :
     calculateProbabilities(table);
 }
 
-Probability CPT::probability(vector<ValueIndex> columns, vector<ValueIndex> values) const
+std::vector<ValueIndex> CPT::fields() const
 {
-    auto matchRules = buildMatchRule(columns, values);
+    return _fields;
+}
+
+Probability CPT::probability(std::vector<ColumnNameValuePair> values) const
+{
+    auto matchRules = buildMatchRule(values);
     AccumulateHelper rowMatch{matchRules};
     Probability p = accumulate(_proabilities.begin(), _proabilities.end(), 0._p, rowMatch);
     return p;
 }
 
-Probability CPT::evidence(const std::vector<ValueIndex> &row)
+ProbabilityDistribution CPT::classify(const std::vector<ColumnNameValuePair> &columns, ValueIndex classifier)
 {
-    auto found = find_if(_proabilities.begin(), _proabilities.end(),
-                     [&row](pair<vector<ValueIndex>, Probability> const &value) {
-                        return row == value.first;
-                    });
-    if (found == _proabilities.end()) {
-        return 0._p;
-    }
-    return (*found).second;
+    traits::VerboseTiming<std::chrono::microseconds> _timing("CPT::classify");
+    auto matchRule = buildMatchRule(columns);
+    auto classifierIndex = fieldIndex(classifier);
+    return classify(matchRule, classifierIndex);
 }
 
-ProbabilityDistribution CPT::classify(const vector<ValueIndex> &columns, const vector<ValueIndex> &values, ValueIndex classifier)
+ProbabilityDistribution CPT::classify(const std::vector<ColumnIndexValuePair> &matchRule, long classifierIndex)
 {
-    traits::VerboseTiming<std::chrono::nanoseconds>("CPT::classify");
-    auto matchRule = buildMatchRule(columns, values);
-    auto classifierIndex = fieldIndex(classifier);
     map<ValueIndex, Probability> result;
     Probability sumOfMatches;
-    auto runner = [&](pair<vector<ValueIndex>, Probability> const &row) {
+    auto runner = [&](Row const &row) {
         if (!matches(row, matchRule)) {
                 return;
         }
-        sumOfMatches += row.second;
-        result[row.first.at(static_cast<size_t>(classifierIndex))] += row.second;
+        sumOfMatches += row.probability;
+        result[row.values.at(static_cast<size_t>(classifierIndex))] += row.probability;
         dumpRow(row);
     };
     for_each(_proabilities.begin(), _proabilities.end(), runner);
@@ -116,8 +114,8 @@ vector<ValueIndex> CPT::distinctValues(ValueIndex field) const
 
     set<ValueIndex> seen;
     for_each(_proabilities.begin(), _proabilities.end(),
-                [index, &seen](pair<vector<ValueIndex>, Probability> const & value){
-        ValueIndex v = value.first.at(static_cast<size_t>(index));
+                [index, &seen](Row const & value){
+        ValueIndex v = value.values.at(static_cast<size_t>(index));
         seen.insert(v);
     });
 
@@ -129,10 +127,10 @@ std::ostream& CPT::dump(std::ostream &stream, services::NameResolver &resolver) 
 {
     for (auto row : _proabilities) {
         stream << "| ";
-        for (auto index : row.first) {
+        for (auto index : row.values) {
             stream << resolver.nameFromIndex(index) << "\t| ";
         }
-        stream << "  " << row.second.value() << "|" << std::endl;
+        stream << "  " << row.probability.value() << "|" << std::endl;
     }
     return stream;
 }
@@ -141,7 +139,7 @@ void CPT::calculateProbabilities(vector<vector<ValueIndex>> table)
 {
     std::ostringstream ss;
     ss << "CPT::calculateProbabilities of " << table.size() << " values";
-    traits::VerboseTiming<std::chrono::microseconds>(ss.str());
+    traits::VerboseTiming<std::chrono::microseconds> _timer(ss.str());
 
     auto total = table.size();
     auto current = table.begin();
@@ -154,8 +152,8 @@ void CPT::calculateProbabilities(vector<vector<ValueIndex>> table)
         previous = current;
     }
     _proabilities.push_back({*previous, Probability(static_cast<long double>(distance(previous, current))/total)});
-    assert(accumulate(_proabilities.begin(), _proabilities.end(), 0._p, [](Probability _1, pair<vector<ValueIndex>, Probability> const &_2){
-        return _1 + _2.second;
+    assert(accumulate(_proabilities.begin(), _proabilities.end(), 0._p, [](Probability _1, Row const &_2){
+        return _1 + _2.probability;
            }) == 1._p);
 }
 
@@ -168,14 +166,14 @@ long CPT::fieldIndex(ValueIndex name) const
     return distance(_fields.begin(), field);
 }
 
-vector<pair<long, ValueIndex>> CPT::buildMatchRule(std::vector<ValueIndex> columns, std::vector<ValueIndex> values) const
+vector<ColumnIndexValuePair> CPT::buildMatchRule(const std::vector<ColumnNameValuePair> &values) const
 {
-    vector<pair<long int, ValueIndex>> matchRules;
+    vector<ColumnIndexValuePair> matchRules;
     auto knownColumns = _fields.begin();
     auto valueIdx = values.begin();
-    for (auto column : columns) {
-        auto i = find_if(knownColumns, _fields.end(), [&column](ValueIndex vi) { return vi == column; });
-        matchRules.push_back({distance(knownColumns, i), *(valueIdx++)});
+    while (valueIdx != values.end()) {
+        auto i = find_if(knownColumns, _fields.end(), [&valueIdx](ValueIndex vi) { return vi == (*valueIdx).columnName; });
+        matchRules.push_back({distance(knownColumns, i), (*(valueIdx++)).value});
     }
     return matchRules;
 }

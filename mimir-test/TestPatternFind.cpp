@@ -1,19 +1,22 @@
 #include "TestPatternFind.h"
 #include <QDebug>
 
+#include "../mimir/models/CPT.h"
 #include "../mimir/models/ProbabilityWithPriors.h"
 #include "../mimir/services/Evaluator.h"
-#include "../mimir/services/EvaluationCombiner.h"
+#include "../mimir/services/DependencyDetector.h"
 
 using std::vector;
 
+using mimir::models::CPT;
 using mimir::models::Evaluation;
+using mimir::models::ColumnNameValuePair;
 using mimir::models::Probability;
 using mimir::models::ProbabilityWithPriors;
 using mimir::models::ValueIndex;
 
+using mimir::services::DependencyDetector;
 using mimir::services::Evaluator;
-using mimir::services::EvaluationCombiner;
 using mimir::services::NameResolver;
 
 #define mkValueIndex(name) ValueIndex name = _nameResolver.indexFromName(#name);
@@ -43,7 +46,7 @@ void TestPatternFind::initTestCase()
     mkValueIndex(hostMale);
     mkValueIndex(hostFemale);
 
-    _dataStore.createDataSet({"status", "type", "colour", "agentContact", "presenterSex"}, "status");
+    _dataStore.createDataSet({"status", "type", "colour", "agentContact", "presenterSex"});
 
     vector<vector<ValueIndex>> testData = {
         {cancelled, ring,    red,   noContact,  hostMale},
@@ -85,6 +88,23 @@ QDebug &operator<<(QDebug &debug, const ProbabilityWithPriors &p){
 
 void TestPatternFind::testPreCheckAssumptionThatDataTurnOutAOne()
 {
+    ValueIndex ring = _nameResolver.indexFromName("ring"),
+            green = _nameResolver.indexFromName("green"),
+            noContact = _nameResolver.indexFromName("noContact"),
+            hostMale = _nameResolver.indexFromName("hostMale"),
+            status = _nameResolver.indexFromName("status"),
+            colour = _nameResolver.indexFromName("colour"),
+            ccContact = _nameResolver.indexFromName("agentContact"),
+            presenterSex = _nameResolver.indexFromName("presenterSex"),
+            type = _nameResolver.indexFromName("type");
+
+    CPT cpt = _dataStore.createConditionalProbabilityTable();
+    auto classification = cpt.classify({{type, ring}, {colour, green}, {ccContact, noContact}, {presenterSex, hostMale}}, status);
+    classification.dump(std::cerr, _nameResolver);
+
+    DependencyDetector detect(cpt);
+    detect.detectDependencies({ValueIndex(ValueIndex::AnyIndex), ring, green, noContact, hostMale}, status);
+
 }
 
 void TestPatternFind::testPredict()
