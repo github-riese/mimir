@@ -96,14 +96,23 @@ void TestPatternFind::testPreCheckAssumptionThatDataTurnOutAOne()
             colour = _nameResolver.indexFromName("colour"),
             ccContact = _nameResolver.indexFromName("agentContact"),
             presenterSex = _nameResolver.indexFromName("presenterSex"),
-            type = _nameResolver.indexFromName("type");
+            type = _nameResolver.indexFromName("type"),
+            kept = _nameResolver.indexFromName("kept");
 
     CPT cpt = _dataStore.createConditionalProbabilityTable();
     auto classification = cpt.classify({{type, ring}, {colour, green}, {ccContact, noContact}, {presenterSex, hostMale}}, status);
     classification.dump(std::cerr, _nameResolver);
 
     DependencyDetector detect(cpt);
-    detect.detectDependencies({ValueIndex(ValueIndex::AnyIndex), ring, green, noContact, hostMale}, status, _nameResolver);
+    auto allStates = cpt.distinctValues(status);
+    for (auto state : allStates) {
+        auto net = detect.findSuitableGraph({{status, state}, {type, ring}, {colour, green}, {ccContact, noContact}, {presenterSex, hostMale}});
+        for (auto node : net) {
+            node.dump(std::cerr, _nameResolver);
+        }
+        std::cerr << "------" << std::endl;
+    }
+    //detect.detectDependencies({ValueIndex(ValueIndex::AnyIndex), ring, green, noContact, hostMale}, status);
 
 }
 

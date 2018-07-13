@@ -13,42 +13,50 @@ struct ColumnNameValuePair
 {
     ValueIndex columnName;
     ValueIndex value;
+    constexpr inline bool operator <(ColumnNameValuePair const &rhs) const
+    {
+        return columnName < rhs.columnName;
+    }
 };
 
 struct ColumnIndexValuePair
 {
     long int columnIndex;
     ValueIndex value;
+    constexpr inline bool operator<(ColumnIndexValuePair const &rhs) const
+    {
+        return columnIndex < rhs.columnIndex;
+    }
 };
 
 struct NamedProbability
 {
     ValueIndex name;
     Probability probability;
-};
-
-struct ValueCompare
-{
-    virtual ~ValueCompare();
-    inline virtual bool operator ()(ValueIndex left, ValueIndex right) = 0;
-};
-
-struct Equals : public ValueCompare
-{
-    inline virtual bool operator ()(ValueIndex left, ValueIndex right)
+    constexpr inline bool operator <(NamedProbability const &rhs) const
     {
-        return left == right;
+        return probability < rhs.probability;
     }
 };
 
-struct NotEquals : public ValueCompare
+/**
+ * @brief The ConditionalProbability struct
+ * for expressions P(k|x1, x2, ..., xn) k is in name, X is in parents
+ */
+struct ConditionalProbability
 {
-    inline virtual bool operator ()(ValueIndex left, ValueIndex right)
+    Probability probability;
+    ValueIndex name;
+    std::vector<ValueIndex> parents;
+    constexpr inline bool operator <(ConditionalProbability const &rhs) const
     {
-        return left != right;
+        return probability < rhs.probability;
+    }
+    constexpr inline bool operator==(ConditionalProbability const &rhs) const
+    {
+        return probability == rhs.probability;
     }
 };
-
 
 } // namespace models
 } // namespace mimir

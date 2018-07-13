@@ -10,8 +10,6 @@
 #include "ProbabilityDistribution.h"
 #include "ValueIndex.h"
 
-#include "../services/NameResolver.h"
-
 namespace mimir {
 namespace models {
 
@@ -37,6 +35,7 @@ public:
     std::vector<ValueIndex> distinctValues(ValueIndex field) const;
     std::ostream &dump(std::ostream&, services::NameResolver &) const;
     long int fieldIndex(ValueIndex name) const;
+    ValueIndex fieldName(long int) const;
 private:
     void calculateProbabilities(std::vector<std::vector<ValueIndex>>);
     std::vector<ColumnIndexValuePair> buildMatchRule(std::vector<ColumnNameValuePair> const&values) const;

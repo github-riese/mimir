@@ -32,6 +32,7 @@ static void dumpRow(CPT::Row const &row)
     }
     std::cout << row.probability << " |" << std::endl;
 }
+
 static inline bool matches(CPT::Row const &row, vector<ColumnIndexValuePair> const &rule)
 {
     auto match = rule.begin();
@@ -106,7 +107,8 @@ ProbabilityDistribution CPT::classify(const std::vector<ColumnIndexValuePair> &m
     for_each(result.begin(), result.end(), [scale](auto &value) {
         value.second *= scale;
     });
-    return ProbabilityDistribution(result);
+    ProbabilityDistribution rd(result);
+    return rd;
 }
 
 vector<ValueIndex> CPT::distinctValues(ValueIndex field) const
@@ -169,6 +171,14 @@ long CPT::fieldIndex(ValueIndex name) const
         return -1;
     }
     return distance(_fields.begin(), field);
+}
+
+ValueIndex CPT::fieldName(long idx) const
+{
+    if (0 > idx || _fields.size() < static_cast<size_t>(idx)) {
+        return ValueIndex(ValueIndex::NoIndex);
+    }
+    return _fields.at(static_cast<size_t>(idx));
 }
 
 vector<ColumnIndexValuePair> CPT::buildMatchRule(const std::vector<ColumnNameValuePair> &values) const

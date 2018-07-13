@@ -28,7 +28,8 @@ SOURCES += \
     models/CPT.cpp \
     models/ProbabilityDistribution.cpp \
     services/DependencyDetector.cpp \
-    models/KeyValuePair.cpp
+    models/KeyValuePair.cpp \
+    models/NetworkFragment.cpp
 
 HEADERS += \
     models/Probability.h \
@@ -39,7 +40,6 @@ HEADERS += \
     models/Evaluation.h \
     services/Evaluator.h \
     models/ValueType.h \
-    models/InterpolationStrategy.h \
     helpers/helpers.h \
     traits/Timing.h \
     services/DataStore.h \
@@ -47,4 +47,5 @@ HEADERS += \
     models/CPT.h \
     models/ProbabilityDistribution.h \
     services/DependencyDetector.h \
-    models/KeyValuePair.h
+    models/KeyValuePair.h \
+    models/NetworkFragment.h

@@ -31,6 +31,7 @@ public:
     std::vector<ValueIndex> classifiers() const;
     std::vector<NamedProbability> distribution() const;
 
+    Probability probabilityOf(ValueIndex) const;
     std::ostream &dump(std::ostream &, services::NameResolver &) const;
 private:
     void analyze();

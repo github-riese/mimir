@@ -16,7 +16,7 @@ NameResolver::NameResolver()
 
 string NameResolver::nameFromIndex(const ValueIndex &index) const
 {
-    if (index > _lookup.size()) {
+    if (index >= _lookup.size()) {
         return string();
     }
     return _lookup.at(index);

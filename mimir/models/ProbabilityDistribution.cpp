@@ -129,6 +129,21 @@ vector<NamedProbability> ProbabilityDistribution::distribution() const
     return result;
 }
 
+Probability ProbabilityDistribution::probabilityOf(ValueIndex name) const
+{
+    auto idx = _classifiers.begin();
+    while (idx != _classifiers.end()) {
+        if (*idx == name) {
+            break;
+        }
+        ++idx;
+    }
+    if (idx == _classifiers.end()) {
+        return 0._p;
+    }
+    return *(_probabilities.begin() + std::distance(_classifiers.begin(), idx));
+}
+
 std::ostream &ProbabilityDistribution::dump(std::ostream &stream, services::NameResolver &resolver) const
 {
     stream << "vectorLength: " << _vectorLength << std::endl;
