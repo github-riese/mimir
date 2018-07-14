@@ -17,6 +17,11 @@ struct ColumnNameValuePair
     {
         return columnName < rhs.columnName;
     }
+
+    constexpr inline bool operator ==(ColumnNameValuePair const &rhs) const
+    {
+        return columnName == rhs.columnName && value == rhs.value;
+    }
 };
 
 struct ColumnIndexValuePair

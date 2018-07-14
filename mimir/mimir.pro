@@ -29,7 +29,8 @@ SOURCES += \
     models/ProbabilityDistribution.cpp \
     services/DependencyDetector.cpp \
     models/KeyValuePair.cpp \
-    models/NetworkFragment.cpp
+    models/NetworkFragment.cpp \
+    models/Network.cpp
 
 HEADERS += \
     models/Probability.h \
@@ -48,4 +49,5 @@ HEADERS += \
     models/ProbabilityDistribution.h \
     services/DependencyDetector.h \
     models/KeyValuePair.h \
-    models/NetworkFragment.h
+    models/NetworkFragment.h \
+    models/Network.h

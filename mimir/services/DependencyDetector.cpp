@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <deque>
 
+#include "../models/Network.h"
 #include "../models/Probability.h"
 #include "../traits/Timing.h"
 
@@ -10,6 +11,7 @@ using std::deque;
 using std::vector;
 
 using std::find_if;
+using std::sort;
 
 using mimir::models::CPT;
 using mimir::models::ColumnIndexValuePair;
@@ -28,24 +30,21 @@ DependencyDetector::DependencyDetector(CPT &cpt) :
 {
 }
 
-std::vector<models::ConditionalProbability> DependencyDetector::detectDependencies(vector<ValueIndex> const& values, ValueIndex classifiingColumn)
+vector<NetworkFragment> DependencyDetector::computePriors(vector<ColumnIndexValuePair> const& input)
 {
-    // what i want:
-    // P(a|b,c,d,e,f,...,z) * P(b|c,d,e,f,...,z) * ... * P(z)
-    traits::VerboseTiming<std::chrono::microseconds> _timer("detectDependencies");
-    auto fields = _cpt.fields();
-    vector<ColumnIndexValuePair> independent;
-    auto classifyingIndex = _cpt.fieldIndex(classifiingColumn);
-    vector<ColumnIndexValuePair> candidates;
-    for (auto field : fields) {
-        auto idx = _cpt.fieldIndex(field);
-        if (idx == classifyingIndex) {
-            continue;
-        }
-        candidates.push_back({idx, values.at(static_cast<size_t>(idx))});
+    // a list. for each input - P(xn=in)
+    // Probabilities delievered as vector of NetworkFragments
+    // sorted by probability ascending
+    traits::VerboseTiming<std::chrono::microseconds> _timer(__PRETTY_FUNCTION__);
+    vector<NetworkFragment> result;
+    for (auto value : input) {
+        Probability p = _cpt.probability({value});
+        result.push_back(NetworkFragment{{_cpt.fieldName(value.columnIndex), value.value}, {}, p});
     }
-    eliminateZeroEvidence(candidates);
-    vector<ConditionalProbability> result;
+    sort(result.begin(), result.end());
+    return result;
+}
+/*
     auto candidate = candidates.begin();
     while (candidate != candidates.end()) {
         auto partner = candidate + 1;
@@ -54,34 +53,27 @@ std::vector<models::ConditionalProbability> DependencyDetector::detectDependenci
                 ++partner;
                 continue;
             }
-            Probability pThisGivenThat = conditionalProbability(*candidate, {*partner});
-            Probability pThatGivenThis = conditionalProbability(*partner, {*(candidate)});
-            Probability p1AndP2 = _cpt.probability({*candidate, *partner});
-            Probability p1 = _cpt.probability({*candidate});
-            Probability p2 = _cpt.probability({*partner});
-            std::cerr << "P(" << candidate->value << '|' << partner->value << "): " << pThisGivenThat << ", "
-                      << "P(" << partner->value << '|' << candidate->value << "): " << pThatGivenThis << ", "
-                      << "P(" << partner->value << ',' << candidate->value << "): " << p1AndP2 << ", "
-                      << "P(a): " << p1 << ", "
-                      << "P(b): " << p2
-                      << std::endl;
-            if (abs(pThisGivenThat - p1) < .05_p || abs(pThatGivenThis - p2) < .05_p || pThisGivenThat == pThatGivenThis) {
-                independent.push_back(*candidate);
-                independent.push_back(*partner);
-            }
+            Probability p = conditionalProbability(*candidate, {*partner});
+            result.push_back({{_cpt.fieldName(candidate->columnIndex), candidate->value}, {{_cpt.fieldName(partner->columnIndex), partner->value}}, p});
+            p = conditionalProbability(*partner, {*candidate});
+            result.push_back({{_cpt.fieldName(partner->columnIndex), partner->value}, {{_cpt.fieldName(candidate->columnIndex), candidate->value}}, p});
             ++partner;
         }
         ++candidate;
     }
+    std::sort(result.begin() + static_cast<long>(candidates.size()), result.end());
     return result;
 }
+*/
 
 vector<NetworkFragment> DependencyDetector::findSuitableGraph(const vector<ColumnNameValuePair> &input)
 {
-    deque<ColumnIndexValuePair> possibleFields;
+    traits::VerboseTiming<std::chrono::microseconds> graphTiming(__PRETTY_FUNCTION__);
+    vector<ColumnIndexValuePair> possibleFields;
     for (auto candidate : input) {
         possibleFields.push_back({_cpt.fieldIndex(candidate.columnName), candidate.value});
     }
+    auto priors = computePriors(possibleFields);
     // look at first field x1. get probability P(x1=i1)
     // take the next field x2. get probability P(x2=i2)
     // get conditional probability P(x1=i1|x2=i2)
@@ -94,35 +86,42 @@ vector<NetworkFragment> DependencyDetector::findSuitableGraph(const vector<Colum
     // is that one less than the value before? ignore x3, go on with x4
     // no more values left? the current one is one net fragment.
     // restart with all values that are not in the net.
-    vector<ColumnIndexValuePair> unassigned;
-    vector<ColumnIndexValuePair> currentWorkload;
-    vector<NetworkFragment> net;
+    vector<ColumnIndexValuePair> potentialParents;
+    models::Network n;
     ColumnIndexValuePair i1, i2;
-    while (possibleFields.size() > 0) {
-        i1 = possibleFields.front(); possibleFields.pop_front();
-        Probability previousL, l;
-        if (possibleFields.size() == 0) {
-            l = likelihood(i1, {});
-            net.push_back({{_cpt.fieldName(i1.columnIndex), i1.value}, {}, l});
-            break;
-        }
-        while (possibleFields.size() > 0) {
-            i2 = possibleFields.front(); possibleFields.pop_front();
-            currentWorkload.push_back(i2);
-            l = likelihood(i1, currentWorkload);
-            if (l <= previousL) {
-                auto v = currentWorkload.back();
-                currentWorkload.pop_back();
-                unassigned.push_back(v);
+    for (auto prior : priors) {
+        for (size_t field = 0; field < possibleFields.size(); ++field) {
+            Probability currentLikelihood = prior.probability(), l;
+            ColumnNameValuePair const &priorInput = prior.input();
+            i1 = {_cpt.fieldIndex(priorInput.columnName), priorInput.value};
+            if (i1.columnIndex == possibleFields.at(field).columnIndex) {
                 continue;
             }
-            previousL = l;
+            for (size_t parentField = 0; parentField < possibleFields.size(); ++parentField) {
+                size_t parentIndex = field + parentField;
+                if (parentIndex >= possibleFields.size()) {
+                    parentIndex -= possibleFields.size(); // wrap around;
+                }
+                if (i1.columnIndex == possibleFields.at(parentIndex).columnIndex) {
+                    continue;
+                }
+                i2 = possibleFields.at(parentIndex);
+                potentialParents.push_back(i2);
+                l = likelihood(i1, potentialParents);
+                if (l <= currentLikelihood) {
+                    potentialParents.pop_back();
+                    continue;
+                } else if (l == 1._p) {
+                    currentLikelihood = l;
+                    break;
+                }
+                currentLikelihood = l;
+            }
+            n.addFragment({{_cpt.fieldName(i1.columnIndex), i1.value}, indexedPairVectorToNamedPairVector(potentialParents), currentLikelihood});
+            potentialParents.clear();
         }
-        net.push_back({{_cpt.fieldName(i1.columnIndex), i1.value}, indexedPairVectorToNamedPairVector(currentWorkload), l});
-        possibleFields.insert(possibleFields.end(), unassigned.begin(), unassigned.end());
-        unassigned.clear();
     }
-    return net;
+    return n.fragments();
 }
 
 Probability DependencyDetector::likelihood(const models::ColumnIndexValuePair &k, const std::vector<models::ColumnIndexValuePair> &x)

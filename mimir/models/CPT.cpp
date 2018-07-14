@@ -33,25 +33,12 @@ static void dumpRow(CPT::Row const &row)
     std::cout << row.probability << " |" << std::endl;
 }
 
-static inline bool matches(CPT::Row const &row, vector<ColumnIndexValuePair> const &rule)
-{
-    auto match = rule.begin();
-    while (match != rule.end()) {
-        ValueIndex search = (*match).value;
-        if (search != ValueIndex::AnyIndex && search != row.values.at(static_cast<size_t>((*match).columnIndex))) {
-            return false;
-        }
-        ++match;
-    }
-    return true;
-}
-
 struct AccumulateHelper
 {
-    vector<ColumnIndexValuePair> matchRules;
+    vector<ColumnIndexValuePair> input;
     Probability operator()(Probability p, CPT::Row const& row)
     {
-        if (!matches(row, matchRules)) {
+        if (!row.matchesInput(input)) {
                 return p;
         }
         return p + row.probability;
@@ -90,19 +77,18 @@ ProbabilityDistribution CPT::classify(const std::vector<ColumnNameValuePair> &co
     return classify(matchRule, classifierIndex);
 }
 
-ProbabilityDistribution CPT::classify(const std::vector<ColumnIndexValuePair> &matchRule, long classifierIndex)
+ProbabilityDistribution CPT::classify(const std::vector<ColumnIndexValuePair> &input, long classifierIndex)
 {
     map<ValueIndex, Probability> result;
     Probability sumOfMatches;
-    auto runner = [&](Row const &row) {
-        if (!matches(row, matchRule)) {
-                return;
+    for(auto row : _proabilities){
+        if (!row.matchesInput(input)) {
+            continue;
         }
         sumOfMatches += row.probability;
         result[row.values.at(static_cast<size_t>(classifierIndex))] += row.probability;
         dumpRow(row);
-    };
-    for_each(_proabilities.begin(), _proabilities.end(), runner);
+    }
     Probability scale = 1/sumOfMatches;
     for_each(result.begin(), result.end(), [scale](auto &value) {
         value.second *= scale;
@@ -191,6 +177,19 @@ vector<ColumnIndexValuePair> CPT::buildMatchRule(const std::vector<ColumnNameVal
         matchRules.push_back({distance(knownColumns, i), (*(valueIdx++)).value});
     }
     return matchRules;
+}
+
+bool CPT::Row::matchesInput(const std::vector<ColumnIndexValuePair> &input) const
+{
+    auto match = input.begin();
+    while (match != input.end()) {
+        ValueIndex search = (*match).value;
+        if (search != ValueIndex::AnyIndex && search != values.at(static_cast<size_t>((*match).columnIndex))) {
+            return false;
+        }
+        ++match;
+    }
+    return true;
 }
 
 } // namespace models

@@ -17,15 +17,25 @@ class NetworkFragment
 public:
     NetworkFragment(ColumnNameValuePair, std::vector<ColumnNameValuePair>, Probability);
 
-    ColumnNameValuePair value() const;
+    ColumnNameValuePair input() const;
 
     std::vector<ColumnNameValuePair> parents() const;
 
     Probability probability() const;
 
+    inline bool operator <(NetworkFragment const &rhs) const
+    {
+        return _probability < rhs._probability;
+    }
+
+    inline size_t countParents() const
+    {
+        return _parents.size();
+    }
+
     std::ostream &dump(std::ostream &, services::NameResolver &);
 private:
-    ColumnNameValuePair _value;
+    ColumnNameValuePair _input;
     std::vector<ColumnNameValuePair> _parents;
     Probability _probability;
 };

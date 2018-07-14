@@ -4,16 +4,16 @@ namespace mimir {
 namespace models {
 
 
-NetworkFragment::NetworkFragment(ColumnNameValuePair classifier, std::vector<ColumnNameValuePair> parents, Probability probability) :
-    _value(classifier),
+NetworkFragment::NetworkFragment(ColumnNameValuePair input, std::vector<ColumnNameValuePair> parents, Probability probability) :
+    _input(input),
     _parents(parents),
     _probability(probability)
 {
 }
 
-ColumnNameValuePair NetworkFragment::value() const
+ColumnNameValuePair NetworkFragment::input() const
 {
-    return _value;
+    return _input;
 }
 
 std::vector<ColumnNameValuePair> NetworkFragment::parents() const
@@ -29,9 +29,9 @@ Probability NetworkFragment::probability() const
 std::ostream &NetworkFragment::dump(std::ostream &stream, services::NameResolver &nameResolver)
 {
     stream << "P("
-           << nameResolver.nameFromIndex(_value.columnName)
+           << nameResolver.nameFromIndex(_input.columnName)
            << '='
-           << nameResolver.nameFromIndex(_value.value);
+           << nameResolver.nameFromIndex(_input.value);
     if (_parents.size() > 0) {
         stream << '|';
         bool first = true;

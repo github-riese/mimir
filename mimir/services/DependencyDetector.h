@@ -16,7 +16,7 @@ class DependencyDetector
 {
 public:
     DependencyDetector(models::CPT &cpt);
-    std::vector<models::ConditionalProbability> detectDependencies(const std::vector<models::ValueIndex> &values, models::ValueIndex classifiingColumn);
+    std::vector<models::NetworkFragment> computePriors(const std::vector<models::ColumnIndexValuePair> &input);
     std::vector<models::NetworkFragment> findSuitableGraph(const std::vector<models::ColumnNameValuePair> &input);
 private:
     models::Probability likelihood(models::ColumnIndexValuePair const &k, std::vector<models::ColumnIndexValuePair> const &x);

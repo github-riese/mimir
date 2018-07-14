@@ -40,25 +40,29 @@ void TestPatternFind::initTestCase()
     mkValueIndex(red);
     mkValueIndex(green);
 
-    mkValueIndex(hadContact);
-    mkValueIndex(noContact);
+    mkValueIndex(yes);
+    mkValueIndex(no);
 
     mkValueIndex(hostMale);
     mkValueIndex(hostFemale);
 
-    _dataStore.createDataSet({"status", "type", "colour", "agentContact", "presenterSex"});
+    mkValueIndex(morning);
+    mkValueIndex(afternoon);
+    mkValueIndex(night);
+
+    _dataStore.createDataSet({"status", "type", "colour", "agentContact", "presenterSex", "sizesAvailable", "dayTime"});
 
     vector<vector<ValueIndex>> testData = {
-        {cancelled, ring,    red,   noContact,  hostMale},
-        {returned,  brooch,  green, hadContact, hostFemale},
-        {kept,      ring,    green, noContact,  hostMale},
-        {kept,      brooch,  red,   hadContact, hostFemale},
-        {kept,      brooch,  blue,  noContact,  hostMale},
-        {returned,  collier, blue, hadContact, hostFemale},
-        {returned,  collier, green, noContact,  hostMale},
-        {cancelled, brooch,  green, hadContact, hostFemale},
-        {kept,      ring,    green, noContact,  hostMale},
-        {cancelled, collier, red,  hadContact, hostFemale}
+        {cancelled, ring,    red,   no,  hostMale,   no,   morning},
+        {returned,  brooch,  green, yes, hostFemale, no,   afternoon},
+        {kept,      ring,    green, no,  hostMale,   yes,  night},
+        {kept,      brooch,  red,   yes, hostFemale, no,   afternoon},
+        {kept,      brooch,  blue,  no,  hostMale,   no,   morning},
+        {returned,  collier, blue,  yes, hostFemale, yes,  afternoon},
+        {returned,  collier, green, no,  hostMale,   yes,  night},
+        {cancelled, brooch,  green, yes, hostFemale, no,   afternoon},
+        {kept,      ring,    green, no,  hostMale,   no,   night},
+        {cancelled, collier, red,   yes, hostFemale, no,   afternoon}
     };
 
     for (auto row : testData) {
@@ -90,28 +94,30 @@ void TestPatternFind::testPreCheckAssumptionThatDataTurnOutAOne()
 {
     ValueIndex ring = _nameResolver.indexFromName("ring"),
             green = _nameResolver.indexFromName("green"),
-            noContact = _nameResolver.indexFromName("noContact"),
+            no = _nameResolver.indexFromName("no"),
+            yes = _nameResolver.indexFromName("yes"),
             hostMale = _nameResolver.indexFromName("hostMale"),
             status = _nameResolver.indexFromName("status"),
             colour = _nameResolver.indexFromName("colour"),
             ccContact = _nameResolver.indexFromName("agentContact"),
             presenterSex = _nameResolver.indexFromName("presenterSex"),
             type = _nameResolver.indexFromName("type"),
-            kept = _nameResolver.indexFromName("kept");
+            dayTime = _nameResolver.indexFromName("dayTime"),
+            sizesAvailable = _nameResolver.indexFromName("sizesAvailable"),
+            afternoon = _nameResolver.indexFromName("afternoon");
 
     CPT cpt = _dataStore.createConditionalProbabilityTable();
-    auto classification = cpt.classify({{type, ring}, {colour, green}, {ccContact, noContact}, {presenterSex, hostMale}}, status);
+    auto classification = cpt.classify({{type, ring}, {colour, green}, {ccContact, no}, {presenterSex, hostMale}, {sizesAvailable, yes}, {dayTime, afternoon}}, status);
     classification.dump(std::cerr, _nameResolver);
 
+    std::cerr << "------" << std::endl;
     DependencyDetector detect(cpt);
-    auto allStates = cpt.distinctValues(status);
-    for (auto state : allStates) {
-        auto net = detect.findSuitableGraph({{status, state}, {type, ring}, {colour, green}, {ccContact, noContact}, {presenterSex, hostMale}});
-        for (auto node : net) {
-            node.dump(std::cerr, _nameResolver);
-        }
-        std::cerr << "------" << std::endl;
+
+    auto net = detect.findSuitableGraph({{type, ring}, {colour, green}, {ccContact, no}, {presenterSex, hostMale}, {sizesAvailable, yes}, {dayTime, afternoon}});
+    for (auto node : net) {
+        node.dump(std::cerr, _nameResolver);
     }
+    std::cerr << "------" << std::endl;
     //detect.detectDependencies({ValueIndex(ValueIndex::AnyIndex), ring, green, noContact, hostMale}, status);
 
 }

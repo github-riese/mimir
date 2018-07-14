@@ -23,6 +23,7 @@ public:
     {
         std::vector<ValueIndex> values;
         Probability probability;
+        bool matchesInput(std::vector<ColumnIndexValuePair> const&) const;
     };
 public:
     CPT(std::vector<ValueIndex>, std::vector<std::vector<ValueIndex>>);
