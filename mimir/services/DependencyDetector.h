@@ -7,6 +7,7 @@
 #include "../models/CPT.h"
 #include "../models/ValueIndex.h"
 #include "../models/KeyValuePair.h"
+#include "../models/Network.h"
 #include "../models/NetworkFragment.h"
 
 namespace mimir {
@@ -16,10 +17,12 @@ class DependencyDetector
 {
 public:
     DependencyDetector(models::CPT &cpt);
-    std::vector<models::NetworkFragment> computePriors(const std::vector<models::ColumnIndexValuePair> &input);
-    std::vector<models::NetworkFragment> findSuitableGraph(const std::vector<models::ColumnNameValuePair> &input);
+    std::vector<models::NetworkFragment> computePriors(const std::vector<models::ColumnIndexValuePair> &input) const;
+    models::Network findSuitableGraph(const std::vector<models::ColumnNameValuePair> &input);
 private:
-    models::Probability likelihood(models::ColumnIndexValuePair const &k, std::vector<models::ColumnIndexValuePair> const &x);
+    std::vector<models::NetworkFragment> findLikelyGraphs(const std::vector<models::ColumnNameValuePair> &input) const;
+    models::Network findBestGraphs(std::vector<models::NetworkFragment> const &candidates);
+    models::Probability likelihood(models::ColumnIndexValuePair const &k, std::vector<models::ColumnIndexValuePair> const &input) const;
     models::Probability conditionalProbability(models::ColumnIndexValuePair const&, std::vector<models::ColumnIndexValuePair>const &);
     void eliminateZeroEvidence(std::vector<models::ColumnIndexValuePair> &) const;
     std::vector<models::ColumnNameValuePair> indexedPairVectorToNamedPairVector(std::vector<models::ColumnIndexValuePair> const &) const;

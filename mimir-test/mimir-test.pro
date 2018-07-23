@@ -11,6 +11,7 @@ QT       -= gui
 TARGET = mimir-test
 CONFIG   += console
 CONFIG   -= app_bundle
+CONFIG   += c++1z
 
 TEMPLATE = app
 

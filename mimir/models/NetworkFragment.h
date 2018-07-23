@@ -25,13 +25,21 @@ public:
 
     inline bool operator <(NetworkFragment const &rhs) const
     {
-        return _probability < rhs._probability;
+        if (long tdiff = static_cast<long>(_input.columnName - rhs._input.columnName)) {
+            return tdiff < 0;
+        }
+        if (_probability < rhs._probability) {
+            return true;
+        }
+        return _parents.size() < rhs._parents.size();
     }
 
     inline size_t countParents() const
     {
         return _parents.size();
     }
+
+    bool hasParent(ValueIndex) const;
 
     std::ostream &dump(std::ostream &, services::NameResolver &);
 private:

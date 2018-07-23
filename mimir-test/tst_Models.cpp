@@ -168,9 +168,9 @@ void Models::testCPT()
     vector<ValueIndex> uniqueClasses = grandTable.distinctValues(classification);
     QCOMPARE(uniqueClasses, (vector<ValueIndex>{ kept, cancelled, returned }));
 
-    ProbabilityDistribution distribution = grandTable.classify({ {type, ring}, {ccContact, noContact }}, classification);
+    ProbabilityDistribution distribution = grandTable.classify(classification, {{type, ring}, {ccContact, noContact }});
     distribution.dump(std::cerr, _nameResolver);
-    ProbabilityDistribution dist2 = grandTable.classify({ {classification, kept}, {colour, green} }, type);
+    ProbabilityDistribution dist2 = grandTable.classify(type, { {classification, kept}, {colour, green} });
     dist2.dump(std::cerr, _nameResolver);
     QCOMPARE(distribution.mostProbable(), kept);
     qDebug() << static_cast<double>(distribution.vectorLength());

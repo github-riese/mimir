@@ -69,15 +69,15 @@ Probability CPT::probability(std::vector<ColumnIndexValuePair> matchRules) const
     return p;
 }
 
-ProbabilityDistribution CPT::classify(const std::vector<ColumnNameValuePair> &columns, ValueIndex classifier)
+ProbabilityDistribution CPT::classify(ValueIndex classifier, const std::vector<ColumnNameValuePair> &columns)
 {
     traits::VerboseTiming<std::chrono::microseconds> _timing("CPT::classify");
     auto matchRule = buildMatchRule(columns);
     auto classifierIndex = fieldIndex(classifier);
-    return classify(matchRule, classifierIndex);
+    return classify(classifierIndex, matchRule);
 }
 
-ProbabilityDistribution CPT::classify(const std::vector<ColumnIndexValuePair> &input, long classifierIndex)
+ProbabilityDistribution CPT::classify(long classifierIndex, const std::vector<ColumnIndexValuePair> &input)
 {
     map<ValueIndex, Probability> result;
     Probability sumOfMatches;
@@ -99,20 +99,24 @@ ProbabilityDistribution CPT::classify(const std::vector<ColumnIndexValuePair> &i
 
 vector<ValueIndex> CPT::distinctValues(ValueIndex field) const
 {
-    vector<ValueIndex> result;
     long int index = fieldIndex(field);
     if (index == -1) {
-        return result;
+        return vector<ValueIndex>();
     }
+    return distinctValues(index);
+}
 
+std::vector<ValueIndex> CPT::distinctValues(long fieldIndex) const
+{
+    vector<ValueIndex> result;
     set<ValueIndex> seen;
     for_each(_proabilities.begin(), _proabilities.end(),
-                [index, &seen](Row const & value){
-        ValueIndex v = value.values.at(static_cast<size_t>(index));
+                [fieldIndex, &seen](Row const & value){
+        ValueIndex v = value.values.at(static_cast<size_t>(fieldIndex));
         seen.insert(v);
     });
 
-    result.insert(result.begin(), seen.begin(), seen.end());
+    result.insert(result.end(), seen.begin(), seen.end());
     return result;
 }
 
@@ -181,13 +185,10 @@ vector<ColumnIndexValuePair> CPT::buildMatchRule(const std::vector<ColumnNameVal
 
 bool CPT::Row::matchesInput(const std::vector<ColumnIndexValuePair> &input) const
 {
-    auto match = input.begin();
-    while (match != input.end()) {
-        ValueIndex search = (*match).value;
-        if (search != ValueIndex::AnyIndex && search != values.at(static_cast<size_t>((*match).columnIndex))) {
+    for (auto rule : input) {
+        ValueIndex search = rule.value;
+        if (search != ValueIndex::AnyIndex && search != values.at(static_cast<size_t>(rule.columnIndex)))
             return false;
-        }
-        ++match;
     }
     return true;
 }

@@ -11,6 +11,7 @@ using std::vector;
 using mimir::models::CPT;
 using mimir::models::Evaluation;
 using mimir::models::ColumnNameValuePair;
+using mimir::models::NamedProbability;
 using mimir::models::Probability;
 using mimir::models::ProbabilityWithPriors;
 using mimir::models::ValueIndex;
@@ -104,20 +105,29 @@ void TestPatternFind::testPreCheckAssumptionThatDataTurnOutAOne()
             type = _nameResolver.indexFromName("type"),
             dayTime = _nameResolver.indexFromName("dayTime"),
             sizesAvailable = _nameResolver.indexFromName("sizesAvailable"),
+            night = _nameResolver.indexFromName("night"),
+            brooch = _nameResolver.indexFromName("brooch"),
+            red = _nameResolver.indexFromName("red"),
             afternoon = _nameResolver.indexFromName("afternoon");
 
     CPT cpt = _dataStore.createConditionalProbabilityTable();
-    auto classification = cpt.classify({{type, ring}, {colour, green}, {ccContact, no}, {presenterSex, hostMale}, {sizesAvailable, yes}, {dayTime, afternoon}}, status);
+    auto classification = cpt.classify(status, {{type, ring}, {colour, green}, {ccContact, no}, {presenterSex, hostMale}, {sizesAvailable, yes}, {dayTime, night}});
     classification.dump(std::cerr, _nameResolver);
 
     std::cerr << "------" << std::endl;
     DependencyDetector detect(cpt);
 
-    auto net = detect.findSuitableGraph({{type, ring}, {colour, green}, {ccContact, no}, {presenterSex, hostMale}, {sizesAvailable, yes}, {dayTime, afternoon}});
-    for (auto node : net) {
-        node.dump(std::cerr, _nameResolver);
-    }
+    auto net = detect.findSuitableGraph({{type, ring}, {colour, green}, {ccContact, no}, {presenterSex, hostMale}, {sizesAvailable, yes}, {dayTime, night}});
+    net.dump(std::cerr, _nameResolver);
+    vector<NamedProbability> expectedSinksNet1 {{ccContact, 1._p}};
+    QCOMPARE(net.sinks(), expectedSinksNet1);
     std::cerr << "------" << std::endl;
+    auto net2 = detect.findSuitableGraph({{type, brooch}, {colour, red}, {ccContact, yes}, {presenterSex, hostMale}, {sizesAvailable, no}, {dayTime, afternoon}});
+    net2.dump(std::cerr, _nameResolver);
+    vector<NamedProbability> expectedSinksNet2 {{colour, .5_p}};
+    QCOMPARE(net2.sinks(), expectedSinksNet2);
+    std::cerr << "------" << std::endl;
+
     //detect.detectDependencies({ValueIndex(ValueIndex::AnyIndex), ring, green, noContact, hostMale}, status);
 
 }

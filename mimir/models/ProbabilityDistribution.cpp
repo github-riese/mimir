@@ -49,6 +49,11 @@ ProbabilityDistribution::ProbabilityDistribution(std::map<ValueIndex, Probabilit
     analyze();
 }
 
+ProbabilityDistribution::ProbabilityDistribution(std::map<std::vector<ValueIndex>, Probability>)
+{
+
+}
+
 Probability ProbabilityDistribution::vectorLength() const
 {
     return _vectorLength;

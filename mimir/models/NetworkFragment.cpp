@@ -1,4 +1,10 @@
 #include "NetworkFragment.h"
+#include "KeyValuePair.h"
+
+#include <algorithm>
+
+using std::find_if;
+using std::sort;
 
 namespace mimir {
 namespace models {
@@ -9,6 +15,7 @@ NetworkFragment::NetworkFragment(ColumnNameValuePair input, std::vector<ColumnNa
     _parents(parents),
     _probability(probability)
 {
+    sort(parents.begin(), parents.end());
 }
 
 ColumnNameValuePair NetworkFragment::input() const
@@ -24,6 +31,14 @@ std::vector<ColumnNameValuePair> NetworkFragment::parents() const
 Probability NetworkFragment::probability() const
 {
     return _probability;
+}
+
+bool NetworkFragment::hasParent(ValueIndex potentialParent) const
+{
+    return find_if(_parents.begin(), _parents.end(),
+                   [potentialParent] (ColumnNameValuePair const &p){
+        return p.columnName == potentialParent;
+    }) != _parents.end();
 }
 
 std::ostream &NetworkFragment::dump(std::ostream &stream, services::NameResolver &nameResolver)

@@ -31,12 +31,14 @@ public:
     Probability probability(std::vector<ColumnNameValuePair> values) const;
     Probability probability(std::vector<ColumnIndexValuePair> values) const;
 
-    ProbabilityDistribution classify(std::vector<ColumnNameValuePair> const &, ValueIndex);
-    ProbabilityDistribution classify(std::vector<ColumnIndexValuePair> const&, long);
+    ProbabilityDistribution classify(ValueIndex, std::vector<ColumnNameValuePair> const &);
+    ProbabilityDistribution classify(long, std::vector<ColumnIndexValuePair> const&);
     std::vector<ValueIndex> distinctValues(ValueIndex field) const;
+    std::vector<ValueIndex> distinctValues(long fieldIndex) const;
     std::ostream &dump(std::ostream&, services::NameResolver &) const;
     long int fieldIndex(ValueIndex name) const;
     ValueIndex fieldName(long int) const;
+
 private:
     void calculateProbabilities(std::vector<std::vector<ValueIndex>>);
     std::vector<ColumnIndexValuePair> buildMatchRule(std::vector<ColumnNameValuePair> const&values) const;

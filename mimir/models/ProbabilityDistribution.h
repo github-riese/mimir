@@ -19,6 +19,7 @@ public:
     ProbabilityDistribution(std::vector<std::pair<ValueIndex, Probability>>);
     ProbabilityDistribution(std::vector<Probability>, std::vector<ValueIndex> = std::vector<ValueIndex>());
     ProbabilityDistribution(std::map<ValueIndex, Probability>);
+    ProbabilityDistribution(std::map<std::vector<ValueIndex>, Probability>);
     Probability vectorLength() const;
     Probability argMax() const;
     ValueIndex mostProbable() const;

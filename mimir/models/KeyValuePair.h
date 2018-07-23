@@ -42,6 +42,11 @@ struct NamedProbability
     {
         return probability < rhs.probability;
     }
+
+    constexpr inline bool operator ==(NamedProbability const &rhs) const
+    {
+        return probability == rhs.probability && name == rhs.name;
+    }
 };
 
 /**
