@@ -33,7 +33,7 @@ bool Network::isKnownChild(ValueIndex column) const
 {
     auto fragment = _fragments.begin();
     while (fragment != _fragments.end()) {
-        if (fragment->input().columnName == column) {
+        if ((*fragment).input().columnName == column) {
             return true;
         }
         ++fragment;
@@ -43,12 +43,13 @@ bool Network::isKnownChild(ValueIndex column) const
 
 bool Network::canAdd(const NetworkFragment &fragment) const
 {
+    if (fragment.countParents() == 0) {
+        return true;
+    }
+
     ValueIndex columnNameOfNew = fragment.input().columnName;
     for (auto f : _fragments) {
-        if (f.input().columnName == columnNameOfNew) {
-            return false;
-        }
-        if (f.hasParent(columnNameOfNew)) {
+        if (f.hasParent(columnNameOfNew) || fragment.hasParent(f.input().columnName)) {
             return false;
         }
     }
@@ -57,19 +58,7 @@ bool Network::canAdd(const NetworkFragment &fragment) const
 
 vector<NetworkFragment> Network::fragments() const
 {
-    if (!_sorted) {
-        sort(const_cast<Network*>(this)->_fragments.begin(), const_cast<Network*>(this)->_fragments.end(),
-             [](NetworkFragment const &left, NetworkFragment const &right) {
-            if (left.input().columnName < right.input().columnName) {
-                return true;
-            }
-            if (left.input().columnName == right.input().columnName) {
-                return left.probability() > right.probability();
-            }
-            return false;
-        });
-        _sorted = true;
-    }
+    sort();
     return _fragments;
 }
 
@@ -83,12 +72,29 @@ int Network::greatestDepth() const
     return maxDepth;
 }
 
-std::vector<NamedProbability> Network::sinks() const
+std::vector<NamedProbability> Network::sinks(vector<ValueIndex> const &availableFieldNames) const
 {
     vector<NamedProbability> result;
+    vector<std::pair<ValueIndex, int>> seenFields;
+    for (auto i = availableFieldNames.begin(); i != availableFieldNames.end(); ++i) {
+        seenFields.push_back({*i, 0});
+    }
     for (auto f : _fragments) {
         if (isLeaf(f)) {
             result.push_back({f.input().columnName, f.probability()});
+            for (auto p : f.parents()) {
+                auto i = find_if(seenFields.begin(), seenFields.end(), [p](std::pair<ValueIndex, int> const&v){
+                        return v.first == p.columnName;
+            });
+                if (i != seenFields.end()) {
+                    (*i).second += 1;
+                }
+            }
+        }
+    }
+    for (auto seen : seenFields) {
+        if (seen.second == 0) {
+//            result.push_back({seen.first});
         }
     }
     return result;
@@ -142,13 +148,30 @@ int Network::depthOf(NetworkFragment &f, int depthBefore) const
 
 std::experimental::optional<NetworkFragment> Network::fragmentByChildFieldName(ValueIndex name) const
 {
-    auto thing = find_if(_fragments.begin(), _fragments.end(), [name](NetworkFragment f) {
+    auto foundChildByName = find_if(_fragments.begin(), _fragments.end(), [name](NetworkFragment f) {
             return f.input().columnName == name;
     });
-    if (thing == _fragments.end()) {
+    if (foundChildByName == _fragments.end()) {
         return std::experimental::optional<NetworkFragment>();
     }
-    return std::experimental::optional<NetworkFragment>(*thing);
+    return std::experimental::optional<NetworkFragment>(*foundChildByName);
+}
+
+void Network::sort() const
+{
+    if (_sorted)
+        return;
+        std::sort(const_cast<Network*>(this)->_fragments.begin(), const_cast<Network*>(this)->_fragments.end(),
+             [](NetworkFragment const &left, NetworkFragment const &right) {
+            if (left.input().columnName < right.input().columnName) {
+                return true;
+            }
+            if (left.input().columnName == right.input().columnName) {
+                return left.probability() > right.probability();
+            }
+            return false;
+        });
+        _sorted = true;
 }
 
 } // namespace models

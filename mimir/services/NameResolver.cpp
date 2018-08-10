@@ -7,6 +7,7 @@ using std::find_if;
 
 using mimir::models::ValueIndex;
 
+
 namespace mimir {
 namespace services {
 
