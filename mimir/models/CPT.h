@@ -27,7 +27,7 @@ public:
     };
 public:
     CPT(std::vector<ValueIndex>, std::vector<std::vector<ValueIndex>>);
-    std::vector<ValueIndex> fields() const;
+    std::vector<ValueIndex> fieldNames() const;
     Probability probability(std::vector<ColumnNameValuePair> values) const;
     Probability probability(std::vector<ColumnIndexValuePair> values) const;
 
@@ -43,7 +43,7 @@ private:
     void calculateProbabilities(std::vector<std::vector<ValueIndex>>);
     std::vector<ColumnIndexValuePair> buildMatchRule(std::vector<ColumnNameValuePair> const&values) const;
 private:
-    std::vector<ValueIndex> _fields;
+    std::vector<ValueIndex> _fieldNames;
     std::vector<Row> _proabilities;
 };
 

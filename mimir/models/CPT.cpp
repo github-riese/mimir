@@ -1,7 +1,7 @@
 #include "CPT.h"
 
 #include <algorithm>
-#include <assert.h>
+#include <cassert>
 #include <iterator>
 #include <numeric>
 #include <map>
@@ -46,14 +46,14 @@ struct AccumulateHelper
 };
 
 CPT::CPT(vector<ValueIndex> fields, vector<vector<ValueIndex>> table) :
-    _fields(fields)
+    _fieldNames(fields)
 {
     calculateProbabilities(table);
 }
 
-std::vector<ValueIndex> CPT::fields() const
+std::vector<ValueIndex> CPT::fieldNames() const
 {
-    return _fields;
+    return _fieldNames;
 }
 
 Probability CPT::probability(std::vector<ColumnNameValuePair> values) const
@@ -156,29 +156,30 @@ void CPT::calculateProbabilities(vector<vector<ValueIndex>> table)
 
 long CPT::fieldIndex(ValueIndex name) const
 {
-    auto field = find_if(_fields.begin(), _fields.end(), [name](ValueIndex item){ return  item == name; });
-    if (field == _fields.end()) {
+    auto field = find_if(_fieldNames.begin(), _fieldNames.end(), [name](ValueIndex item){ return  item == name; });
+    if (field == _fieldNames.end()) {
         return -1;
     }
-    return distance(_fields.begin(), field);
+    return distance(_fieldNames.begin(), field);
 }
 
 ValueIndex CPT::fieldName(long idx) const
 {
-    if (0 > idx || _fields.size() < static_cast<size_t>(idx)) {
+    if (0 > idx || _fieldNames.size() < static_cast<size_t>(idx)) {
         return ValueIndex(ValueIndex::NoIndex);
     }
-    return _fields.at(static_cast<size_t>(idx));
+    return _fieldNames.at(static_cast<size_t>(idx));
 }
 
 vector<ColumnIndexValuePair> CPT::buildMatchRule(const std::vector<ColumnNameValuePair> &values) const
 {
     vector<ColumnIndexValuePair> matchRules;
-    auto knownColumns = _fields.begin();
+    auto knownColumns = _fieldNames.begin();
     auto valueIdx = values.begin();
     while (valueIdx != values.end()) {
-        auto i = find_if(knownColumns, _fields.end(), [&valueIdx](ValueIndex vi) { return vi == (*valueIdx).columnName; });
-        matchRules.push_back({distance(knownColumns, i), (*(valueIdx++)).value});
+        auto i = find_if(knownColumns, _fieldNames.end(), [&valueIdx](ValueIndex valueIndex) { return valueIndex == (*valueIdx).columnName; });
+        matchRules.push_back({distance(knownColumns, i), (*valueIdx).value});
+        ++valueIdx;
     }
     return matchRules;
 }

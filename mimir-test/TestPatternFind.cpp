@@ -65,7 +65,7 @@ void TestPatternFind::initTestCase()
         {cancelled, collier, red,   yes, hostFemale, no,   afternoon}
     };
 
-    for (auto row : testData) {
+    for (auto const &row : testData) {
         _dataStore.addRow(row);
     }
 }
@@ -77,7 +77,7 @@ QString dumpProb(const char*name, ProbabilityWithPriors const &prob)
         txt = txt.left(6);
         txt += QString().fill(' ', 7 - txt.length());
     }
-    txt += QString().append("p(class|val): %1 p(class): %2 p(val): %3 likelyhood: %4").
+    txt += QString().append("p(class|val): %1 p(class): %2 p(val): %3 likelihood: %4").
             arg(static_cast<double>(prob.probability().value()), 8, 'f', 6).
             arg(static_cast<double>(prob.prior().value()), 8, 'f', 6).
             arg(static_cast<double>(prob.evidence().value()), 8, 'f', 6).
