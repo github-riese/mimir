@@ -16,38 +16,35 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    models/Probability.cpp \
-    models/Sample.cpp \
-    models/ValueCounter.cpp \
-    models/ValueIndex.cpp \
-    services/NameResolver.cpp \
-    models/Evaluation.cpp \
-    services/Evaluator.cpp \
     helpers/helpers.cpp \
-    services/DataStore.cpp \
+    helpers/AccumulateHelper.cpp \
     models/CPT.cpp \
-    models/ProbabilityDistribution.cpp \
-    services/DependencyDetector.cpp \
+    models/Evaluation.cpp \
     models/KeyValuePair.cpp \
+    models/Network.cpp \
     models/NetworkFragment.cpp \
-    models/Network.cpp
+    models/Probability.cpp \
+    models/ProbabilityDistribution.cpp \
+    models/ValueIndex.cpp \
+    services/DataStore.cpp \
+    services/DependencyDetector.cpp \
+    services/Evaluator.cpp \
+    services/NameResolver.cpp
 
 HEADERS += \
-    models/Probability.h \
-    models/Sample.h \
-    models/ValueCounter.h \
-    models/ValueIndex.h \
-    services/NameResolver.h \
-    models/Evaluation.h \
-    services/Evaluator.h \
-    models/ValueType.h \
+    helpers/AccumulateHelper.h \
     helpers/helpers.h \
-    traits/Timing.h \
-    services/DataStore.h \
-    models/ProbabilityWithPriors.h \
     models/CPT.h \
-    models/ProbabilityDistribution.h \
-    services/DependencyDetector.h \
+    models/Evaluation.h \
     models/KeyValuePair.h \
+    models/Network.h \
     models/NetworkFragment.h \
-    models/Network.h
+    models/Probability.h \
+    models/ProbabilityDistribution.h \
+    models/ProbabilityWithPriors.h \
+    models/ValueIndex.h \
+    services/DataStore.h \
+    services/DependencyDetector.h \
+    services/Evaluator.h \
+    services/NameResolver.h \
+    traits/Timing.h \
