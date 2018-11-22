@@ -6,7 +6,6 @@
 
 #include <numeric>
 
-#include "../models/Evaluation.h"
 #include "../models/Probability.h"
 
 namespace mimir {
@@ -34,7 +33,7 @@ inline long double variance(InputIterator first, InputIterator last)
 template <typename InputIterator>
 inline long double deviation(InputIterator first, InputIterator last)
 {
-    return std::sqrtl(variance(first, last));
+    return std::sqrt(variance(first, last));
 }
 
 long double mean(const std::deque<mimir::models::Probability> &);
@@ -51,7 +50,6 @@ long double mean(InputIterator first, InputIterator last)
 long double deviation(const std::deque<mimir::models::Probability> &);
 long double deviation(const std::vector<mimir::models::Probability> &);
 
-std::vector<mimir::models::Probability> fetchMostProbables(std::vector<mimir::models::Evaluation> const &input);
 } // namespace helpers
 } // namespace mimir
 

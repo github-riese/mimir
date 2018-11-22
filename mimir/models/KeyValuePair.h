@@ -24,6 +24,8 @@ struct ColumnNameValuePair
     }
 };
 
+using ColumnNameValuePairCollection = std::vector<ColumnNameValuePair>;
+
 struct ColumnIndexValuePair
 {
     long int columnIndex;
@@ -33,6 +35,8 @@ struct ColumnIndexValuePair
         return columnIndex < rhs.columnIndex;
     }
 };
+
+using ColumnIndexValuePairCollection = std::vector<ColumnIndexValuePair>;
 
 struct NamedProbability
 {

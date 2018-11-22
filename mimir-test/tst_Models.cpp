@@ -8,7 +8,6 @@
 #include "tst_Models.h"
 
 #include "../mimir/models/ProbabilityDistribution.h"
-#include "../mimir/models/ValueType.h"
 #include "../mimir/services/DataStore.h"
 #include "../mimir/services/Evaluator.h"
 #include "../mimir/services/NameResolver.h"
@@ -23,7 +22,6 @@ using mimir::models::Evaluation;
 using mimir::models::Probability;
 using mimir::models::ProbabilityDistribution;
 using mimir::models::ProbabilityWithPriors;
-using mimir::models::ValueType;
 using mimir::models::ValueIndex;
 using mimir::services::DataStore;
 using mimir::services::Evaluator;

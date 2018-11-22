@@ -5,7 +5,6 @@
 #include <QtCore/qglobal.h>
 #include <QObject>
 
-#include "../mimir/models/ValueType.h"
 #include "../mimir/services/DataStore.h"
 #include "../mimir/services/NameResolver.h"
 

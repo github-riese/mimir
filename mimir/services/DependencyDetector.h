@@ -17,11 +17,11 @@ class DependencyDetector
 {
 public:
     DependencyDetector(models::CPT &cpt);
-    std::vector<models::NetworkFragment> computePriors(const std::vector<models::ColumnNameValuePair> &input) const;
-    std::vector<models::NetworkFragment> computePriors(const std::vector<models::ColumnIndexValuePair> &input) const;
+    std::vector<models::Node> computePriors(const std::vector<models::ColumnNameValuePair> &input) const;
+    std::vector <models::Node> computePriors(const std::vector<models::ColumnIndexValuePair> &input) const;
     models::Network findSuitableGraph(const std::vector<models::ColumnNameValuePair> &input, NameResolver &nr);
 private:
-    std::vector<models::NetworkFragment> findLikelyGraphs(const std::vector<models::ColumnNameValuePair> &input) const;
+    std::vector<models::Fragment> findLikelyGraphs(const std::vector<models::ColumnNameValuePair> &input) const;
     models::Network findBestGraphs(std::vector<models::NetworkFragment> const &candidates, NameResolver &nr);
     models::Probability likelihood(models::ColumnIndexValuePair const &k, std::vector<models::ColumnIndexValuePair> const &input) const;
     models::Probability conditionalProbability(models::ColumnIndexValuePair const&, std::vector<models::ColumnIndexValuePair>const &);

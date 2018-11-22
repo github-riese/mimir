@@ -18,13 +18,8 @@ add_library(mimir SHARED
         models/ProbabilityDistribution.cpp
         models/ProbabilityDistribution.h
         models/ProbabilityWithPriors.h
-        models/Sample.cpp
-        models/Sample.h
-        models/ValueCounter.cpp
-        models/ValueCounter.h
         models/ValueIndex.cpp
         models/ValueIndex.h
-        models/ValueType.h
         services/DataStore.cpp
         services/DataStore.h
         services/DependencyDetector.cpp
@@ -33,4 +28,4 @@ add_library(mimir SHARED
         services/Evaluator.h
         services/NameResolver.cpp
         services/NameResolver.h
-        traits/Timing.h)
+        traits/Timing.h mimir.cpp mimir.h helpers/AccumulateHelper.cpp helpers/AccumulateHelper.h)

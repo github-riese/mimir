@@ -12,8 +12,71 @@
 namespace mimir {
 namespace models {
 
+struct Node {
+    ColumnNameValuePair namedValue;
+    Probability probability;
+    inline bool operator <(Node const &rhs) const {
+        if (long fieldDiff = static_cast<long>(namedValue.columnName - rhs.namedValue.columnName)) {
+            return fieldDiff < 0;
+        }
+        return probability < rhs.probability;
+    }
+
+    inline std::ostream & dump(std::ostream &stream, services::NameResolver &nr) {
+        stream << nr.nameFromIndex(namedValue.columnName) << "=" << nr.nameFromIndex(namedValue.value);
+        return stream;
+    }
+
+    inline bool operator == (Node const &rhs) const {
+        return namedValue == rhs.namedValue;
+    }
+
+    inline bool operator != (Node const &rhs) const {
+        return !(namedValue == rhs.namedValue);
+    }
+};
+
+struct Fragment
+{
+    Node node;
+    std::vector<Node> parents;
+    inline bool operator <(Fragment const &rhs) const {
+        if (node < rhs.node) {
+            return true;
+        }
+        return parents.size() < rhs.parents.size();
+    }
+    inline std::ostream &dump(std::ostream &stream, services::NameResolver &nr) {
+        stream << "P(";
+        node.dump(stream, nr);
+        if (parents.size() > 0) {
+            stream << "|";
+            for (auto parent = parents.begin(); parent != parents.end(); ++ parent) {
+                (*parent).dump(stream, nr);
+                if (std::distance(parents.begin(), parent) < parents.size() - 1) {
+                    stream << ", ";
+                }
+            }
+        }
+        stream << ") = ";
+        stream << node.probability;
+        stream << std::endl;
+        return stream;
+    }
+
+    inline bool operator == (Fragment const &rhs) const {
+        return node == rhs.node && parents == rhs.parents;
+    }
+
+    inline bool operator != (Fragment const &rhs) const {
+        return node != rhs.node || parents != rhs.parents;
+    }
+
+};
+
 class NetworkFragment
 {
+
 public:
     NetworkFragment(ColumnNameValuePair, std::vector<ColumnNameValuePair>, Probability);
 

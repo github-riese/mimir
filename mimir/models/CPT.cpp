@@ -9,6 +9,7 @@
 #include <sstream>
 
 #include <traits/Timing.h>
+#include "../helpers/AccumulateHelper.h"
 
 using std::map;
 using std::pair;
@@ -33,18 +34,6 @@ static void dumpRow(CPT::Row const &row)
     std::cout << row.probability << " |" << std::endl;
 }
 
-struct AccumulateHelper
-{
-    vector<ColumnIndexValuePair> input;
-    Probability operator()(Probability p, CPT::Row const& row)
-    {
-        if (!row.matchesInput(input)) {
-                return p;
-        }
-        return p + row.probability;
-    }
-};
-
 CPT::CPT(vector<ValueIndex> fields, vector<vector<ValueIndex>> table) :
     _fieldNames(fields)
 {
@@ -64,7 +53,7 @@ Probability CPT::probability(std::vector<ColumnNameValuePair> values) const
 
 Probability CPT::probability(std::vector<ColumnIndexValuePair> matchRules) const
 {
-    AccumulateHelper rowMatch{matchRules};
+    helpers::AccumulateHelper rowMatch{matchRules};
     Probability p = accumulate(_proabilities.begin(), _proabilities.end(), 0._p, rowMatch);
     return p;
 }
@@ -93,8 +82,8 @@ ProbabilityDistribution CPT::classify(long classifierIndex, const std::vector<Co
     for_each(result.begin(), result.end(), [scale](auto &value) {
         value.second *= scale;
     });
-    ProbabilityDistribution rd(result);
-    return rd;
+    ProbabilityDistribution probabilityDistribution(result);
+    return probabilityDistribution;
 }
 
 vector<ValueIndex> CPT::distinctValues(ValueIndex field) const
@@ -171,15 +160,15 @@ ValueIndex CPT::fieldName(long idx) const
     return _fieldNames.at(static_cast<size_t>(idx));
 }
 
-vector<ColumnIndexValuePair> CPT::buildMatchRule(const std::vector<ColumnNameValuePair> &values) const
+vector<ColumnIndexValuePair> CPT::buildMatchRule(const std::vector<ColumnNameValuePair> &searchFields) const
 {
     vector<ColumnIndexValuePair> matchRules;
     auto knownColumns = _fieldNames.begin();
-    auto valueIdx = values.begin();
-    while (valueIdx != values.end()) {
-        auto i = find_if(knownColumns, _fieldNames.end(), [&valueIdx](ValueIndex valueIndex) { return valueIndex == (*valueIdx).columnName; });
-        matchRules.push_back({distance(knownColumns, i), (*valueIdx).value});
-        ++valueIdx;
+    auto searchFieldIterator = searchFields.begin();
+    while (searchFieldIterator != searchFields.end()) {
+        auto i = find_if(knownColumns, _fieldNames.end(), [&searchFieldIterator](ValueIndex valueIndex) { return valueIndex == (*searchFieldIterator).columnName; });
+        matchRules.push_back({distance(knownColumns, i), (*searchFieldIterator).value});
+        ++searchFieldIterator;
     }
     return matchRules;
 }

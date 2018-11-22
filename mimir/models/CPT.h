@@ -41,7 +41,7 @@ public:
 
 private:
     void calculateProbabilities(std::vector<std::vector<ValueIndex>>);
-    std::vector<ColumnIndexValuePair> buildMatchRule(std::vector<ColumnNameValuePair> const&values) const;
+    ColumnIndexValuePairCollection buildMatchRule(ColumnNameValuePairCollection const&searchFields) const;
 private:
     std::vector<ValueIndex> _fieldNames;
     std::vector<Row> _proabilities;

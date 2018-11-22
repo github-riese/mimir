@@ -18,6 +18,7 @@ using mimir::models::ColumnIndexValuePair;
 using mimir::models::ColumnNameValuePair;
 using mimir::models::NamedProbability;
 using mimir::models::Network;
+using mimir::models::Node;
 using mimir::models::NetworkFragment;
 using mimir::models::Probability;
 using mimir::models::ValueIndex;
@@ -30,35 +31,40 @@ DependencyDetector::DependencyDetector(CPT &cpt) :
 {
 }
 
-std::vector<models::NetworkFragment> DependencyDetector::computePriors(const std::vector<models::ColumnNameValuePair> &input) const
+vector<Node> DependencyDetector::computePriors(const std::vector<models::ColumnNameValuePair> &input) const
 {
     return computePriors(namedPairVectorToIndexedPairVector(input));
 }
 
-vector<NetworkFragment> DependencyDetector::computePriors(vector<ColumnIndexValuePair> const& input) const
+vector<Node> DependencyDetector::computePriors(const vector<ColumnIndexValuePair> &input) const
 {
     // a list. for each input - P(xn=in)
     // Probabilities delievered as vector of NetworkFragments
     // sorted by probability ascending
     traits::VerboseTiming<std::chrono::microseconds> _timer(__PRETTY_FUNCTION__);
-    vector<NetworkFragment> result;
+    vector<models::Node> priorNodes;
     for (auto value : input) {
         Probability p = _cpt.probability({value});
-        result.push_back(NetworkFragment{{_cpt.fieldName(value.columnIndex), value.value}, {}, p});
+        priorNodes.push_back({{_cpt.fieldName(value.columnIndex), value.value}, p});
     }
-    sort(result.begin(), result.end());
-    return result;
+    sort(priorNodes.begin(), priorNodes.end());
+    return priorNodes;
 }
 
 Network DependencyDetector::findSuitableGraph(const vector<ColumnNameValuePair> &input, NameResolver &nr)
 {
     traits::VerboseTiming<std::chrono::microseconds> graphTiming(__PRETTY_FUNCTION__);
     auto likelyGraphs = findLikelyGraphs(input);
-    auto bestGraphs = findBestGraphs(likelyGraphs, nr);
-    return bestGraphs;
+    sort(likelyGraphs.begin(), likelyGraphs.end());
+    for (auto likely : likelyGraphs) {
+        likely.dump(std::cerr, nr);
+    }
+    return Network();
+//    auto bestGraphs = findBestGraphs(likelyGraphs, nr);
+//    return bestGraphs;
 }
 
-std::vector<models::NetworkFragment> DependencyDetector::findLikelyGraphs(const std::vector<models::ColumnNameValuePair> &input) const
+vector<models::Fragment> DependencyDetector::findLikelyGraphs(const std::vector<models::ColumnNameValuePair> &input) const
 {
     vector<ColumnIndexValuePair> possibleFields;
     for (auto candidate : input) {
@@ -77,13 +83,14 @@ std::vector<models::NetworkFragment> DependencyDetector::findLikelyGraphs(const 
     // is that one less than the value before? ignore x3, go on with x4
     // no more values left? the current one is one net fragment.
     // restart with all values that are not in the net.
-    Network n;
+    vector<models::Fragment> result;
     ColumnIndexValuePair i1, i2;
     for (auto prior : priors) {
         for (size_t field = 0; field < possibleFields.size(); ++field) {
             vector<ColumnIndexValuePair> potentialParents;
-            Probability currentLikelihood = prior.probability(), l;
-            ColumnNameValuePair const &priorInput = prior.input();
+            vector<Node> potentialParentNodes;
+            Probability currentLikelihood = prior.probability, l;
+            ColumnNameValuePair const &priorInput = prior.namedValue;
             i1 = {_cpt.fieldIndex(priorInput.columnName), priorInput.value};
             if (i1.columnIndex == possibleFields.at(field).columnIndex) {
                 continue;
@@ -98,9 +105,11 @@ std::vector<models::NetworkFragment> DependencyDetector::findLikelyGraphs(const 
                 }
                 i2 = possibleFields.at(parentIndex);
                 potentialParents.push_back(i2);
+                potentialParentNodes.push_back(priors.at(parentIndex));
                 l = likelihood(i1, potentialParents);
-                if (l <= currentLikelihood) { // less likely is uninterestring, equal likelihood would point to independence
+                if (l <= currentLikelihood) { // less likely is uninteresting, equal likelihood would point to independence
                     potentialParents.pop_back();
+                    potentialParentNodes.pop_back();
                     continue;
                 }
                 currentLikelihood = l;
@@ -108,10 +117,13 @@ std::vector<models::NetworkFragment> DependencyDetector::findLikelyGraphs(const 
                     break;
                 }
             }
-            n.addFragment({{_cpt.fieldName(i1.columnIndex), i1.value}, indexedPairVectorToNamedPairVector(potentialParents), currentLikelihood});
+            models::Fragment f{{prior.namedValue, currentLikelihood}, potentialParentNodes};
+            if (result.size() == 0 || result.back() != f) {
+                result.push_back(f);
+            }
         }
     }
-    return n.fragments();
+    return result;
 }
 
 Network DependencyDetector::findBestGraphs(const std::vector<NetworkFragment> &candidates, NameResolver& nr)
