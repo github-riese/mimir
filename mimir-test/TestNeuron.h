@@ -15,7 +15,9 @@ public:
 signals:
 
 private Q_SLOTS:
-    void testConcept();
+    void testNeuronBasics();
+    void testLayer();
+    void testOr();
 };
 
 #endif // TESTNEURON_H

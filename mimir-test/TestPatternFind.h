@@ -25,5 +25,5 @@ private:
     mimir::services::DataStore _dataStore;
 };
 
-REGISTER_TEST(TestPatternFind)
+// REGISTER_TEST(TestPatternFind)
 #endif // TESTPATTERNFIND_H
