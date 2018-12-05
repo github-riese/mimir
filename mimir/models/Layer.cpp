@@ -24,10 +24,7 @@ std::vector<double> Layer::values()
 {
     if (_dirty) {
         _dirty = false;
-        std::vector<double> values;
-        values.reserve(_neurons.size());
-        std::copy(_neurons.begin(), _neurons.end(),
-                       std::back_inserter(values));
+        std::vector<double> values(_neurons.begin(), _neurons.end());
         _values = values;
     }
     return _values;
@@ -133,19 +130,23 @@ void Layer::run()
     }
     auto currentValues = values();
     auto targetWeights = _weights.begin();
+    std::vector<double>nextInputs(_nextLayer->neurons().size());
+
     while (targetWeights != _weights.end()) {
-        auto input = currentValues.begin();
-        auto output = _nextLayer->neurons().begin();
-        while (output != _nextLayer->neurons().end()) {
+        auto output = nextInputs.begin();
+        while (output != nextInputs.end()) {
+            auto input = currentValues.begin();
             auto weight = (*targetWeights).begin();
+
             while (input != currentValues.end()) {
-                *output << *input * *weight;
+                *output += *input * *weight;
                 ++input; ++weight;
             }
             ++output;
         }
         ++targetWeights;
     }
+    _nextLayer->setValues(nextInputs);
 }
 
 bool Layer::isConnected() const
