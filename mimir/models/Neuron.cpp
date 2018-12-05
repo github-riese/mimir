@@ -18,15 +18,16 @@ int Neuron::id() const
     return _id;
 }
 
-void Neuron::reset()
+void Neuron::resetInput()
 {
-    _input.clear();
-    _bias = .0;
+    _input = 0.;
+    _dirty = true;
 }
 
 void Neuron::setBias(double bias)
 {
     _bias = bias;
+    _dirty = true;
 }
 
 double Neuron::bias() const
@@ -36,13 +37,17 @@ double Neuron::bias() const
 
 void Neuron::addInput(double value)
 {
-    _input.push_back(value);
+    _input += value;
+    _dirty = true;
 }
 
-double Neuron::value() const
+double Neuron::value()
 {
-    auto sum = std::accumulate(_input.begin(), _input.end(), 0.) + _bias;
-    return std::tanh(sum);
+    if (_dirty){
+        _value = std::tanh(_input + _bias);
+        _dirty = false;
+    }
+    return _value;
 }
 
 bool Neuron::operator==(const Neuron &rhs) const
@@ -50,12 +55,13 @@ bool Neuron::operator==(const Neuron &rhs) const
     return _id == rhs._id;
 }
 
-bool Neuron::operator==(const std::shared_ptr<Neuron> &rhs) const
+Neuron &Neuron::operator <<(double value)
 {
-    return _id == rhs->_id;
+    addInput(value);
+    return *this;
 }
 
-mimir::models::Neuron::operator double() const
+mimir::models::Neuron::operator double()
 {
     return value();
 }

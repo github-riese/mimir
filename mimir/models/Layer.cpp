@@ -4,6 +4,7 @@
 #include <exception>
 #include <future>
 #include <iterator>
+#include <strstream>
 
 namespace mimir {
 namespace models {
@@ -13,75 +14,61 @@ Layer::Layer()
 
 }
 
-void Layer::addNeuron(const std::shared_ptr<Neuron> &neuron)
+void Layer::addNeuron(const Neuron &neuron)
 {
     _neurons.push_back(neuron);
+    _dirty = true;
 }
 
-std::vector<double> Layer::values() const
+std::vector<double> Layer::values()
 {
-    std::vector<double> values;
-    std::transform(_neurons.begin(), _neurons.end(),
-                   std::back_inserter(values),
-                   [](std::shared_ptr<Neuron>const &n) ->double
-                    {
-                        return *n;
-                    });
-    return values;
+    if (_dirty) {
+        _dirty = false;
+        std::vector<double> values;
+        values.reserve(_neurons.size());
+        std::copy(_neurons.begin(), _neurons.end(),
+                       std::back_inserter(values));
+        _values = values;
+    }
+    return _values;
 }
 
-bool Layer::connect(const Layer &next)
+bool Layer::connect(Layer &next)
 {
-    if (_edges.size() > 0) {
+    if (_weights.size() > 0) {
         return false;
     }
-    auto nextLayerNeurons = next.neurons();
-    std::for_each(nextLayerNeurons.begin(), nextLayerNeurons.end(),
-                  [this](auto nextLayerNeuron){
-        std::for_each(_neurons.begin(), _neurons.end(),
-                      [this, &nextLayerNeuron](auto myNeuron){
-            _edges.push_back({myNeuron, nextLayerNeuron, 1.0});
-        });
-    });
+    _weights.assign(_neurons.size(), {});
+    auto nextLayerNeuronCount = next.neurons().size();
+    std::for_each(_weights.begin(), _weights.end(),
+                  [nextLayerNeuronCount](auto & w){
+                        w.assign(nextLayerNeuronCount, 1.);
+                    });
     _nextLayer = &next;
+    _dirty = true;
     return true;
 }
 
-const std::vector<std::shared_ptr<Neuron> > &Layer::neurons() const
+const std::vector<Neuron> &Layer::neurons() const
 {
     return _neurons;
 }
 
-Edge &Layer::edge(long idxMyNeuron, long idxNextLayerNeuron)
+std::vector<Neuron> &Layer::neurons()
 {
-    if (idxMyNeuron < 0 || idxNextLayerNeuron < 0) {
-        throw std::logic_error("indices must be at least zero");
-    }
+    return _neurons;
+}
+
+double Layer::weight(size_t idxMyNeuron, size_t idxNextLayerNeuron)
+{
     if (_nextLayer == nullptr) {
         throw std::logic_error("not connected");
     }
-    long numNextNodes = static_cast<long>(_nextLayer->neurons().size());
-    if (idxMyNeuron >= static_cast<long>(_neurons.size()) || idxNextLayerNeuron >= static_cast<long>(numNextNodes)) {
+    size_t numNextNodes = _nextLayer->neurons().size();
+    if (idxMyNeuron >= _neurons.size() || idxNextLayerNeuron >= numNextNodes) {
         throw std::out_of_range("no such edge");
     }
-    auto first = _edges.begin();
-    std::advance(first, idxMyNeuron*numNextNodes + idxNextLayerNeuron);
-    return  *first;
-}
-
-std::vector<Edge> Layer::operator[](long neuronIdx) const
-{
-    if (neuronIdx >= static_cast<long>(_neurons.size()) || _nextLayer == nullptr) {
-        return {};
-    }
-    long stride = static_cast<long>(_nextLayer->_neurons.size());
-    std::vector<Edge> outEdges = {};
-    auto first = _edges.begin();
-    std::advance(first, stride * neuronIdx);
-    auto last = first;
-    std::advance(last, stride);
-    std::copy(first, last, std::back_inserter(outEdges));
-    return  outEdges;
+    return _weights.at(idxMyNeuron).at(idxNextLayerNeuron);
 }
 
 void Layer::setValues(const std::vector<double> &values)
@@ -89,10 +76,11 @@ void Layer::setValues(const std::vector<double> &values)
     if (values.size() != _neurons.size()) {
         throw std::logic_error("wrong number of inputs for setValues");
     }
+    _dirty = true;
     auto value = values.begin();
     auto neuron = _neurons.begin();
     while (value != values.end()) {
-        (*neuron)->addInput(*value);
+        (*neuron) << (*value);
         ++neuron; ++value;
     }
 }
@@ -102,25 +90,32 @@ void Layer::setBiases(const std::vector<double> &biasValues)
     if (biasValues.size() != _neurons.size()) {
         throw std::logic_error("wrong number of biases for layer");
     }
+    _dirty = true;
     auto bias = biasValues.begin();
     auto neuron = _neurons.begin();
     while (bias != biasValues.end()) {
-        (*neuron)->setBias(*bias);
+        (*neuron).setBias(*bias);
         ++neuron; ++bias;
     }
 }
 
-void Layer::setWeights(const std::vector<double> &weights)
+void Layer::setWeights(const std::vector<std::vector<double>> &weights)
 {
-    if (weights.size() != _edges.size()) {
-        throw std::logic_error("wrong number of weights for layer");
+    if (_nextLayer == nullptr) {
+        throw std::logic_error("no weights applyable on unconnected layer.");
     }
-    auto weight = weights.begin();
-    auto edge = _edges.begin();
-    while (weight != weights.end()) {
-        (*edge).setWeight(*weight);
-        ++weight; ++edge;
+    if (weights.size() != _neurons.size()) {
+        throw std::logic_error("wrong number of weights for layer.");
     }
+    auto newWeights = weights.begin();
+    auto oldWeights = _weights.begin();
+    while (newWeights != weights.end()) {
+        if ((*newWeights).size() != (*oldWeights).size()) {
+            throw std::logic_error((std::strstream() << "in " << std::distance(newWeights, weights.begin()) << "th node: wrong number of weights.").str());
+        }
+    }
+    _dirty = true;
+    _weights = weights;
 }
 
 Neuron &Layer::neuron(long index)
@@ -128,27 +123,46 @@ Neuron &Layer::neuron(long index)
     if (index >= static_cast<long>(_neurons.size())) {
         throw std::out_of_range("no such neuron in layer");
     }
-    return *_neurons.at(static_cast<size_t>(index)).get();
+    return _neurons.at(static_cast<size_t>(index));
 }
 
 void Layer::run()
 {
-    std::for_each(_edges.begin(), _edges.end(), [](auto edge) -> void {
-        edge.propagate();
-    });
+    if (_nextLayer == nullptr) {
+        throw std::logic_error("can't run a layer without subsequent layer.");
+    }
+    auto currentValues = values();
+    auto targetWeights = _weights.begin();
+    while (targetWeights != _weights.end()) {
+        auto input = currentValues.begin();
+        auto output = _nextLayer->neurons().begin();
+        while (output != _nextLayer->neurons().end()) {
+            auto weight = (*targetWeights).begin();
+            while (input != currentValues.end()) {
+                *output << *input * *weight;
+                ++input; ++weight;
+            }
+            ++output;
+        }
+        ++targetWeights;
+    }
 }
 
 bool Layer::isConnected() const
 {
-    return _edges.size() > 0;
+    return _weights.size() > 0;
 }
 
 void Layer::reset()
 {
+    _dirty = true;
     std::for_each(_neurons.begin(), _neurons.end(),
-                  [](auto neuron){
-        neuron->reset();
+        [](auto &neuron){
+            neuron.resetInput();
     });
+    if (_nextLayer != nullptr) {
+        _nextLayer->reset();
+    }
 }
 
 } // namespace models

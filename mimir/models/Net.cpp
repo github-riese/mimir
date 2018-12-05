@@ -9,10 +9,10 @@ namespace models {
 Net::Net(long inputs, long outputs)
 {
     for (auto n = 0; n < inputs; ++n) {
-        _input.addNeuron(std::make_shared<Neuron>());
+        _input.addNeuron({});
     }
     for (auto n = 0; n < outputs; ++n) {
-        _output.addNeuron(std::make_shared<Neuron>());
+        _output.addNeuron({});
     }
 }
 
@@ -23,7 +23,7 @@ void Net::addHiddenLayer(int numNeurons)
     }
     Layer l;
     for (auto n = 0; n < numNeurons; ++n) {
-        l.addNeuron(std::make_shared<Neuron>());
+        l.addNeuron({});
     }
     _hiddenLayers.push_back(l);
 }
@@ -42,7 +42,7 @@ void Net::connect()
     ++next;
     _input.connect(*previous);
     while (next != _hiddenLayers.end()) {
-        (previous)->connect(*(next));
+        (*previous).connect(*(next));
         ++previous; ++next;
     }
     (previous)->connect(_output);

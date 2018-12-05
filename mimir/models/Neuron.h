@@ -14,23 +14,25 @@ public:
     Neuron();
     int id() const;
 
-    void reset();
+    void resetInput();
 
     void addInput(double value);
-    double value() const;
+    double value();
 
     double bias() const;
     void setBias(double bias);
 
     bool operator==(const Neuron &rhs) const;
-    bool operator==(const std::shared_ptr<Neuron>&rhs) const;
+    Neuron &operator << (double);
 
-    operator double() const;
+    operator double();
 private:
     static std::atomic<int> __neuronIdSource;
     int _id;
     double _bias = 0.;
-    std::vector<double> _input = {};
+    double _input = 0.;
+    bool _dirty = false;
+    double _value = .0;
 };
 
 } // namespace models

@@ -7,7 +7,6 @@
 #include <models/Layer.h>
 #include <models/Net.h>
 
-using mimir::models::Edge;
 using mimir::models::Layer;
 using mimir::models::Net;
 using mimir::models::Neuron;
@@ -28,11 +27,11 @@ void TestNeuron::testNeuronBasics()
     n1.addInput(0);
     n1.addInput(0);
     QCOMPARE(0, n1.value());
-    n1.reset();
+    n1.resetInput();
     n1.addInput(-1);
     n1.addInput(-1);
     QVERIFY(qFuzzyCompare(-.964028f, static_cast<float>(n1.value())));
-    n1.reset();
+    n1.resetInput();
     n1.addInput(1);
     n1.addInput(1);
     QVERIFY(qFuzzyCompare(.964028f, static_cast<float>(n1.value())));
@@ -41,31 +40,36 @@ void TestNeuron::testNeuronBasics()
 void TestNeuron::testLayer()
 {
     Layer inputLayer;
-    inputLayer.addNeuron(std::make_shared<Neuron>());
-    inputLayer.addNeuron(std::make_shared<Neuron>());
+    inputLayer.addNeuron({});
+    inputLayer.addNeuron({});
     auto valueVector = inputLayer.values();
     QCOMPARE((std::vector<double>{0.,0.}), valueVector);
     Layer outputLayer;
     try {
-        outputLayer.edge(0, 0);
+        outputLayer.weight(0, 0);
         QFAIL("Expected an exception but none was thrown");
     } catch (std::exception &e) {
         QCOMPARE(e.what(), "not connected");
     }
-    outputLayer.addNeuron(std::make_shared<Neuron>());
+    outputLayer.addNeuron({});
     inputLayer.connect(outputLayer);
-    Edge e = inputLayer.edge(0, 0);
-    QVERIFY(e.weight() == 1.);
-    auto edges = inputLayer[0];
-    QVERIFY(edges.size() == 1);
+    auto weight = inputLayer.weight(0, 0);
+    QVERIFY(weight == 1.);
+    inputLayer.setValues({0, 0});
+    inputLayer.run();
+    QVERIFY(outputLayer.values() == std::vector<double>{0});
 }
 
 void TestNeuron::testOr()
 {
     Net orNet(2, 1);
     orNet.addHiddenLayer(17);
+    orNet.addHiddenLayer(4);
     orNet.connect();
     auto result = orNet.run({1, 0});
+    qDebug() << result;
     result = orNet.run({0, 0});
-
+    qDebug() << result;
+    result = orNet.run({0, 1});
+    qDebug() << result;
 }

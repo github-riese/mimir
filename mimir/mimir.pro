@@ -31,7 +31,6 @@ SOURCES += \
     services/Evaluator.cpp \
     services/NameResolver.cpp \
     models/Neuron.cpp \
-    models/Edge.cpp \
     models/Layer.cpp \
     models/Net.cpp
 
@@ -53,6 +52,5 @@ HEADERS += \
     services/NameResolver.h \
     traits/Timing.h \
     models/Neuron.h \
-    models/Edge.h \
     models/Layer.h \
     models/Net.h
