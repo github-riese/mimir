@@ -2,9 +2,9 @@
 
 #include <algorithm>
 #include <exception>
-#include <future>
-#include <iterator>
+#include <numeric>
 #include <strstream>
+#include <valarray>
 
 namespace mimir {
 namespace models {
@@ -20,11 +20,14 @@ void Layer::addNeuron(const Neuron &neuron)
     _dirty = true;
 }
 
-std::vector<double> Layer::values()
+std::valarray<double> Layer::values()
 {
     if (_dirty) {
         _dirty = false;
-        std::vector<double> values(_neurons.begin(), _neurons.end());
+        std::valarray<double> values(_neurons.size());
+        size_t idx = 0;
+        for (auto neuron : _neurons)
+            values[idx++] = neuron;
         _values = values;
     }
     return _values;
@@ -39,7 +42,7 @@ bool Layer::connect(Layer &next)
     auto nextLayerNeuronCount = next.neurons().size();
     std::for_each(_weights.begin(), _weights.end(),
                   [nextLayerNeuronCount](auto & w){
-                        w.assign(nextLayerNeuronCount, 1.);
+                        w = std::valarray<double>(1., nextLayerNeuronCount);
                     });
     _nextLayer = &next;
     _dirty = true;
@@ -56,7 +59,7 @@ std::vector<Neuron> &Layer::neurons()
     return _neurons;
 }
 
-double Layer::weight(size_t idxMyNeuron, size_t idxNextLayerNeuron)
+double Layer::weight(size_t idxMyNeuron, size_t idxNextLayerNeuron) const
 {
     if (_nextLayer == nullptr) {
         throw std::logic_error("not connected");
@@ -65,10 +68,10 @@ double Layer::weight(size_t idxMyNeuron, size_t idxNextLayerNeuron)
     if (idxMyNeuron >= _neurons.size() || idxNextLayerNeuron >= numNextNodes) {
         throw std::out_of_range("no such edge");
     }
-    return _weights.at(idxMyNeuron).at(idxNextLayerNeuron);
+    return _weights.at(idxMyNeuron)[idxNextLayerNeuron];
 }
 
-void Layer::setValues(const std::vector<double> &values)
+void Layer::addInput(const std::vector<double> &values)
 {
     if (values.size() != _neurons.size()) {
         throw std::logic_error("wrong number of inputs for setValues");
@@ -80,6 +83,16 @@ void Layer::setValues(const std::vector<double> &values)
         (*neuron) << (*value);
         ++neuron; ++value;
     }
+}
+
+std::valarray<double> Layer::input() const
+{
+    std::valarray<double> result(_neurons.size());
+    size_t idx = 0;
+    for (auto neuron : _neurons) {
+        result[idx++] = neuron.input();
+    }
+    return result;
 }
 
 void Layer::setBiases(const std::vector<double> &biasValues)
@@ -112,7 +125,10 @@ void Layer::setWeights(const std::vector<std::vector<double>> &weights)
         }
     }
     _dirty = true;
-    _weights = weights;
+    _weights.clear();
+    for(auto weight : weights) {
+        _weights.push_back({weight.data(), weight.size()});
+    }
 }
 
 Neuron &Layer::neuron(long index)
@@ -128,25 +144,14 @@ void Layer::run()
     if (_nextLayer == nullptr) {
         throw std::logic_error("can't run a layer without subsequent layer.");
     }
-    auto currentValues = values();
-    auto targetWeights = _weights.begin();
-    std::vector<double>nextInputs(_nextLayer->neurons().size());
-
-    while (targetWeights != _weights.end()) {
-        auto output = nextInputs.begin();
-        while (output != nextInputs.end()) {
-            auto input = currentValues.begin();
-            auto weight = (*targetWeights).begin();
-
-            while (input != currentValues.end()) {
-                *output += *input * *weight;
-                ++input; ++weight;
-            }
-            ++output;
+    std::valarray<double> intermediate(0., _nextLayer->size());
+    for (auto weight : _weights) {
+        for (auto value : values()) {
+            intermediate += weight * value;
         }
-        ++targetWeights;
     }
-    _nextLayer->setValues(nextInputs);
+    std::vector<double> nextInput(std::begin(intermediate), std::end(intermediate));
+    _nextLayer->addInput(nextInput);
 }
 
 bool Layer::isConnected() const
@@ -164,6 +169,11 @@ void Layer::reset()
     if (_nextLayer != nullptr) {
         _nextLayer->reset();
     }
+}
+
+size_t Layer::size() const noexcept
+{
+    return _neurons.size();
 }
 
 } // namespace models

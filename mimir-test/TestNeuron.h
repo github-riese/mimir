@@ -18,6 +18,7 @@ private Q_SLOTS:
     void testNeuronBasics();
     void testLayer();
     void testOr();
+    void testBackPropagate();
 };
 
 #endif // TESTNEURON_H

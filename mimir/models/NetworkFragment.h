@@ -53,7 +53,7 @@ struct Fragment
             stream << "|";
             for (auto parent = parents.begin(); parent != parents.end(); ++ parent) {
                 (*parent).dump(stream, nr);
-                if (std::distance(parents.begin(), parent) < parents.size() - 1) {
+                if (std::distance(parents.begin(), parent) < static_cast<decltype (std::distance(parents.begin(), parent))>(parents.size() - 1)) {
                     stream << ", ";
                 }
             }

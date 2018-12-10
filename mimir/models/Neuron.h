@@ -17,7 +17,9 @@ public:
     void resetInput();
 
     void addInput(double value);
+    double input() const;
     double value();
+    double deriviateActivation() const;
 
     double bias() const;
     void setBias(double bias);
@@ -26,6 +28,10 @@ public:
     Neuron &operator << (double);
 
     operator double();
+
+protected:
+    double activate() const;
+    double derivativeActivate() const;
 private:
     static std::atomic<int> __neuronIdSource;
     int _id;

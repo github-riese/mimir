@@ -48,10 +48,10 @@ void Net::connect()
     (previous)->connect(_output);
 }
 
-std::vector<double> Net::run(std::vector<double> inputs)
+std::valarray<double> Net::run(std::vector<double> inputs)
 {
     _input.reset();
-    _input.setValues(inputs);
+    _input.addInput(inputs);
     _input.run();
     std::for_each(_hiddenLayers.begin(), _hiddenLayers.end(),
                   [](Layer &layer){
@@ -61,9 +61,14 @@ std::vector<double> Net::run(std::vector<double> inputs)
 }
 
 
-std::vector<double> Net::results()
+std::valarray<double> Net::results()
 {
     return _output.values();
+}
+
+void Net::backPropagate(const std::vector<double> &delta)
+{
+
 }
 
 }
