@@ -8,6 +8,15 @@
 
 REGISTER_TEST(TestHelpers)
 
+template <typename T>
+static bool valArraysEqual(std::valarray<T> const &left, std::valarray<T> const &right)
+{
+    if (left.size() != right.size()) {
+        return false;
+    }
+    return (left == right).min() == true;
+}
+
 TestHelpers::TestHelpers(QObject *parent) : QObject(parent)
 {
 
@@ -48,6 +57,20 @@ void TestHelpers::testMultiply()
 
     auto resultInvokedAdVector = mimir::helpers::math::crossProduct(expect, out);
     QCOMPARE((std::vector<int>{468, 36, -396}), resultInvokedAdVector);
+}
+
+void TestHelpers::testMatrix()
+{
+    std::vector<std::valarray<double>> testee = {
+        {1,  2,  3,  4},
+        {5,  6,  7,  8},
+        {9, 10, 11, 12}};
+    auto transposed = mimir::helpers::math::transposeMatrix(testee);
+    QVERIFY(transposed.size() == 4);
+    QVERIFY(valArraysEqual(transposed[0], {1., 5.,  9.}));
+    QVERIFY(valArraysEqual(transposed[1], {2., 6., 10.}));
+    QVERIFY(valArraysEqual(transposed[2], {3., 7., 11.}));
+    QVERIFY(valArraysEqual(transposed[3], {4., 8., 12.}));
 }
 
 

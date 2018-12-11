@@ -17,10 +17,9 @@ public:
     void connect();
     std::valarray<double> run(std::vector<double> inputs);
     std::valarray<double> results();
-    void backPropagate(std::vector<double> const &delta);
+    void backPropagate(const std::valarray<double> &expectation);
 private:
-    Layer _input;
-    std::vector<Layer> _hiddenLayers;
+    std::vector<Layer> _layers;
     Layer _output;
 };
 

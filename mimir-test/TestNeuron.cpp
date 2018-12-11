@@ -14,7 +14,7 @@ using mimir::models::Neuron;
 REGISTER_TEST(TestNeuron)
 
 template <typename T>
-bool valArraysEqual(std::valarray<T> const &left, std::valarray<T> const &right)
+static bool valArraysEqual(std::valarray<T> const &left, std::valarray<T> const &right)
 {
     if (left.size() != right.size()) {
         return false;
@@ -90,5 +90,11 @@ void TestNeuron::testOr()
 
 void TestNeuron::testBackPropagate()
 {
+    Net backProp(5, 5);
+    backProp.addHiddenLayer(5);
+    backProp.addHiddenLayer(5);
+    backProp.connect();
+    backProp.run({1, 2, 3, 4, 5});
+    backProp.backPropagate({2, 4, 6, 8, 10});
 
 }

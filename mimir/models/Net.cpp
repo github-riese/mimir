@@ -3,61 +3,61 @@
 #include <algorithm>
 #include <iterator>
 
+#include "helpers/math.h"
+
 namespace mimir {
 namespace models {
 
-Net::Net(long inputs, long outputs)
+Net::Net(long inputs, long outputs) :
+    _output()
 {
+    Layer input;
     for (auto n = 0; n < inputs; ++n) {
-        _input.addNeuron({});
+        input.addNeuron({});
     }
+    _layers.push_back(input);
     for (auto n = 0; n < outputs; ++n) {
         _output.addNeuron({});
     }
+
 }
 
 void Net::addHiddenLayer(int numNeurons)
 {
-    if (_input.isConnected()) {
+    if (_layers[0].isConnected()) {
         throw std::logic_error("can't add layers after net is connected.");
     }
     Layer l;
     for (auto n = 0; n < numNeurons; ++n) {
         l.addNeuron({});
     }
-    _hiddenLayers.push_back(l);
+    _layers.push_back(l);
 }
 
 void Net::connect()
 {
-    if (_input.isConnected()) {
+    if (_layers[0].isConnected()) {
         return;
     }
-    if (_hiddenLayers.size() == 0) {
-        _input.connect(_output);
-        return;
-    }
-    auto previous = _hiddenLayers.begin();
+    auto previous = _layers.begin();
     auto next = previous;
     ++next;
-    _input.connect(*previous);
-    while (next != _hiddenLayers.end()) {
+    while (next != _layers.end()) {
         (*previous).connect(*(next));
         ++previous; ++next;
     }
-    (previous)->connect(_output);
+    (*previous).connect(_output);
 }
 
 std::valarray<double> Net::run(std::vector<double> inputs)
 {
-    _input.reset();
-    _input.addInput(inputs);
-    _input.run();
-    std::for_each(_hiddenLayers.begin(), _hiddenLayers.end(),
-                  [](Layer &layer){
+    Layer &input = _layers.front();
+    input.reset();
+    input.addInput(inputs);
+    for (auto &layer : _layers) {
         layer.run();
-    });
-    return _output.values();
+    }
+    return results();
 }
 
 
@@ -66,9 +66,27 @@ std::valarray<double> Net::results()
     return _output.values();
 }
 
-void Net::backPropagate(const std::vector<double> &delta)
+/**
+ * @brief Net::backPropagate
+ * will back propagate new biases & weights in order to achive output as defined in expectation
+ * @param expectation
+ */
+void Net::backPropagate(const std::valarray<double> &expectation)
 {
-
+    std::valarray<double> deltaLPlusOne = (_output.values() - expectation) * _output.deriviateActivations();
+    _output.setBiases(deltaLPlusOne);
+    Layer *lPlusOne = &_output;
+    Layer *l;
+    auto hiddenLayer = _layers.rbegin();
+    while (hiddenLayer != _layers.rend()) {
+        l = &(*hiddenLayer);
+        ++hiddenLayer;
+        std::valarray<double> sigmaDerivateZ = l->deriviateActivations();
+        std::vector<std::valarray<double>> weights = l->weights();
+        mimir::helpers::math::transposeMatrix(weights);
+        lPlusOne = l;
+    }
+    l = &_layers.front();
 }
 
 }

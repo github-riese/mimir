@@ -9,11 +9,6 @@
 namespace mimir {
 namespace models {
 
-Layer::Layer()
-{
-
-}
-
 void Layer::addNeuron(const Neuron &neuron)
 {
     _neurons.push_back(neuron);
@@ -71,6 +66,11 @@ double Layer::weight(size_t idxMyNeuron, size_t idxNextLayerNeuron) const
     return _weights.at(idxMyNeuron)[idxNextLayerNeuron];
 }
 
+const std::vector<std::valarray<double> > &Layer::weights() const
+{
+    return _weights;
+}
+
 void Layer::addInput(const std::vector<double> &values)
 {
     if (values.size() != _neurons.size()) {
@@ -95,15 +95,16 @@ std::valarray<double> Layer::input() const
     return result;
 }
 
-void Layer::setBiases(const std::vector<double> &biasValues)
+void Layer::setBiases(const std::valarray<double> &biasValues)
 {
     if (biasValues.size() != _neurons.size()) {
         throw std::logic_error("wrong number of biases for layer");
     }
     _dirty = true;
-    auto bias = biasValues.begin();
-    auto neuron = _neurons.begin();
-    while (bias != biasValues.end()) {
+    auto bias = std::begin(biasValues);
+    auto neuron = std::begin(_neurons);
+    auto end = std::end(biasValues);
+    while (bias != end) {
         (*neuron).setBias(*bias);
         ++neuron; ++bias;
     }
@@ -129,6 +130,16 @@ void Layer::setWeights(const std::vector<std::vector<double>> &weights)
     for(auto weight : weights) {
         _weights.push_back({weight.data(), weight.size()});
     }
+}
+
+std::valarray<double> Layer::deriviateActivations() const
+{
+    std::valarray<double> result(size());
+    size_t idx = 0;
+    for (auto neuron : _neurons) {
+        result[idx++] = neuron.deriviateActivation();
+    }
+    return result;
 }
 
 Neuron &Layer::neuron(long index)

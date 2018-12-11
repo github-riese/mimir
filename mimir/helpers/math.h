@@ -57,9 +57,27 @@ Container crossProduct(Container const &left, Container const &right)
 template <typename Container>
 Container matrixStyleMult(Container const &left, Container const &right)
 {
-    Container result(0, left.size());
+    Container result = prepareResult(left);
     for (size_t i = 0; i < left.size(); ++i) {
         result += right * left[i];
+    }
+    return result;
+}
+
+template<typename T>
+std::vector<std::valarray<T>> transposeMatrix(std::vector<std::valarray<T>> const &m)
+{
+    if (m.size() == 0) {
+        return std::vector<std::valarray<T>>();
+    }
+    size_t columns = m.at(0).size();
+    size_t rows = m.size();
+    std::vector<std::valarray<T>> result(columns, std::valarray<T>(rows));
+    size_t row, column;
+    for (row = 0; row < rows; ++row) {
+        for (column = 0; column < columns; ++column) {
+            result[column][row] = m[row][column];
+        }
     }
     return result;
 }

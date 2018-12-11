@@ -33,7 +33,8 @@ SOURCES += \
     models/Neuron.cpp \
     models/Layer.cpp \
     models/Net.cpp \
-    helpers/math.cpp
+    helpers/math.cpp \
+    models/Matrix.cpp
 
 HEADERS += \
     helpers/AccumulateHelper.h \
@@ -55,4 +56,5 @@ HEADERS += \
     models/Neuron.h \
     models/Layer.h \
     models/Net.h \
-    helpers/math.h
+    helpers/math.h \
+    models/Matrix.h

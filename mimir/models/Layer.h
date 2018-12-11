@@ -13,17 +13,19 @@ namespace models {
 class Layer
 {
 public:
-    Layer();
+    Layer() = default;
     void addNeuron(const Neuron &neuron);
     std::valarray<double> values();
     bool connect(Layer &next);
     std::vector<Neuron> const &neurons() const;
     std::vector<Neuron> &neurons();
     double weight(size_t idxMyNeuron, size_t idxNextLayerNeuron) const;
+    std::vector<std::valarray<double>> const &weights() const;
     void addInput(std::vector<double> const &);
     std::valarray<double> input() const;
-    void setBiases(std::vector<double> const &);
+    void setBiases(std::valarray<double> const &);
     void setWeights(const std::vector<std::vector<double> > &);
+    std::valarray<double> deriviateActivations() const;
     Neuron &neuron(long index);
     void run();
     bool isConnected() const;
