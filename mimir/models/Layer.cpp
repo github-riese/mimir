@@ -6,6 +6,8 @@
 #include <strstream>
 #include <valarray>
 
+#include "helpers/helpers.h"
+
 namespace mimir {
 namespace models {
 
@@ -15,7 +17,7 @@ void Layer::addNeuron(const Neuron &neuron)
     _dirty = true;
 }
 
-std::valarray<double> Layer::values()
+std::vector<double> Layer::values()
 {
     if (_dirty) {
         _dirty = false;
@@ -23,22 +25,19 @@ std::valarray<double> Layer::values()
         size_t idx = 0;
         for (auto neuron : _neurons)
             values[idx++] = neuron;
-        _values = values;
+        _values.resize(values.size());
+        std::copy(std::begin(values), std::end(values), std::begin(_values));
     }
     return _values;
 }
 
 bool Layer::connect(Layer &next)
 {
-    if (_weights.size() > 0) {
+    if (_weights.rows() > 0) {
         return false;
     }
-    _weights.assign(_neurons.size(), {});
     auto nextLayerNeuronCount = next.neurons().size();
-    std::for_each(_weights.begin(), _weights.end(),
-                  [nextLayerNeuronCount](auto & w){
-                        w = std::valarray<double>(1., nextLayerNeuronCount);
-                    });
+    _weights = Matrix{nextLayerNeuronCount, _neurons.size(), 1.};
     _nextLayer = &next;
     _dirty = true;
     return true;
@@ -63,10 +62,10 @@ double Layer::weight(size_t idxMyNeuron, size_t idxNextLayerNeuron) const
     if (idxMyNeuron >= _neurons.size() || idxNextLayerNeuron >= numNextNodes) {
         throw std::out_of_range("no such edge");
     }
-    return _weights.at(idxMyNeuron)[idxNextLayerNeuron];
+    return _weights.value(idxNextLayerNeuron, idxMyNeuron);
 }
 
-const std::vector<std::valarray<double> > &Layer::weights() const
+const Matrix &Layer::weights() const
 {
     return _weights;
 }
@@ -110,26 +109,39 @@ void Layer::setBiases(const std::valarray<double> &biasValues)
     }
 }
 
-void Layer::setWeights(const std::vector<std::vector<double>> &weights)
+void Layer::changeBiases(const std::valarray<double> &deltas)
+{
+    if (deltas.size() != _neurons.size()) {
+        throw std::logic_error("wrong number of biases for layer");
+    }
+    _dirty = true;
+    auto delta = std::begin(deltas);
+    auto end = std::end(deltas);
+    auto neuron = std::begin(_neurons);
+    while (delta != end) {
+        (*neuron).setBias((*neuron).bias() - *delta);
+        ++neuron; ++delta;
+    }
+}
+
+void Layer::setWeights(const Matrix &weights)
 {
     if (_nextLayer == nullptr) {
         throw std::logic_error("no weights applyable on unconnected layer.");
     }
-    if (weights.size() != _neurons.size()) {
+    if (weights.rows() != _neurons.size()) {
         throw std::logic_error("wrong number of weights for layer.");
     }
-    auto newWeights = weights.begin();
-    auto oldWeights = _weights.begin();
-    while (newWeights != weights.end()) {
-        if ((*newWeights).size() != (*oldWeights).size()) {
-            throw std::logic_error((std::strstream() << "in " << std::distance(newWeights, weights.begin()) << "th node: wrong number of weights.").str());
-        }
+    if (weights.cols() != _nextLayer->_neurons.size()) {
+        throw std::logic_error("wrong number of weights for subsequent layer.");
     }
+    _weights = weights;
     _dirty = true;
-    _weights.clear();
-    for(auto weight : weights) {
-        _weights.push_back({weight.data(), weight.size()});
-    }
+}
+
+void Layer::changeWeights(const Matrix &delta)
+{
+    _weights -= delta;
 }
 
 std::valarray<double> Layer::deriviateActivations() const
@@ -155,19 +167,14 @@ void Layer::run()
     if (_nextLayer == nullptr) {
         throw std::logic_error("can't run a layer without subsequent layer.");
     }
-    std::valarray<double> intermediate(0., _nextLayer->size());
-    for (auto weight : _weights) {
-        for (auto value : values()) {
-            intermediate += weight * value;
-        }
-    }
-    std::vector<double> nextInput(std::begin(intermediate), std::end(intermediate));
-    _nextLayer->addInput(nextInput);
+    Matrix nextInput = _weights * values();
+    _nextLayer->reset();
+    _nextLayer->addInput(nextInput.column(0));
 }
 
 bool Layer::isConnected() const
 {
-    return _weights.size() > 0;
+    return _nextLayer != nullptr;
 }
 
 void Layer::reset()

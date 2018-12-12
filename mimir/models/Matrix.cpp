@@ -22,6 +22,12 @@ Matrix::Matrix(const std::valarray<double> &array) :
 {
 }
 
+Matrix::Matrix(size_t rows, size_t colums, double initalValue)
+{
+    std::valarray<double> t(initalValue, colums);
+    _rows.assign(rows, t);
+}
+
 Matrix Matrix::transposed() const
 {
     if (_rows.size() == 0) {
@@ -46,6 +52,19 @@ std::vector<std::valarray<double>>const &Matrix::data() const
     return _rows;
 }
 
+std::vector<double> Matrix::column(size_t column) const
+{
+    if (column >= _rows.front().size()) {
+        throw std::out_of_range("no such column");
+    }
+    std::vector<double> result;
+    result.reserve(_rows.size());
+    for (auto r : _rows) {
+        result.push_back(r[column]);
+    }
+    return result;
+}
+
 void Matrix::addRow(const std::valarray<double> &row)
 {
     if (_rows.size() && _rows.front().size() != row.size()) {
@@ -56,7 +75,7 @@ void Matrix::addRow(const std::valarray<double> &row)
 
 Matrix &Matrix::operator*=(const Matrix &rhs)
 {
-    if (rhs.rows() != cols()) {
+    if (cols() != rhs.rows()) {
         throw std::logic_error("can't multiply matrices where left number of columns doesn't match right number of rows.");
     }
     auto leftArray = array();
@@ -113,6 +132,21 @@ Matrix &Matrix::operator *=(double value)
     return *this;
 }
 
+Matrix &Matrix::operator -=(const Matrix &rhs)
+{
+    auto thisRow = _rows.begin();
+    auto otherRow = rhs._rows.begin();
+    while (thisRow != _rows.end()) {
+        if (otherRow->size() == 1) {
+            (*thisRow) -= (*otherRow)[0];
+        } else {
+            (*thisRow) -= (*otherRow);
+        }
+        ++thisRow; ++otherRow;
+    }
+    return *this;
+}
+
 size_t Matrix::cols() const
 {
     return _rows.size() > 0 ? _rows.front().size() : 0;
@@ -121,6 +155,16 @@ size_t Matrix::cols() const
 size_t Matrix::rows() const
 {
     return _rows.size();
+}
+
+double Matrix::value(size_t row, size_t column) const
+{
+    return _rows.at(row)[column];
+}
+
+void Matrix::setValue(size_t row, size_t column, double value)
+{
+    _rows[row][column] = value;
 }
 
 bool Matrix::operator==(const Matrix &rhs) const

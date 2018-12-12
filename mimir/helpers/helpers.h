@@ -2,6 +2,7 @@
 #define HELPERS_H
 
 #include <deque>
+#include <valarray>
 #include <vector>
 
 #include <numeric>
@@ -49,6 +50,9 @@ long double mean(InputIterator first, InputIterator last)
 
 long double deviation(const std::deque<mimir::models::Probability> &);
 long double deviation(const std::vector<mimir::models::Probability> &);
+
+std::vector<double> toVector(std::valarray<double> const&);
+std::valarray<double> toArray(std::vector<double> const &);
 
 } // namespace helpers
 } // namespace mimir

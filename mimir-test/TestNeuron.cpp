@@ -52,7 +52,7 @@ void TestNeuron::testLayer()
     inputLayer.addNeuron({});
     inputLayer.addNeuron({});
     auto valueVector = inputLayer.values();
-    QVERIFY(valArraysEqual((std::valarray<double>{0.,0.}), valueVector));
+    QVERIFY((std::vector<double>{0.,0.} == valueVector));
     Layer outputLayer;
     try {
         outputLayer.weight(0, 0);
@@ -66,7 +66,7 @@ void TestNeuron::testLayer()
     QVERIFY(weight == 1.);
     inputLayer.addInput({0, 0});
     inputLayer.run();
-    QVERIFY(valArraysEqual(outputLayer.values(), std::valarray<double>{0}));
+    QVERIFY((outputLayer.values() == std::vector<double>{0}));
     inputLayer.addInput({2., 1.});
     auto inputRead = inputLayer.input();
     QVERIFY(inputRead[0] == 2.);
@@ -81,11 +81,14 @@ void TestNeuron::testOr()
     orNet.addHiddenLayer(4);
     orNet.connect();
     auto result = orNet.run({1, 0});
-    QVERIFY(valArraysEqual({0.9999999999999747}, result));
+    qDebug() << "1 0 -> " << result;
+    QVERIFY((std::vector<double>{0.9993292997355148} == result));
     result = orNet.run({0, 0});
-    QVERIFY(valArraysEqual({0.}, result));
+    qDebug() << "0 0 -> " << result;
+    QVERIFY((std::vector<double>{0.} == result));
     result = orNet.run({0, 1});
-    QVERIFY(valArraysEqual({0.9999999999999747}, result));
+    qDebug() << "0 1 -> " << result;
+    QVERIFY((std::vector<double>{0.9993292997355148} == result));
 }
 
 void TestNeuron::testBackPropagate()
@@ -94,7 +97,11 @@ void TestNeuron::testBackPropagate()
     backProp.addHiddenLayer(5);
     backProp.addHiddenLayer(5);
     backProp.connect();
-    backProp.run({1, 2, 3, 4, 5});
-    backProp.backPropagate({2, 4, 6, 8, 10});
-
-}
+    for (auto n = 0; n < 350; ++n) {
+        backProp.run({1, 2, 3, 4, 5});
+        if (n % 100 == 0) {
+            qDebug() << backProp.results();
+        }
+        backProp.backPropagate({.1, .2, .3, .4, .5}, .1);
+    }
+ }

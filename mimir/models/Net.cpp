@@ -4,6 +4,7 @@
 #include <iterator>
 
 #include "helpers/math.h"
+#include "helpers/helpers.h"
 
 namespace mimir {
 namespace models {
@@ -49,7 +50,7 @@ void Net::connect()
     (*previous).connect(_output);
 }
 
-std::valarray<double> Net::run(std::vector<double> inputs)
+std::vector<double> Net::run(std::vector<double> inputs)
 {
     Layer &input = _layers.front();
     input.reset();
@@ -61,7 +62,7 @@ std::valarray<double> Net::run(std::vector<double> inputs)
 }
 
 
-std::valarray<double> Net::results()
+std::vector<double> Net::results()
 {
     return _output.values();
 }
@@ -71,22 +72,26 @@ std::valarray<double> Net::results()
  * will back propagate new biases & weights in order to achive output as defined in expectation
  * @param expectation
  */
-void Net::backPropagate(const std::valarray<double> &expectation)
+void Net::backPropagate(const std::valarray<double> &expectation, double eta)
 {
-    std::valarray<double> deltaLPlusOne = (_output.values() - expectation) * _output.deriviateActivations();
-    _output.setBiases(deltaLPlusOne);
-    Layer *lPlusOne = &_output;
-    Layer *l;
-    auto hiddenLayer = _layers.rbegin();
-    while (hiddenLayer != _layers.rend()) {
-        l = &(*hiddenLayer);
-        ++hiddenLayer;
-        std::valarray<double> sigmaDerivateZ = l->deriviateActivations();
-        std::vector<std::valarray<double>> weights = l->weights();
-        mimir::helpers::math::transposeMatrix(weights);
-        lPlusOne = l;
+    std::valarray<double> delta = helpers::toArray(results()) - expectation;
+    auto deltaV = helpers::toVector(delta);
+    _output.changeBiases(delta * _output.deriviateActivations() * eta);
+    _layers.back().changeWeights(_layers.back().weights().transposed() * helpers::toVector((delta * eta)));
+    auto layer = _layers.rbegin();
+    auto previousLayer = layer + 1;
+    while (previousLayer != _layers.rend()) {
+        auto sigmoidPrime = (*layer).deriviateActivations();
+        Matrix t = layer->weights();
+        t *= deltaV;
+        deltaV = t.column(0);
+        delta = helpers::toArray(deltaV) * eta;
+        (*layer).changeBiases(delta);
+        t = previousLayer->values();
+        t *= delta;
+        previousLayer->changeWeights(t);
+        ++layer; ++previousLayer;
     }
-    l = &_layers.front();
 }
 
 }
