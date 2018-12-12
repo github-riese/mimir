@@ -1,4 +1,4 @@
-#include "Net.h"
+#include "NeuronNet.h"
 
 #include <algorithm>
 #include <iterator>
@@ -6,10 +6,13 @@
 #include "helpers/math.h"
 #include "helpers/helpers.h"
 
-namespace mimir {
-namespace models {
+using mimir::models::Layer;
+using mimir::models::Matrix;
 
-Net::Net(long inputs, long outputs) :
+namespace mimir {
+namespace services {
+
+NeuronNet::NeuronNet(long inputs, long outputs) :
     _output()
 {
     Layer input;
@@ -17,13 +20,14 @@ Net::Net(long inputs, long outputs) :
         input.addNeuron({});
     }
     _layers.push_back(input);
+    Layer output;
     for (auto n = 0; n < outputs; ++n) {
-        _output.addNeuron({});
+        output.addNeuron({});
     }
-
+    _layers.push_back(output);
 }
 
-void Net::addHiddenLayer(int numNeurons)
+void NeuronNet::addHiddenLayer(int numNeurons)
 {
     if (_layers[0].isConnected()) {
         throw std::logic_error("can't add layers after net is connected.");
@@ -32,10 +36,10 @@ void Net::addHiddenLayer(int numNeurons)
     for (auto n = 0; n < numNeurons; ++n) {
         l.addNeuron({});
     }
-    _layers.push_back(l);
+    _layers.insert(_layers.end() -1, l);
 }
 
-void Net::connect()
+void NeuronNet::connect()
 {
     if (_layers[0].isConnected()) {
         return;
@@ -47,24 +51,26 @@ void Net::connect()
         (*previous).connect(*(next));
         ++previous; ++next;
     }
-    (*previous).connect(_output);
 }
 
-std::vector<double> Net::run(std::vector<double> inputs)
+std::vector<double> NeuronNet::run(std::vector<double> inputs)
 {
     Layer &input = _layers.front();
     input.reset();
     input.addInput(inputs);
-    for (auto &layer : _layers) {
-        layer.run();
+    auto layer = _layers.begin();
+    auto output = _layers.end() -1;
+    while (layer != output) {
+        layer->run();
+        ++layer;
     }
     return results();
 }
 
 
-std::vector<double> Net::results()
+std::vector<double> NeuronNet::results()
 {
-    return _output.values();
+    return _layers.back().values();
 }
 
 /**
@@ -72,14 +78,15 @@ std::vector<double> Net::results()
  * will back propagate new biases & weights in order to achive output as defined in expectation
  * @param expectation
  */
-void Net::backPropagate(const std::valarray<double> &expectation, double eta)
+void NeuronNet::backPropagate(const std::valarray<double> &expectation, double eta)
 {
     std::valarray<double> delta = helpers::toArray(results()) - expectation;
     auto deltaV = helpers::toVector(delta);
-    _output.changeBiases(delta * _output.deriviateActivations() * eta);
-    _layers.back().changeWeights(_layers.back().weights().transposed() * helpers::toVector((delta * eta)));
     auto layer = _layers.rbegin();
     auto previousLayer = layer + 1;
+    layer->changeBiases(delta * layer->deriviateActivations() * eta);
+    previousLayer->changeWeights(previousLayer->weights().transposed() * helpers::toVector((delta * eta)));
+    ++layer; ++previousLayer;
     while (previousLayer != _layers.rend()) {
         auto sigmoidPrime = (*layer).deriviateActivations();
         Matrix t = layer->weights();

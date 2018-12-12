@@ -1,76 +1,88 @@
 #include "Matrix.h"
 
+#include <algorithm>
+#include <numeric>
+
 namespace mimir {
 namespace models {
 
 
 Matrix::Matrix(const std::vector<std::valarray<double> > &values) :
-    _rows(values)
+    _rows(values.size()),
+    _cols(values.front().size())
 {
-
-}
-
-Matrix::Matrix(const std::vector<double> &vector)
-{
-    for(auto value : vector) {
-        addRow({value});
+    _data.assign(_rows * _cols, 0);
+    auto offset = _data.begin();
+    for(auto value : values) {
+        std::copy(std::begin(value), std::end(value), offset);
+        std::advance(offset, static_cast<long>(_cols));
     }
 }
 
-Matrix::Matrix(const std::valarray<double> &array) :
-    _rows({array})
+Matrix::Matrix(const std::vector<double> &vector) :
+    _rows(vector.size()),
+    _cols(1)
 {
+    _data.assign(vector.size(), 0);
+    std::copy(std::begin(vector), std::end(vector), std::begin(_data));
 }
 
-Matrix::Matrix(size_t rows, size_t colums, double initalValue)
+Matrix::Matrix(const std::valarray<double> &array) :
+    _rows(1),
+    _cols(array.size())
 {
-    std::valarray<double> t(initalValue, colums);
-    _rows.assign(rows, t);
+    _data.assign(array.size(), 0);
+    std::copy(std::begin(array), std::end(array), std::begin(_data));
+}
+
+Matrix::Matrix(size_t rows, size_t colums, double initalValue) :
+    _rows(rows),
+    _cols(colums)
+{
+    _data.assign(_rows * _cols, initalValue);
 }
 
 Matrix Matrix::transposed() const
 {
-    if (_rows.size() == 0) {
-        return *this;
-    }
-    size_t columns = _rows.front().size();
-    size_t rows = _rows.size();
-    std::vector<std::valarray<double>> result(columns, std::valarray<double>(rows));
-    size_t row, column;
-    for (row = 0; row < rows; ++row) {
-        for (column = 0; column < columns; ++column) {
-            result[column][row] = _rows[row][column];
-        }
-    }
-    Matrix out;
-    out._rows = result;
-    return out;
+    Matrix tmp = *this;
+    return tmp.transpose();
 }
 
-std::vector<std::valarray<double>>const &Matrix::data() const
+std::vector<std::valarray<double>> Matrix::data() const
 {
-    return _rows;
+    std::vector<std::valarray<double>> out;
+    auto pointer = _data.begin();
+    for (auto row = 0ul; row < _rows; ++row) {
+        out.push_back({&(*pointer), _cols});
+        std::advance(pointer, static_cast<long>(_cols));
+    }
+    return out;
 }
 
 std::vector<double> Matrix::column(size_t column) const
 {
-    if (column >= _rows.front().size()) {
-        throw std::out_of_range("no such column");
+    if (column >= _cols) {
+        throw std::out_of_range("No such column.");
     }
     std::vector<double> result;
-    result.reserve(_rows.size());
-    for (auto r : _rows) {
-        result.push_back(r[column]);
+    result.reserve(_rows);
+    auto pointer = _data.begin();
+    while (pointer != _data.end()) {
+        result.push_back(*pointer);
+        std::advance(pointer, static_cast<long>(_cols));
     }
     return result;
 }
 
 void Matrix::addRow(const std::valarray<double> &row)
 {
-    if (_rows.size() && _rows.front().size() != row.size()) {
-        throw std::logic_error("matrix value size mismatch");
+    if (_rows != 0 && _cols != row.size()) {
+        throw std::logic_error("Matrix value size mismatch.");
+    } else if (_rows == 0) {
+        _cols = row.size();
     }
-    _rows.push_back(row);
+    _data.insert(_data.end(), std::begin(row), std::end(row));
+    ++_rows;
 }
 
 Matrix &Matrix::operator*=(const Matrix &rhs)
@@ -78,6 +90,23 @@ Matrix &Matrix::operator*=(const Matrix &rhs)
     if (cols() != rhs.rows()) {
         throw std::logic_error("can't multiply matrices where left number of columns doesn't match right number of rows.");
     }
+    Matrix rightColumns = rhs.transposed();
+    std::vector<double> result;
+    result.assign(_rows * rhs._cols, 0);
+    auto resultIterator = result.begin();
+    auto leftIterator = _data.begin();
+    for (size_t i = 0; i < rows(); ++i) {
+        auto rightIterator = rightColumns._data.begin();
+        for (size_t j = 0; j < rhs.cols(); ++j) {
+            *(resultIterator + static_cast<long>(j)) = std::inner_product(leftIterator, leftIterator + static_cast<long>(_cols), rightIterator, 0.);
+            std::advance(rightIterator, static_cast<long>(rightColumns._cols));
+        }
+        resultIterator += static_cast<long>(_rows);
+        ++leftIterator;
+    }
+    _data = result;
+    return *this;
+    /*
     auto leftArray = array();
     auto rightArray = rhs.array();
     std::valarray<double> result(0., rows() * rhs.cols());
@@ -104,6 +133,7 @@ Matrix &Matrix::operator*=(const Matrix &rhs)
         --rows;
     }
     return *this;
+    */
 }
 
 Matrix Matrix::operator *(const Matrix &rhs)
@@ -126,45 +156,73 @@ Matrix &Matrix::operator *=(const std::valarray<double> &valarray)
 
 Matrix &Matrix::operator *=(double value)
 {
-    for(auto &row : _rows) {
-        row *= value;
-    }
+    std::transform(_data.begin(), _data.end(), _data.begin(), [value](double v) -> double { return v * value; });
     return *this;
 }
 
 Matrix &Matrix::operator -=(const Matrix &rhs)
 {
-    auto thisRow = _rows.begin();
+    if (cols() != rhs.cols() && rhs.cols() == 1 && rows() == rhs.rows()) {
+        return operator -=(rhs.column(0));
+    }
+    if (cols() != rhs.cols() || rows() != rhs.rows()) {
+        throw std::logic_error("Can't piecewise substract matrices of unequal size.");
+    }
+    std::transform(_data.begin(), _data.end(), rhs._data.begin(), _data.begin(), [] (double left, double right) -> double { return left - right; });
+/*    auto thisRow = _rows.begin();
     auto otherRow = rhs._rows.begin();
     while (thisRow != _rows.end()) {
-        if (otherRow->size() == 1) {
-            (*thisRow) -= (*otherRow)[0];
-        } else {
-            (*thisRow) -= (*otherRow);
-        }
+        (*thisRow) -= (*otherRow);
         ++thisRow; ++otherRow;
+    }*/
+    return *this;
+}
+
+Matrix &Matrix::operator -=(const std::vector<double> &rhs)
+{
+    if (rows() != rhs.size()) {
+        throw std::logic_error("Size mismatch. Subtractor vector must have as many elements as the matrix has rows.");
     }
+    auto pointer = _data.begin();
+    for (auto value : rhs) {
+        std::transform(pointer, pointer + static_cast<long>(_cols), pointer, [value](double current) -> double { return current - value; });
+        std::advance(pointer, static_cast<long>(_cols));
+    }
+    /*
+    auto thisRow = _rows.begin();
+    auto rhsVal = rhs.begin();
+    while (thisRow != _rows.end()) {
+        (*thisRow) -= *rhsVal;
+        ++thisRow; ++rhsVal;
+    }
+    */
     return *this;
 }
 
 size_t Matrix::cols() const
 {
-    return _rows.size() > 0 ? _rows.front().size() : 0;
+    return _cols;
 }
 
 size_t Matrix::rows() const
 {
-    return _rows.size();
+    return _rows;
 }
 
 double Matrix::value(size_t row, size_t column) const
 {
-    return _rows.at(row)[column];
+    if (row >= _rows || column >= _cols) {
+        throw std::out_of_range("Requested value out of bounds of matrix.");
+    }
+    return _data.at(row * _cols + column);
 }
 
 void Matrix::setValue(size_t row, size_t column, double value)
 {
-    _rows[row][column] = value;
+    if (row >= _rows || column >= _cols) {
+        throw std::out_of_range("Requested value out of bounds of matrix.");
+    }
+    _data[row * _cols + column] = value;
 }
 
 bool Matrix::operator==(const Matrix &rhs) const
@@ -175,7 +233,7 @@ bool Matrix::operator==(const Matrix &rhs) const
     if (cols() != rhs.cols()) {
         return false;
     }
-    return (array() == rhs.array()).min() == true;
+    return _data == rhs._data;
 }
 
 bool Matrix::operator!=(const Matrix &rhs) const
@@ -183,25 +241,29 @@ bool Matrix::operator!=(const Matrix &rhs) const
     return !(*this == rhs);
 }
 
-std::valarray<double> Matrix::array() const
-{
-    if (0 == _rows.size()) {
-        return std::valarray<double>();
-    }
-    auto columns = cols();
-    std::valarray<double> result(columns * rows());
-    auto resultIterator = std::begin(result);
-    for (auto row : _rows) {
-        std::copy(std::begin(row), std::end(row), resultIterator);
-        resultIterator += columns;
-    }
-    return result;
-}
-
 Matrix& Matrix::transpose()
 {
-    auto tmp = transposed();
-    _rows = tmp._rows;
+    if (_rows == 0) {
+        return *this;
+    }
+    std::vector<double> tmp(_data.size());
+    /*
+     *  1  2  3     1  4
+     *  4  5  6     2  5
+     *              3  6
+     *
+     * 1  2  3  4  5  6    1  4  2  5  3  6
+     *  swap cols < -- > rows
+     *
+     */
+    size_t s = _data.size();
+    for (size_t x = 0; x < s; ++x) {
+        size_t i = x / _rows;
+        size_t j = x % _rows;
+        tmp[x] = _data[j * _cols + i];
+    }
+    std::swap(_rows, _cols);
+    _data = tmp;
     return *this;
 }
 

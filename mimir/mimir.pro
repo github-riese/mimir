@@ -32,9 +32,9 @@ SOURCES += \
     services/NameResolver.cpp \
     models/Neuron.cpp \
     models/Layer.cpp \
-    models/Net.cpp \
     helpers/math.cpp \
-    models/Matrix.cpp
+    models/Matrix.cpp \
+    services/NeuronNet.cpp
 
 HEADERS += \
     helpers/AccumulateHelper.h \
@@ -55,6 +55,6 @@ HEADERS += \
     traits/Timing.h \
     models/Neuron.h \
     models/Layer.h \
-    models/Net.h \
     helpers/math.h \
-    models/Matrix.h
+    models/Matrix.h \
+    services/NeuronNet.h

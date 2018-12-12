@@ -7,20 +7,20 @@
 #include <vector>
 
 namespace mimir {
-namespace models {
+namespace services {
 
-class Net
+class NeuronNet
 {
 public:
-    Net(long inputs, long outputs);
+    NeuronNet(long inputs, long outputs);
     void addHiddenLayer(int numNeurons);
     void connect();
     std::vector<double> run(std::vector<double> inputs);
     std::vector<double> results();
     void backPropagate(const std::valarray<double> &expectation, double eta);
 private:
-    std::vector<Layer> _layers;
-    Layer _output;
+    std::vector<models::Layer> _layers;
+    models::Layer _output;
 };
 
 }

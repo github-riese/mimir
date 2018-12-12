@@ -141,7 +141,7 @@ void Layer::setWeights(const Matrix &weights)
 
 void Layer::changeWeights(const Matrix &delta)
 {
-    _weights -= delta;
+    _weights -= delta.column(0);
 }
 
 std::valarray<double> Layer::deriviateActivations() const

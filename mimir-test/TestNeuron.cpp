@@ -5,11 +5,11 @@
 
 #include <models/Neuron.h>
 #include <models/Layer.h>
-#include <models/Net.h>
+#include <services/NeuronNet.h>
 
 using mimir::models::Layer;
-using mimir::models::Net;
 using mimir::models::Neuron;
+using mimir::services::NeuronNet;
 
 REGISTER_TEST(TestNeuron)
 
@@ -76,7 +76,7 @@ void TestNeuron::testLayer()
 
 void TestNeuron::testOr()
 {
-    Net orNet(2, 1);
+    NeuronNet orNet(2, 1);
     orNet.addHiddenLayer(17);
     orNet.addHiddenLayer(4);
     orNet.connect();
@@ -93,7 +93,7 @@ void TestNeuron::testOr()
 
 void TestNeuron::testBackPropagate()
 {
-    Net backProp(5, 5);
+    NeuronNet backProp(5, 5);
     backProp.addHiddenLayer(5);
     backProp.addHiddenLayer(5);
     backProp.connect();
