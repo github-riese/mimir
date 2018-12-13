@@ -57,18 +57,21 @@ void TestMatrix::testMultiply()
 {
     Matrix m1;
     Matrix m2;
-    m1.addRow({1, 2, 3});
-    m1.addRow({4, 5, 6});
+    m1.addRow({1,  2,  3,  4});
+    m1.addRow({5,  6,  7,  8});
+    m1.addRow({9, 10, 11, 12});
 
-    m2.addRow({1, 2});
-    m2.addRow({3, 4});
-    m2.addRow({5, 6});
+    m2.addRow({ 1,   2,  3});
+    m2.addRow({ 4,   5,  6});
+    m2.addRow({ 7,   8,  9});
+    m2.addRow({10,  11, 12});
 
     Matrix resultMatrix = m1 * m2;
     auto result = resultMatrix.data();
-    QVERIFY(result.size() == 2);
-    QVERIFY(valarraysEqual({22, 28},result[0]));
-    QVERIFY(valarraysEqual({49, 64},result[1]));
+    QVERIFY(result.size() == 3);
+    QVERIFY(valarraysEqual({ 70,  80,  90},result[0]));
+    QVERIFY(valarraysEqual({158, 184, 210},result[1]));
+    QVERIFY(valarraysEqual({246, 288, 330},result[2]));
 
     Matrix m3{std::vector<std::valarray<double>>{{1, 2}}};
     QVERIFY_EXCEPTION_THROWN(m1*m3, std::logic_error);

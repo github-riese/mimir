@@ -101,10 +101,11 @@ Matrix &Matrix::operator*=(const Matrix &rhs)
             *(resultIterator + static_cast<long>(j)) = std::inner_product(leftIterator, leftIterator + static_cast<long>(_cols), rightIterator, 0.);
             std::advance(rightIterator, static_cast<long>(rightColumns._cols));
         }
-        resultIterator += static_cast<long>(_rows);
-        ++leftIterator;
+        resultIterator += static_cast<long>(rhs._cols);
+        leftIterator += static_cast<long>(_cols);
     }
     _data = result;
+    _cols = rhs.cols();
     return *this;
     /*
     auto leftArray = array();
