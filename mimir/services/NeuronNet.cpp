@@ -12,6 +12,22 @@ using mimir::models::Matrix;
 namespace mimir {
 namespace services {
 
+template<typename T>
+std::vector<T> operator*(T const &left, std::vector<T> const &right)
+{
+    std::vector<T> result(right);
+    std::transform(result.begin(), result.end(), result.begin(), [left](T const &v) -> T { return  left * v;});
+    return result;
+}
+
+template<typename T>
+std::vector<T> operator*(T const &left, std::valarray<T> const &right)
+{
+    std::vector<T> result(right.size());
+    std::transform(std::begin(right), std::end(right), result.begin(), [left](T const &v) -> T { return  left * v;});
+    return result;
+}
+
 NeuronNet::NeuronNet(long inputs, long outputs) :
     _output()
 {
@@ -78,57 +94,121 @@ std::vector<double> NeuronNet::results()
  * will back propagate new biases & weights in order to achive output as defined in expectation
  * @param expectation
  */
-void NeuronNet::backPropagate(const std::vector<double> &costDerivative, double eta)
+void NeuronNet::backPropagate(const std::vector<std::vector<double>> &results, std::vector<std::vector<double>> const &expectations, double eta)
 {
-    auto cost = helpers::toArray(costDerivative);
-    std::vector<double> costV = costDerivative;
-
     std::vector<std::vector<double>> nablaBiases;
+    std::vector<Matrix> nablaWeights;
+
     std::vector<std::vector<double>> deltaNablaBiases;
     std::vector<Matrix> deltaNablaWeights;
-    std::vector<Matrix> nablaWeights;
-    std::vector<std::vector<double>> sigmoidPrimes;
 
     std::vector<std::vector<double>> biases;
     std::vector<Matrix> weights;
 
-    std::vector<std::vector<double>> activations;
-
     for (auto layer : _layers) {
         nablaBiases.push_back(std::vector<double>(layer.size()));
-        deltaNablaBiases.push_back(std::vector<double>(layer.size()));
-        activations.push_back(layer.values());
         if (layer.isConnected()) {
-            nablaWeights.push_back(Matrix(layer.size(), layer.nextSize() == 0 ? 1 : layer.nextSize(), 0));
-            deltaNablaWeights.push_back(Matrix(layer.size(), layer.nextSize() == 0 ? 1 : layer.nextSize(), 0));
+            nablaWeights.push_back(Matrix(layer.size(), layer.nextSize() == 0 ? 1 : layer.nextSize(), .0));
         }
-        sigmoidPrimes.push_back(helpers::toVector(layer.sigmoidPrime()));
     }
 
-    auto layer = _layers.rbegin();
-    auto previousLayer = layer + 1;
-    auto deltaNablaBias = deltaNablaBiases.rbegin();
-    auto deltaNablaWeight = deltaNablaWeights.rbegin();
-    auto activation = activations.rbegin();
-    auto sigmoidPrime = sigmoidPrimes.rbegin();
+    auto x = results.begin();
+    auto y = expectations.begin();
+    while (x != results.end()) {
+        auto deltas = deltaNabla(helpers::toVector(helpers::toArray(*x) - helpers::toArray(*y)));
+        deltaNablaBiases = std::get<0>(deltas);
+        deltaNablaWeights = std::get<1>(deltas);
+        nablaBiases = addVectors(nablaBiases, deltaNablaBiases);
+        nablaWeights = addMatices(nablaWeights, deltaNablaWeights);
 
-    std::vector<double> delta = costDerivative;
-    *deltaNablaBias = costDerivative;
-    *deltaNablaWeight = Matrix(delta) * helpers::toArray(*activation);
-    ++deltaNablaBias; ++deltaNablaWeight; ++activation; ++sigmoidPrime; ++previousLayer;
-    while (deltaNablaBias != deltaNablaBiases.rend()) {
-        delta = helpers::toVector(helpers::toArray(((*previousLayer).weights().transposed() * delta).column(0)) * helpers::toArray(*sigmoidPrime));
-        *deltaNablaBias = delta;
-        if (deltaNablaWeight != deltaNablaWeights.rend()) {
-            *deltaNablaWeight = Matrix(delta) * helpers::toArray(*(activation + 1));
-        }
-        ++deltaNablaBias; ++deltaNablaWeight; ++activation; ++sigmoidPrime; ++previousLayer;
+        ++x; ++y;
     }
+
+    eta = eta / static_cast<double>(results.size());
+
+    auto nablaWeight = nablaWeights.begin();
+    auto nablaBias = nablaBiases.begin();
+    for (auto &layer : _layers) {
+        layer.setBiases(layer.biases() - helpers::toArray(*nablaBias) * eta);
+        if (layer.isConnected()) {
+            Matrix t(layer.weights());
+            t -= (*nablaWeight) * eta;
+            layer.setWeights(t);
+        }
+        ++nablaWeight; ++nablaBias;
+    }
+
 }
 
 size_t NeuronNet::outputSize() const
 {
     return _layers.back().size();
+}
+
+std::tuple<std::vector<std::vector<double> >, std::vector<models::Matrix> >
+  NeuronNet::deltaNabla(std::vector<double> const &costDerivative) const
+{
+    std::vector<std::vector<double>> deltaNablaBiases;
+    std::vector<Matrix> deltaNablaWeights;
+    std::vector<std::vector<double>> activations;
+
+    for (auto layer : _layers) {
+        deltaNablaBiases.push_back(std::vector<double>(layer.size()));
+        if (layer.isConnected()) {
+            deltaNablaWeights.push_back(Matrix(layer.size(), layer.nextSize() == 0 ? 1 : layer.nextSize(), 0.));
+        }
+        activations.push_back(layer.values());
+    }
+
+    auto deltaNablaBias = deltaNablaBiases.rbegin();
+    auto deltaNablaWeight = deltaNablaWeights.rbegin();
+    auto activation = activations.rbegin();
+
+    auto layer = _layers.rbegin();
+
+    auto sigPrim = layer->sigmoidPrime();
+    auto delta = helpers::toVector(helpers::toArray(costDerivative) * layer->sigmoidPrime());
+    *deltaNablaBias = delta;
+    *deltaNablaWeight = (Matrix(helpers::toArray(delta)) * (*(activation )));
+    ++deltaNablaBias; ++deltaNablaWeight; ++activation;
+
+    ++layer;
+    while (deltaNablaBias != deltaNablaBiases.rend()) {
+        delta = ((*layer).weights() * delta).value(0,0) * layer->sigmoidPrime();
+                //helpers::toVector(helpers::toArray(((*(layer+1)).weights() * delta).column(0)) * layer->sigmoidPrime());
+        *deltaNablaBias = delta;
+        if (deltaNablaWeight != deltaNablaWeights.rend()) {
+            *deltaNablaWeight = (Matrix(helpers::toArray(delta)) * *(activation ));
+        }
+        ++deltaNablaBias; ++deltaNablaWeight; ++activation; ++layer;
+    }
+    return {deltaNablaBiases, deltaNablaWeights};
+}
+
+std::vector<models::Matrix> NeuronNet::addMatices(const std::vector<models::Matrix> &left, const std::vector<models::Matrix> &right) const
+{
+    std::vector<Matrix> result;
+    auto l = left.begin();
+    auto r = right.begin();
+    while (l != left.end()) {
+        result.push_back({*l + r->value(0,0)});
+        ++l; ++r;
+    }
+    return result;
+}
+
+std::vector<std::vector<double> > NeuronNet::addVectors(const std::vector<std::vector<double> > &left, const std::vector<std::vector<double> > &right) const
+{
+    std::vector<std::vector<double>> result;
+    auto l = left.begin();
+    auto r = right.begin();
+    while (l != left.end()) {
+        std::vector<double> t(l->size());
+        std::transform(l->begin(), l->end(), r->begin(), t.begin(), [](auto left, auto right)->auto { return left + right; });
+        result.push_back(t);
+        ++l; ++r;
+    }
+    return result;
 }
 
 }

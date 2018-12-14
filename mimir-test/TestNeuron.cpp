@@ -93,18 +93,22 @@ void TestNeuron::testOr()
 
 void TestNeuron::testBackPropagate()
 {
-    NeuronNet backProp(5, 5);
+    return;
+    NeuronNet backProp(5, 3);
     backProp.addHiddenLayer(5);
     backProp.addHiddenLayer(5);
     backProp.connect();
-    std::vector<double> expect{.1, .2, .3, .4, .5};
+    std::vector<double> expect{.1, .3, .5};
+    std::vector<std::vector<double>> allExpectations;
+    std::vector<std::vector<double>> results;
     for (auto n = 0; n < 350; ++n) {
         auto result = backProp.run({1, 2, 3, 4, 5});
         auto delta = result;
-        std::transform(result.begin(), result.end(), expect.begin(), delta.begin(), [](double result, double expect) -> double { return result - expect;});
         if (n % 100 == 0) {
             qDebug() << backProp.results();
         }
-        backProp.backPropagate(delta, .1);
+        results.push_back(result);
+        allExpectations.push_back(expect);
+        backProp.backPropagate(results, allExpectations, .1);
     }
  }

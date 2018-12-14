@@ -25,9 +25,11 @@ private:
     };
 
     struct Epoch {
+        void addResult(std::vector<double> const&result, std::vector<double> const &expected);
+        std::vector<std::vector<double>> results;
+        std::vector<std::vector<double>> expectations;
         std::vector<std::vector<double>> deltas;
-        void addDelta(std::vector<double> const&);
-        std::vector<double> averageDeltas() const;
+        std::vector<double> mses;
     };
     std::deque<Batch> _batches;
     double _currentError = -1;

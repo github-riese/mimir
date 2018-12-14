@@ -16,7 +16,7 @@ public:
     Matrix(std::valarray<double> const&) noexcept;
     Matrix(size_t rows, size_t colums, double initalValue = 1.) noexcept;
     template<typename BinaryOp>
-    Matrix(size_t rows, size_t columns, BinaryOp setter) :
+    explicit Matrix(size_t rows, size_t columns, BinaryOp setter) :
         _rows(rows),
         _cols(columns)
     {
@@ -36,11 +36,16 @@ public:
     Matrix & operator*=(const Matrix &rhs);
     Matrix operator *(const Matrix &rhs) const;
     Matrix operator *(std::vector<double> const&) const;
+    Matrix operator *(double) const;
     Matrix &operator *=(std::vector<double> const&);
     Matrix &operator *=(std::valarray<double> const &);
     Matrix &operator *=(double);
     Matrix &operator -=(Matrix const &);
     Matrix &operator -=(std::vector<double> const&);
+    Matrix operator +(Matrix const &) const;
+    Matrix operator +(double) const;
+    Matrix &operator +=(double);
+    Matrix& operator +=(Matrix const &);
     size_t cols() const;
     size_t rows() const;
     double value(size_t row, size_t column) const;

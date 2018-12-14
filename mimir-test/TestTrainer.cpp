@@ -74,12 +74,11 @@ void TestTrainer::testImageDetect()
     mimir::services::NeuronNet detector(28*28, 10);
 //    detector.addHiddenLayer(28*14);
 //    detector.addHiddenLayer(14*14);
-    detector.addHiddenLayer(28);
-    detector.addHiddenLayer(14);
+    detector.addHiddenLayer(15);
     detector.connect();
     mimir::services::Trainer trainer(detector);
-    auto batches = makeInput(data, 50, 40);
-    auto expectations = makeExpectations(labels, 50, 40);
+    auto batches = makeInput(data, 100, 40);
+    auto expectations = makeExpectations(labels, 100, 40);
     auto batch = batches.begin();
     auto expect = expectations.begin();
     qDebug() << "Begin training...";
@@ -95,7 +94,7 @@ void TestTrainer::testImageDetect()
             trainer.addBatch(*b, *e);
             ++b; ++e;
         }
-        trainer.run(10000, .000000001, .5);
+        trainer.run(10000, .000000001, 100);
         trainer.reset();
         ++iterations;
         qDebug() << "iteration" << iterations << "current error: " << trainer.currentError();

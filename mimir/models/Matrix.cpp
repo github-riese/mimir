@@ -62,6 +62,9 @@ std::vector<double> Matrix::column(size_t column) const
     if (column >= _cols) {
         throw std::out_of_range("No such column.");
     }
+    if (_cols == 1 && column == 0) {
+        return _data;
+    }
     std::vector<double> result;
     result.reserve(_rows);
     auto pointer = _data.begin();
@@ -119,6 +122,12 @@ Matrix Matrix::operator *(const std::vector<double> &vector) const
     return t *= Matrix{vector};
 }
 
+Matrix Matrix::operator *(double v) const
+{
+    Matrix m(*this);
+    return m *= v;
+}
+
 Matrix &Matrix::operator *=(const std::vector<double> &vector)
 {
     Matrix t{vector};
@@ -159,6 +168,39 @@ Matrix &Matrix::operator -=(const std::vector<double> &rhs)
         std::transform(pointer, pointer + static_cast<long>(_cols), pointer, [value](double current) -> double { return current - value; });
         std::advance(pointer, static_cast<long>(_cols));
     }
+    return *this;
+}
+
+Matrix Matrix::operator +(const Matrix &rhs) const
+{
+//    if (cols() != rhs.cols() && rhs.cols() == 1 && rows() == rhs.rows()) {
+//        return operator +(rhs.column(0));
+//    }
+    if (cols() != rhs.cols() || rows() != rhs.rows()) {
+        throw std::logic_error("Can't piecewise add matrices of unequal size.");
+    }
+    Matrix out(*this);
+    return out += rhs;
+}
+
+Matrix Matrix::operator +(double v) const
+{
+    Matrix result(*this);
+    return result += v;
+}
+
+Matrix &Matrix::operator +=(double v)
+{
+    std::transform(_data.begin(), _data.end(), _data.begin(), [v](double oldVal) -> double { return oldVal + v; });
+    return *this;
+}
+
+Matrix &Matrix::operator +=(const Matrix &rhs)
+{
+    if (cols() != rhs.cols() || rows() != rhs.rows()) {
+        throw std::logic_error("Can't piecewise add matrices of unequal size.");
+    }
+    std::transform(_data.begin(), _data.end(), rhs._data.begin(), _data.begin(), [] (double left, double right) -> double { return left + right; });
     return *this;
 }
 
