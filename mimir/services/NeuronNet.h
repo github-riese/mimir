@@ -17,7 +17,8 @@ public:
     void connect();
     std::vector<double> run(std::vector<double> inputs);
     std::vector<double> results();
-    void backPropagate(const std::valarray<double> &expectation, double eta);
+    void backPropagate(const std::vector<double> &costDerivative, double eta);
+    size_t outputSize() const;
 private:
     std::vector<models::Layer> _layers;
     models::Layer _output;

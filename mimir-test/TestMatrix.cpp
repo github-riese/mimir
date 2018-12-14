@@ -95,6 +95,9 @@ void TestMatrix::testOtherMultiplications()
     QVERIFY(m1 == Matrix({{2,2,2},{6,6,6},{18,18,18}}));
     m1 *= .5;
     QVERIFY(m1 == Matrix({{1,1,1},{3,3,3},{9,9,9}}));
+    m1 = Matrix({{.9, .1, .2}, {.9, .1, .2}, {.9, .1, .2}});
+    Matrix m2 = m1 * std::vector<double>{.2, .2, .2};
+    QVERIFY(m2 == Matrix(std::vector<std::valarray<double>>{{.24},{.24},{.24}}));
 }
 
 void TestMatrix::testDiff()
@@ -138,4 +141,12 @@ void TestMatrix::testDiff()
                              { .9, .9, .9, .9, .9},
                          }));
 
+}
+
+void TestMatrix::testCallbackConstructor()
+{
+    double vals[2][3] = {{1, 2, 3}, {4, 5, 6}};
+    auto setter = [&vals](size_t row, size_t col) -> double { return vals[row][col];};
+    Matrix cbAssigned(2, 3, setter);
+    QVERIFY(cbAssigned == Matrix({{1, 2, 3}, {4, 5, 6}}));
 }

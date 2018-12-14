@@ -35,7 +35,8 @@ SOURCES += \
     TestPatternFind.cpp \
     TestNeuron.cpp \
     TestHelpers.cpp \
-    TestMatrix.cpp
+    TestMatrix.cpp \
+    TestTrainer.cpp
 
 HEADERS += \
     tst_Models.h \
@@ -44,7 +45,8 @@ HEADERS += \
     TestPatternFind.h \
     TestNeuron.h \
     TestHelpers.h \
-    TestMatrix.h
+    TestMatrix.h \
+    TestTrainer.h
 
 unix|win32: LIBS += -L$$OUT_PWD/../mimir/ -lmimir
 

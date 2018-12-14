@@ -34,7 +34,8 @@ SOURCES += \
     models/Layer.cpp \
     helpers/math.cpp \
     models/Matrix.cpp \
-    services/NeuronNet.cpp
+    services/NeuronNet.cpp \
+    services/Trainer.cpp
 
 HEADERS += \
     helpers/AccumulateHelper.h \
@@ -57,4 +58,5 @@ HEADERS += \
     models/Layer.h \
     helpers/math.h \
     models/Matrix.h \
-    services/NeuronNet.h
+    services/NeuronNet.h \
+    services/Trainer.h

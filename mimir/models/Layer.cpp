@@ -37,7 +37,7 @@ bool Layer::connect(Layer &next)
         return false;
     }
     auto nextLayerNeuronCount = next.neurons().size();
-    _weights = Matrix{nextLayerNeuronCount, _neurons.size(), 1.};
+    _weights = Matrix{_neurons.size(), nextLayerNeuronCount};
     _nextLayer = &next;
     _dirty = true;
     return true;
@@ -94,6 +94,16 @@ std::valarray<double> Layer::input() const
     return result;
 }
 
+std::valarray<double> Layer::biases() const
+{
+    std::valarray<double> result(_neurons.size());
+    unsigned i = 0;
+    for (auto neuron : neurons()) {
+        result[i++] = neuron.bias();
+    }
+    return result;
+}
+
 void Layer::setBiases(const std::valarray<double> &biasValues)
 {
     if (biasValues.size() != _neurons.size()) {
@@ -144,12 +154,22 @@ void Layer::changeWeights(const Matrix &delta)
     _weights -= delta.column(0);
 }
 
-std::valarray<double> Layer::deriviateActivations() const
+std::valarray<double> Layer::zValues() const
+{
+    std::valarray<double> result(_neurons.size());
+    unsigned idx = 0;
+    for (auto neuron : _neurons) {
+        result[idx++] = neuron.z();
+    }
+    return result;
+}
+
+std::valarray<double> Layer::sigmoidPrime() const
 {
     std::valarray<double> result(size());
     size_t idx = 0;
     for (auto neuron : _neurons) {
-        result[idx++] = neuron.deriviateActivation();
+        result[idx++] = neuron.sigmoidPrime();
     }
     return result;
 }
@@ -167,7 +187,7 @@ void Layer::run()
     if (_nextLayer == nullptr) {
         throw std::logic_error("can't run a layer without subsequent layer.");
     }
-    Matrix nextInput = _weights * values();
+    Matrix nextInput = _weights.transposed() * values();
     _nextLayer->reset();
     _nextLayer->addInput(nextInput.column(0));
 }
@@ -192,6 +212,11 @@ void Layer::reset()
 size_t Layer::size() const noexcept
 {
     return _neurons.size();
+}
+
+size_t Layer::nextSize() const noexcept
+{
+    return _nextLayer == nullptr ? 0 : _nextLayer->size();
 }
 
 } // namespace models

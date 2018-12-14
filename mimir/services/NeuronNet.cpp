@@ -78,27 +78,57 @@ std::vector<double> NeuronNet::results()
  * will back propagate new biases & weights in order to achive output as defined in expectation
  * @param expectation
  */
-void NeuronNet::backPropagate(const std::valarray<double> &expectation, double eta)
+void NeuronNet::backPropagate(const std::vector<double> &costDerivative, double eta)
 {
-    std::valarray<double> delta = helpers::toArray(results()) - expectation;
-    auto deltaV = helpers::toVector(delta);
+    auto cost = helpers::toArray(costDerivative);
+    std::vector<double> costV = costDerivative;
+
+    std::vector<std::vector<double>> nablaBiases;
+    std::vector<std::vector<double>> deltaNablaBiases;
+    std::vector<Matrix> deltaNablaWeights;
+    std::vector<Matrix> nablaWeights;
+    std::vector<std::vector<double>> sigmoidPrimes;
+
+    std::vector<std::vector<double>> biases;
+    std::vector<Matrix> weights;
+
+    std::vector<std::vector<double>> activations;
+
+    for (auto layer : _layers) {
+        nablaBiases.push_back(std::vector<double>(layer.size()));
+        deltaNablaBiases.push_back(std::vector<double>(layer.size()));
+        activations.push_back(layer.values());
+        if (layer.isConnected()) {
+            nablaWeights.push_back(Matrix(layer.size(), layer.nextSize() == 0 ? 1 : layer.nextSize(), 0));
+            deltaNablaWeights.push_back(Matrix(layer.size(), layer.nextSize() == 0 ? 1 : layer.nextSize(), 0));
+        }
+        sigmoidPrimes.push_back(helpers::toVector(layer.sigmoidPrime()));
+    }
+
     auto layer = _layers.rbegin();
     auto previousLayer = layer + 1;
-    layer->changeBiases(delta * layer->deriviateActivations() * eta);
-    previousLayer->changeWeights(previousLayer->weights().transposed() * helpers::toVector((delta * eta)));
-    ++layer; ++previousLayer;
-    while (previousLayer != _layers.rend()) {
-        auto sigmoidPrime = (*layer).deriviateActivations();
-        Matrix t = layer->weights();
-        t *= deltaV;
-        deltaV = t.column(0);
-        delta = helpers::toArray(deltaV) * eta;
-        (*layer).changeBiases(delta);
-        t = previousLayer->values();
-        t *= delta;
-        previousLayer->changeWeights(t);
-        ++layer; ++previousLayer;
+    auto deltaNablaBias = deltaNablaBiases.rbegin();
+    auto deltaNablaWeight = deltaNablaWeights.rbegin();
+    auto activation = activations.rbegin();
+    auto sigmoidPrime = sigmoidPrimes.rbegin();
+
+    std::vector<double> delta = costDerivative;
+    *deltaNablaBias = costDerivative;
+    *deltaNablaWeight = Matrix(delta) * helpers::toArray(*activation);
+    ++deltaNablaBias; ++deltaNablaWeight; ++activation; ++sigmoidPrime; ++previousLayer;
+    while (deltaNablaBias != deltaNablaBiases.rend()) {
+        delta = helpers::toVector(helpers::toArray(((*previousLayer).weights().transposed() * delta).column(0)) * helpers::toArray(*sigmoidPrime));
+        *deltaNablaBias = delta;
+        if (deltaNablaWeight != deltaNablaWeights.rend()) {
+            *deltaNablaWeight = Matrix(delta) * helpers::toArray(*(activation + 1));
+        }
+        ++deltaNablaBias; ++deltaNablaWeight; ++activation; ++sigmoidPrime; ++previousLayer;
     }
+}
+
+size_t NeuronNet::outputSize() const
+{
+    return _layers.back().size();
 }
 
 }

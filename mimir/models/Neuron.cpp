@@ -55,7 +55,7 @@ double Neuron::value()
     return _value;
 }
 
-double Neuron::deriviateActivation() const
+double Neuron::sigmoidPrime() const
 {
     return derivativeActivate();
 }
@@ -71,14 +71,20 @@ Neuron &Neuron::operator <<(double value)
     return *this;
 }
 
-double Neuron::activate() const
+double Neuron::z() const
 {
-    return std::tanh(_input + _bias);
+    return _z;
+}
+
+double Neuron::activate()
+{
+    _z = _input + _bias;
+    return std::tanh(_z);
 }
 
 double Neuron::derivativeActivate() const
 {
-    return 1/std::pow(std::cosh(_input + _bias), 2.);
+    return 1/std::pow(std::cosh(_z), 2.);
 }
 
 mimir::models::Neuron::operator double()

@@ -97,11 +97,14 @@ void TestNeuron::testBackPropagate()
     backProp.addHiddenLayer(5);
     backProp.addHiddenLayer(5);
     backProp.connect();
+    std::vector<double> expect{.1, .2, .3, .4, .5};
     for (auto n = 0; n < 350; ++n) {
-        backProp.run({1, 2, 3, 4, 5});
+        auto result = backProp.run({1, 2, 3, 4, 5});
+        auto delta = result;
+        std::transform(result.begin(), result.end(), expect.begin(), delta.begin(), [](double result, double expect) -> double { return result - expect;});
         if (n % 100 == 0) {
             qDebug() << backProp.results();
         }
-        backProp.backPropagate({.1, .2, .3, .4, .5}, .1);
+        backProp.backPropagate(delta, .1);
     }
  }

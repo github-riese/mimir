@@ -7,7 +7,7 @@ namespace mimir {
 namespace models {
 
 
-Matrix::Matrix(const std::vector<std::valarray<double> > &values) :
+Matrix::Matrix(const std::vector<std::valarray<double> > &values) noexcept :
     _rows(values.size()),
     _cols(values.front().size())
 {
@@ -19,23 +19,21 @@ Matrix::Matrix(const std::vector<std::valarray<double> > &values) :
     }
 }
 
-Matrix::Matrix(const std::vector<double> &vector) :
+Matrix::Matrix(const std::vector<double> &vector) noexcept :
     _rows(vector.size()),
     _cols(1)
 {
-    _data.assign(vector.size(), 0);
-    std::copy(std::begin(vector), std::end(vector), std::begin(_data));
+    _data.assign(vector.begin(), vector.end());
 }
 
-Matrix::Matrix(const std::valarray<double> &array) :
+Matrix::Matrix(const std::valarray<double> &array) noexcept :
     _rows(1),
     _cols(array.size())
 {
-    _data.assign(array.size(), 0);
-    std::copy(std::begin(array), std::end(array), std::begin(_data));
+    _data.assign(std::begin(array), std::end(array));
 }
 
-Matrix::Matrix(size_t rows, size_t colums, double initalValue) :
+Matrix::Matrix(size_t rows, size_t colums, double initalValue) noexcept :
     _rows(rows),
     _cols(colums)
 {
@@ -107,40 +105,18 @@ Matrix &Matrix::operator*=(const Matrix &rhs)
     _data = result;
     _cols = rhs.cols();
     return *this;
-    /*
-    auto leftArray = array();
-    auto rightArray = rhs.array();
-    std::valarray<double> result(0., rows() * rhs.cols());
-    auto lcols = cols();
-    auto lrows = rows();
-    auto rcols = rhs.cols();
-    for (size_t i = 0; i < lrows; ++i) {
-        for (size_t j = 0; j < rcols; ++j) {
-            for (size_t k = 0; k < lcols; ++k) {
-                result[i * rcols + j] += leftArray[i * lcols + k] * rightArray[rcols * k + j ];
-            }
-        }
-    }
-    auto cpBegin = std::begin(result);
-    auto cpStride = cpBegin + rcols;
-    _rows.clear();
-    auto rows = result.size()/rcols;
-    while (rows > 0) {
-        std::valarray<double> tmp(rcols);
-        std::copy(cpBegin, cpStride, std::begin(tmp));
-        _rows.push_back(tmp);
-        cpBegin += rcols;
-        cpStride += rcols;
-        --rows;
-    }
-    return *this;
-    */
 }
 
-Matrix Matrix::operator *(const Matrix &rhs)
+Matrix Matrix::operator *(const Matrix &rhs) const
 {
     Matrix result = *this;
     return result *= rhs;
+}
+
+Matrix Matrix::operator *(const std::vector<double> &vector) const
+{
+    Matrix t{*this};
+    return t *= Matrix{vector};
 }
 
 Matrix &Matrix::operator *=(const std::vector<double> &vector)
@@ -170,12 +146,6 @@ Matrix &Matrix::operator -=(const Matrix &rhs)
         throw std::logic_error("Can't piecewise substract matrices of unequal size.");
     }
     std::transform(_data.begin(), _data.end(), rhs._data.begin(), _data.begin(), [] (double left, double right) -> double { return left - right; });
-/*    auto thisRow = _rows.begin();
-    auto otherRow = rhs._rows.begin();
-    while (thisRow != _rows.end()) {
-        (*thisRow) -= (*otherRow);
-        ++thisRow; ++otherRow;
-    }*/
     return *this;
 }
 
@@ -189,14 +159,6 @@ Matrix &Matrix::operator -=(const std::vector<double> &rhs)
         std::transform(pointer, pointer + static_cast<long>(_cols), pointer, [value](double current) -> double { return current - value; });
         std::advance(pointer, static_cast<long>(_cols));
     }
-    /*
-    auto thisRow = _rows.begin();
-    auto rhsVal = rhs.begin();
-    while (thisRow != _rows.end()) {
-        (*thisRow) -= *rhsVal;
-        ++thisRow; ++rhsVal;
-    }
-    */
     return *this;
 }
 
@@ -234,7 +196,11 @@ bool Matrix::operator==(const Matrix &rhs) const
     if (cols() != rhs.cols()) {
         return false;
     }
-    return _data == rhs._data;
+    return std::equal(_data.begin(), _data.end(), rhs._data.begin(),
+            [](double left, double right) -> bool {
+                return std::abs(left-right) < .00000000001;
+            }
+    );
 }
 
 bool Matrix::operator!=(const Matrix &rhs) const

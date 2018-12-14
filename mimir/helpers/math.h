@@ -109,5 +109,4 @@ std::vector<T> operator *(std::vector<T> const &left, T const &right)
     return result;
 }
 
-
 #endif // MATH_H

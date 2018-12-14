@@ -11,17 +11,31 @@ class Matrix
 {
 public:
     Matrix() = default;
-    Matrix(std::vector<std::valarray<double>> const &);
-    Matrix(std::vector<double> const&);
-    Matrix(std::valarray<double> const&);
-    Matrix(size_t rows, size_t colums, double initalValue = 1.);
+    Matrix(std::vector<std::valarray<double>> const &) noexcept;
+    Matrix(std::vector<double> const&) noexcept;
+    Matrix(std::valarray<double> const&) noexcept;
+    Matrix(size_t rows, size_t colums, double initalValue = 1.) noexcept;
+    template<typename BinaryOp>
+    Matrix(size_t rows, size_t columns, BinaryOp setter) :
+        _rows(rows),
+        _cols(columns)
+    {
+        size_t elements = _rows * _cols;
+        _data.reserve(elements);
+        size_t offset = 0;
+        while (offset < elements) {
+            _data.push_back(setter(offset/_cols, offset%_cols));
+            ++offset;
+        }
+    }
     Matrix &transpose();
     Matrix transposed() const;
     std::vector<std::valarray<double> > data() const;
     std::vector<double> column(size_t column) const;
     void addRow(std::valarray<double> const &);
     Matrix & operator*=(const Matrix &rhs);
-    Matrix operator *(const Matrix &rhs);
+    Matrix operator *(const Matrix &rhs) const;
+    Matrix operator *(std::vector<double> const&) const;
     Matrix &operator *=(std::vector<double> const&);
     Matrix &operator *=(std::valarray<double> const &);
     Matrix &operator *=(double);

@@ -19,7 +19,7 @@ public:
     void addInput(double value);
     double input() const;
     double value();
-    double deriviateActivation() const;
+    double sigmoidPrime() const;
 
     double bias() const;
     void setBias(double bias);
@@ -29,8 +29,10 @@ public:
 
     operator double();
 
+    double z() const;
+
 protected:
-    double activate() const;
+    double activate();
     double derivativeActivate() const;
 private:
     static std::atomic<int> __neuronIdSource;
@@ -39,6 +41,7 @@ private:
     double _input = 0.;
     bool _dirty = false;
     double _value = .0;
+    double _z = 0.;
 };
 
 } // namespace models
