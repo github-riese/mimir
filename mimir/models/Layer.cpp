@@ -5,6 +5,7 @@
 #include <numeric>
 #include <strstream>
 #include <valarray>
+#include <cstdlib>
 
 #include "helpers/helpers.h"
 
@@ -23,7 +24,7 @@ std::vector<double> Layer::values()
         _dirty = false;
         std::valarray<double> values(_neurons.size());
         size_t idx = 0;
-        for (auto neuron : _neurons)
+        for (auto& neuron : _neurons)
             values[idx++] = neuron;
         _values.resize(values.size());
         std::copy(std::begin(values), std::end(values), std::begin(_values));
@@ -37,7 +38,7 @@ bool Layer::connect(Layer &next)
         return false;
     }
     auto nextLayerNeuronCount = next.neurons().size();
-    _weights = Matrix{_neurons.size(), nextLayerNeuronCount};
+    _weights = Matrix{_neurons.size(), nextLayerNeuronCount, [](auto, auto) ->auto { return static_cast<double>(rand()%2000)/10000. -.1;}};
     _nextLayer = &next;
     _dirty = true;
     return true;

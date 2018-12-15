@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <cstdlib>
 
 #include "helpers/math.h"
 #include "helpers/helpers.h"
@@ -21,6 +22,14 @@ std::vector<T> operator*(T const &left, std::vector<T> const &right)
 }
 
 template<typename T>
+std::vector<T> operator*(std::vector<T> const &left, std::vector<T> const &right)
+{
+    std::vector<T> result(right);
+    std::transform(left.begin(), left.end(), right.begin(), result.begin(), [](T const &l, T const &r) -> T { return  l * r;});
+    return result;
+}
+
+template<typename T>
 std::vector<T> operator*(T const &left, std::valarray<T> const &right)
 {
     std::vector<T> result(right.size());
@@ -33,12 +42,16 @@ NeuronNet::NeuronNet(long inputs, long outputs) :
 {
     Layer input;
     for (auto n = 0; n < inputs; ++n) {
-        input.addNeuron({});
+        models::Neuron neuron;
+        neuron.setBias(static_cast<double>(rand()%2000)/1000. -1.);
+        input.addNeuron(neuron);
     }
     _layers.push_back(input);
     Layer output;
     for (auto n = 0; n < outputs; ++n) {
-        output.addNeuron({});
+        models::Neuron neuron;
+        neuron.setBias(static_cast<double>(rand()%2000)/1000. -1.);
+        output.addNeuron(neuron);
     }
     _layers.push_back(output);
 }
@@ -50,7 +63,9 @@ void NeuronNet::addHiddenLayer(int numNeurons)
     }
     Layer l;
     for (auto n = 0; n < numNeurons; ++n) {
-        l.addNeuron({});
+        models::Neuron neuron;
+        neuron.setBias(static_cast<double>(rand()%2000)/1000. -1.);
+        l.addNeuron(neuron);
     }
     _layers.insert(_layers.end() -1, l);
 }
@@ -75,7 +90,7 @@ std::vector<double> NeuronNet::run(std::vector<double> inputs)
     input.reset();
     input.addInput(inputs);
     auto layer = _layers.begin();
-    auto output = _layers.end() -1;
+    auto output = layer + static_cast<long>(_layers.size() - 1);
     while (layer != output) {
         layer->run();
         ++layer;
@@ -124,7 +139,7 @@ void NeuronNet::backPropagate(const std::vector<std::vector<double>> &results, s
         ++x; ++y;
     }
 
-    eta = eta / static_cast<double>(results.size());
+    //eta = eta / static_cast<double>(results.size());
 
     auto nablaWeight = nablaWeights.begin();
     auto nablaBias = nablaBiases.begin();
@@ -169,16 +184,17 @@ std::tuple<std::vector<std::vector<double> >, std::vector<models::Matrix> >
     auto sigPrim = layer->sigmoidPrime();
     auto delta = helpers::toVector(helpers::toArray(costDerivative) * layer->sigmoidPrime());
     *deltaNablaBias = delta;
-    *deltaNablaWeight = (Matrix(helpers::toArray(delta)) * (*(activation )));
+    *deltaNablaWeight = (Matrix((delta)) * helpers::toArray(*(activation )));
     ++deltaNablaBias; ++deltaNablaWeight; ++activation;
 
     ++layer;
     while (deltaNablaBias != deltaNablaBiases.rend()) {
-        delta = ((*layer).weights() * delta).value(0,0) * layer->sigmoidPrime();
+        auto wTimesD = (*layer).weights() * delta;
+        delta = wTimesD.column(0) * helpers::toVector(layer->sigmoidPrime());
                 //helpers::toVector(helpers::toArray(((*(layer+1)).weights() * delta).column(0)) * layer->sigmoidPrime());
         *deltaNablaBias = delta;
         if (deltaNablaWeight != deltaNablaWeights.rend()) {
-            *deltaNablaWeight = (Matrix(helpers::toArray(delta)) * *(activation ));
+            *deltaNablaWeight = (Matrix((delta)) * helpers::toArray(*(activation)));
         }
         ++deltaNablaBias; ++deltaNablaWeight; ++activation; ++layer;
     }

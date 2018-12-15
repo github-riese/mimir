@@ -40,13 +40,14 @@ unsigned Trainer::run(unsigned maxEpochs, double maxError, double eta)
             epochData.addResult(result, item.expectedResult);
         }
         _currentError = std::accumulate(epochData.mses.begin(), epochData.mses.end(), 0., [](double current, double v) -> double { return current + std::pow(v, 2); })/static_cast<double>(_batches.size());
-        if (epoch % 1 == 0) {
-            std::cout << "Epoch " << epoch << ", mse: " << _currentError <<"\n";
+        if (epoch % 100 == 0) {
+            std::cout << "Epoch " << epoch << ", mse: " << _currentError << ", eta: " << eta << "\n";
         }
         if (_currentError <= maxError) {
             std::cout << "Goal of error <= " << maxError << " reached after " << epoch << " epochs.\n";
             return epoch;
         }
+        eta -= (epoch * .00000001) * eta;
         _net.backPropagate(epochData.results, epochData.expectations, eta);
     }
     std::cout << "Error level not reached.\n";

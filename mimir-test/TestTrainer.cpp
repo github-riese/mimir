@@ -54,14 +54,16 @@ TestTrainer::TestTrainer(QObject *parent) : QObject(parent)
 
 void TestTrainer::testTrain()
 {
+    if (0) {
     mimir::services::NeuronNet net(5, 5);
     net.connect();
     mimir::services::Trainer testee(net);
     testee.addBatch({1, 2, 3, 4, 5}, {.5, .4, .3, .2, .1});
-    auto epochs = testee.run(1500, .000000001, .9);
+    auto epochs = testee.run(1500, .000000001, .1);
     qDebug() << net.results();
     QVERIFY(epochs < 1500);
     QVERIFY(testee.currentError() < .000000001);
+    }
 }
 
 void TestTrainer::testImageDetect()
@@ -74,11 +76,11 @@ void TestTrainer::testImageDetect()
     mimir::services::NeuronNet detector(28*28, 10);
 //    detector.addHiddenLayer(28*14);
 //    detector.addHiddenLayer(14*14);
-    detector.addHiddenLayer(15);
+    detector.addHiddenLayer(30);
     detector.connect();
     mimir::services::Trainer trainer(detector);
-    auto batches = makeInput(data, 100, 40);
-    auto expectations = makeExpectations(labels, 100, 40);
+    auto batches = makeInput(data, 20, 50);
+    auto expectations = makeExpectations(labels, 20, 50);
     auto batch = batches.begin();
     auto expect = expectations.begin();
     qDebug() << "Begin training...";
@@ -87,6 +89,7 @@ void TestTrainer::testImageDetect()
     long detectedAs = 0;
     std::vector<double> test;
     std::vector<double> expectedResult;
+    double eta = 5e-07;
     while (batch != batches.end()) {
         auto b = (*batch).begin();
         auto e = (*expect).begin();
@@ -94,19 +97,23 @@ void TestTrainer::testImageDetect()
             trainer.addBatch(*b, *e);
             ++b; ++e;
         }
-        trainer.run(10000, .000000001, 100);
+        trainer.run(5000, .000000001, eta);
         trainer.reset();
         ++iterations;
         qDebug() << "iteration" << iterations << "current error: " << trainer.currentError();
-        ++batch; ++expect;
-        test = batches[0][iterations];
-        expectedResult = expectations[0][iterations];
+        size_t idx = static_cast<size_t>(std::distance(batches.begin(), batch));
+        if (idx >= batches[0].size()) idx -= batches[0].size();
+        test = batches[0][idx];
+        expectedResult = expectations[0][idx];
         auto result = detector.run(test);
         itIs = std::distance(expectedResult.begin(), std::max_element(expectedResult.begin(), expectedResult.end()));
         auto maxPtr = std::max_element(result.begin(), result.end());
         detectedAs = std::distance(result.begin(), maxPtr);
-        qDebug() << "we've seen a" << itIs << "as a " << detectedAs << "with" << (*maxPtr * 100.) << "% certainty.";
+        qDebug() << "we've seen a" << itIs << "as a " << detectedAs << "with" << (*maxPtr * 100.) << "% confidence.";
         qDebug() << "detection" << result;
+        qDebug() << "eta was" << eta;
+        eta *= .99992;
+        ++batch; ++expect;
     }
     qDebug() << "finally: error" << trainer.currentError() << "after" << iterations << "batches.";
     QVERIFY(itIs == detectedAs);

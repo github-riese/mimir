@@ -84,7 +84,7 @@ double Neuron::activate()
 
 double Neuron::derivativeActivate() const
 {
-    return 1/std::pow(std::cosh(_z), 2.);
+   return  1./std::pow(std::cosh(_z), 2);//_value * (1-_value);
 }
 
 mimir::models::Neuron::operator double()
