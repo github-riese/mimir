@@ -44,6 +44,7 @@ NeuronNet::NeuronNet(long inputs, long outputs) :
     for (auto n = 0; n < inputs; ++n) {
         models::Neuron neuron;
         neuron.setBias(static_cast<double>(rand()%2000)/1000. -1.);
+        //neuron.setBias(0);
         input.addNeuron(neuron);
     }
     _layers.push_back(input);
@@ -51,6 +52,7 @@ NeuronNet::NeuronNet(long inputs, long outputs) :
     for (auto n = 0; n < outputs; ++n) {
         models::Neuron neuron;
         neuron.setBias(static_cast<double>(rand()%2000)/1000. -1.);
+        //neuron.setBias(0);
         output.addNeuron(neuron);
     }
     _layers.push_back(output);

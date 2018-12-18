@@ -1,6 +1,7 @@
 #include "TestTrainer.h"
 #include "TestListener.h"
 
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 
@@ -52,6 +53,29 @@ TestTrainer::TestTrainer(QObject *parent) : QObject(parent)
 
 }
 
+void TestTrainer::testXOR()
+{
+    srand(static_cast<unsigned>(time(nullptr)));
+    mimir::services::NeuronNet net(2, 1);
+    net.addHiddenLayer(2);
+    net.connect();
+    mimir::services::Trainer trainer(net);
+    trainer.addBatch({1, 0}, {1});
+    trainer.addBatch({0, 1}, {1});
+    trainer.addBatch({0, 0}, {0});
+    trainer.addBatch({1, 1}, {0});
+    trainer.addBatch({0, 0}, {0});
+    trainer.addBatch({1, 1}, {0});
+    trainer.addBatch({0, 0}, {0});
+    trainer.addBatch({1, 1}, {0});
+    auto epochs = trainer.run(1, .00001, .15);
+    qDebug() << "1 xor 1" << net.run({1, 1});
+    qDebug() << "0 xor 0" << net.run({0, 0});
+    qDebug() << "1 xor 0" << net.run({1, 0});
+    qDebug() << "0 xor 1" << net.run({0, 1});
+    QVERIFY(epochs < 1000);
+}
+
 void TestTrainer::testTrain()
 {
     if (0) {
@@ -76,11 +100,12 @@ void TestTrainer::testImageDetect()
     mimir::services::NeuronNet detector(28*28, 10);
 //    detector.addHiddenLayer(28*14);
 //    detector.addHiddenLayer(14*14);
-    detector.addHiddenLayer(30);
+    detector.addHiddenLayer(64);
+    detector.addHiddenLayer(32);
     detector.connect();
     mimir::services::Trainer trainer(detector);
-    auto batches = makeInput(data, 20, 50);
-    auto expectations = makeExpectations(labels, 20, 50);
+    auto batches = makeInput(data, 50, 20);
+    auto expectations = makeExpectations(labels, 50, 20);
     auto batch = batches.begin();
     auto expect = expectations.begin();
     qDebug() << "Begin training...";
@@ -89,7 +114,7 @@ void TestTrainer::testImageDetect()
     long detectedAs = 0;
     std::vector<double> test;
     std::vector<double> expectedResult;
-    double eta = 5e-07;
+    double eta = .00001; //1/static_cast<double>(batch->size());
     while (batch != batches.end()) {
         auto b = (*batch).begin();
         auto e = (*expect).begin();
@@ -97,7 +122,7 @@ void TestTrainer::testImageDetect()
             trainer.addBatch(*b, *e);
             ++b; ++e;
         }
-        trainer.run(5000, .000000001, eta);
+        trainer.run(1500, .000000001, eta);
         trainer.reset();
         ++iterations;
         qDebug() << "iteration" << iterations << "current error: " << trainer.currentError();
@@ -112,7 +137,7 @@ void TestTrainer::testImageDetect()
         qDebug() << "we've seen a" << itIs << "as a " << detectedAs << "with" << (*maxPtr * 100.) << "% confidence.";
         qDebug() << "detection" << result;
         qDebug() << "eta was" << eta;
-        eta *= .99992;
+        eta *= .9991;
         ++batch; ++expect;
     }
     qDebug() << "finally: error" << trainer.currentError() << "after" << iterations << "batches.";

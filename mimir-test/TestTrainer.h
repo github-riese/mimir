@@ -13,6 +13,7 @@ public:
 signals:
 
 private slots:
+    void testXOR();
     void testTrain();
     void testImageDetect();
 };
