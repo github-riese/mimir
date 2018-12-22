@@ -26,14 +26,15 @@ private:
 
     struct Epoch {
         void addResult(std::vector<double> const&result, std::vector<double> const &expected);
-        int hitrate();
+        int hitrate() const;
         std::vector<std::vector<double>> results;
         std::vector<std::vector<double>> expectations;
         std::vector<std::vector<double>> deltas;
         std::vector<double> mses;
     };
     std::vector<int> expectedSums;
-    std::vector<int> detectedSums;
+    std::vector<double> detectedSums;
+    std::vector<double> misDetectSums;
     std::deque<Batch> _batches;
     double _currentError = -1;
 };

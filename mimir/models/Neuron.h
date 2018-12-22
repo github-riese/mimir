@@ -19,7 +19,7 @@ public:
     void addInput(double value);
     double input() const;
     double value();
-    double sigmoidPrime() const;
+    double sigmoidPrime();
 
     double bias() const;
     void setBias(double bias);
@@ -33,7 +33,7 @@ public:
 
 protected:
     double activate();
-    double derivativeActivate() const;
+    double derivativeActivate();
 private:
     static std::atomic<int> __neuronIdSource;
     int _id;

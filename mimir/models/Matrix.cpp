@@ -146,6 +146,12 @@ Matrix &Matrix::operator *=(double value)
     return *this;
 }
 
+Matrix Matrix::operator -(const Matrix &rhs) const
+{
+    Matrix l(*this);
+    return l -= rhs;
+}
+
 Matrix &Matrix::operator -=(const Matrix &rhs)
 {
     if (cols() != rhs.cols() && rhs.cols() == 1 && rows() == rhs.rows()) {

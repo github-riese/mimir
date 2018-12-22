@@ -20,6 +20,7 @@ public:
     std::vector<double> results();
     void backPropagate(const std::vector<std::vector<double> > &results, const std::vector<std::vector<double> > &expectations, double eta);
     size_t outputSize() const;
+    inline std::vector<models::Layer> const &layers() const { return  _layers; }
 private:
     std::tuple<std::vector<std::vector<double>>, std::vector<models::Matrix>>
     deltaNabla(const std::vector<double> &costDerivative) const;

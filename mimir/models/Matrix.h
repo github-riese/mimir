@@ -40,6 +40,7 @@ public:
     Matrix &operator *=(std::vector<double> const&);
     Matrix &operator *=(std::valarray<double> const &);
     Matrix &operator *=(double);
+    Matrix operator -(Matrix const &) const;
     Matrix &operator -=(Matrix const &);
     Matrix &operator -=(std::vector<double> const&);
     Matrix operator +(Matrix const &) const;
