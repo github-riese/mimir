@@ -16,8 +16,8 @@ signals:
 
 private slots:
     void testDiffVectors();
-    void testMultiply();
     void testMatrix();
+    void testDot();
 };
 
 #endif // TESTHELPERS_H

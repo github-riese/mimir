@@ -33,7 +33,6 @@ SOURCES += \
     TestListener.cpp \
     TestRunner.cpp \
     TestPatternFind.cpp \
-    TestNeuron.cpp \
     TestHelpers.cpp \
     TestMatrix.cpp \
     TestTrainer.cpp
@@ -43,7 +42,6 @@ HEADERS += \
     TestListener.h \
     TestRunner.h \
     TestPatternFind.h \
-    TestNeuron.h \
     TestHelpers.h \
     TestMatrix.h \
     TestTrainer.h

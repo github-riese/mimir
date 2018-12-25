@@ -5,7 +5,6 @@
 #include <valarray>
 #include <vector>
 
-#include "models/Neuron.h"
 #include "models/Matrix.h"
 
 namespace mimir {
@@ -15,34 +14,39 @@ class Layer
 {
 public:
     Layer() = default;
-    void addNeuron(const Neuron &neuron);
+    void addNeuron(double);
     std::vector<double> values();
     bool connect(Layer &next);
-    std::vector<Neuron> const &neurons() const;
-    std::vector<Neuron> &neurons();
     double weight(size_t idxMyNeuron, size_t idxNextLayerNeuron) const;
     const Matrix &weights() const;
     void addInput(std::vector<double> const &);
-    std::valarray<double> input() const;
-    std::valarray<double> biases() const;
-    void setBiases(std::valarray<double> const &);
-    void changeBiases(std::valarray<double> const &);
+    std::vector<double> input() const;
+    std::vector<double> biases() const;
+    void setBiases(const std::vector<double> &);
+    void setBias(size_t neuron, double value);
+    void changeBiases(const std::vector<double> &);
     void setWeights(const Matrix &);
+    void setWeight(size_t neuron, size_t nextLayerNeuron, double value);
     void changeWeights(const Matrix &);
-    std::valarray<double> zValues() const;
-    std::valarray<double> sigmoidPrime() const;
-    Neuron &neuron(long index);
+    std::vector<double> zValues() const;
+    std::vector<double> sigmoidPrime() const;
     void run();
     bool isConnected() const;
     void reset();
     size_t size() const noexcept;
     size_t nextSize() const noexcept;
+    void setIsInput(bool isInput);
+protected:
+    double activate(double) const;
+    double derivativeActivate(double) const;
 private:
-    std::vector<Neuron> _neurons;
     Layer * _nextLayer = nullptr;
+    std::vector<double> _inputs;
+    std::vector<double> _biases;
     std::vector<double> _values;
     Matrix _weights;
     bool _dirty = false;
+    bool _isInputLayer = false;
 };
 
 } // namespace models

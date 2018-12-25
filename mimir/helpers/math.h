@@ -31,29 +31,6 @@ typename std::enable_if<!std::is_same<T, typename std::valarray<typename T::valu
     return T(_x.size(), typename T::value_type(0));
 }
 
-
-template <typename Container>
-Container crossProduct(Container const &left, Container const &right)
-{
-    size_t last = left.size();
-    auto result = prepareResult<Container>(right);
-    size_t idx1;
-    size_t idx2;
-    for (size_t i = 0; i < last; ++i) {
-        typename Container::value_type v = 0;
-        size_t c = 1;
-        while (c < last) {
-            idx1 = c++ + i;
-            idx2 = c++ + i;
-            if (idx1 >= last) idx1 -= last;
-            if (idx2 >= last) idx2 -= last;
-            v += left[idx1] * right[idx2] - left[idx2]*right[idx1];
-        }
-        result[i] = v;
-    }
-    return result;
-}
-
 template <typename Container>
 Container matrixStyleMult(Container const &left, Container const &right)
 {
@@ -89,23 +66,89 @@ std::vector<std::valarray<T>> transposeMatrix(std::vector<std::valarray<T>> cons
 template <class T>
 std::vector<T> operator -(std::vector<T> const&left, std::vector<T> const &right)
 {
-    std::vector<T> result;
-    result.reserve(left.size());
-    auto l = left.begin();
-    auto r = right.begin();
-    while (l != left.end()) {
-        result.push_back(*l - *r);
-        ++l; ++r;
-    }
-    return result;
+    std::vector<T> result(left.size());
+    std::transform(left.begin(), left.end(), right.begin(), result.begin(), [](auto l, auto r) -> auto {return l-r;});
+    return  result;
 }
 
 template <class T>
-std::vector<T> operator *(std::vector<T> const &left, T const &right)
+std::vector<T>& operator -=(std::vector<T> &left, std::vector<T> const &right)
 {
-    std::vector<T> result;
-    result = left;
-    std::transform(left.begin(), left.end(), result.begin(), std::bind(std::multiplies<T>(), std::placeholders::_1, right));
+    std::transform(left.begin(), left.end(), right.begin(), left.begin(), [](auto l, auto r) -> auto {return l-r;});
+    return  left;
+}
+
+template<typename T>
+std::vector<T> operator +(std::vector<T> const &left, std::vector<T> const &right)
+{
+    std::vector<T> result(left.size());
+    std::transform(left.begin(), left.end(), right.begin(), result.begin(), [](auto l, auto r) -> auto {return l+r;});
+    return  result;
+}
+
+template <class T>
+std::vector<T>& operator +=(std::vector<T> &left, std::vector<T> const &right)
+{
+    std::transform(left.begin(), left.end(), right.begin(), left.begin(), [](auto l, auto r) -> auto {return l+r;});
+    return  left;
+}
+
+template<typename T>
+std::vector<T> operator*(T const &left, std::vector<T> const &right)
+{
+    std::vector<T> result(right);
+    std::transform(result.begin(), result.end(), result.begin(), [left](T const &v) -> T { return  left * v;});
+    return result;
+}
+
+template<typename T>
+std::vector<T> operator*(std::vector<T> const &left, T const &right)
+{
+    return right * left;
+}
+
+template<typename T>
+std::vector<T> operator*(std::vector<T> const &left, std::vector<T> const &right)
+{
+    std::vector<T> result(right);
+    std::transform(left.begin(), left.end(), right.begin(), result.begin(), [](T const &l, T const &r) -> T { return  l * r;});
+    return result;
+}
+
+template<typename T>
+std::vector<T> operator*(std::vector<T> const &left, std::valarray<T> const &right)
+{
+    std::vector<T> result(right.size());
+    std::transform(left.begin(), left.end(), std::begin(right), result.begin(), [](T const &l, T const &r) -> T { return  l * r;});
+    return result;
+}
+
+template<typename T>
+std::vector<T> operator*(T const &left, std::valarray<T> const &right)
+{
+    std::vector<T> result(right.size());
+    std::transform(std::begin(right), std::end(right), result.begin(), [left](T const &v) -> T { return  left * v;});
+    return result;
+}
+
+/**
+ * The dot product line vector times row vector
+ */
+template <typename T>
+T operator *(std::valarray<T> const & left, std::vector<T> const &right)
+{
+    if (left.size() != right.size()) {
+        throw std::logic_error("Need same size of column vector and row vector for dot product.");
+    }
+    T result = 0;
+    auto lfirst = std::begin(left);
+    auto llast = std::end(left);
+    auto rfirst = right.begin();
+    auto rlas = right.end();
+    for (; lfirst != llast; ++lfirst, ++rfirst) {
+        result += *lfirst * *rfirst;
+    }
+
     return result;
 }
 

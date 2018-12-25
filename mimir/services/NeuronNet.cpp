@@ -10,65 +10,23 @@
 
 using mimir::models::Layer;
 using mimir::models::Matrix;
+using namespace mimir::helpers::math;
 
 namespace mimir {
 namespace services {
-
-template<typename T>
-std::vector<T> operator*(T const &left, std::vector<T> const &right)
-{
-    std::vector<T> result(right);
-    std::transform(result.begin(), result.end(), result.begin(), [left](T const &v) -> T { return  left * v;});
-    return result;
-}
-
-template<typename T>
-std::vector<T> operator*(std::vector<T> const &left, T const &right)
-{
-    return right * left;
-}
-
-template<typename T>
-std::vector<T> operator*(std::vector<T> const &left, std::vector<T> const &right)
-{
-    std::vector<T> result(right);
-    std::transform(left.begin(), left.end(), right.begin(), result.begin(), [](T const &l, T const &r) -> T { return  l * r;});
-    return result;
-}
-
-template<typename T>
-std::vector<T> operator*(std::vector<T> const &left, std::valarray<T> const &right)
-{
-    std::vector<T> result(right.size());
-    std::transform(left.begin(), left.end(), std::begin(right), result.begin(), [](T const &l, T const &r) -> T { return  l * r;});
-    return result;
-}
-
-template<typename T>
-std::vector<T> operator*(T const &left, std::valarray<T> const &right)
-{
-    std::vector<T> result(right.size());
-    std::transform(std::begin(right), std::end(right), result.begin(), [left](T const &v) -> T { return  left * v;});
-    return result;
-}
 
 NeuronNet::NeuronNet(long inputs, long outputs) :
     _output()
 {
     Layer input;
     for (auto n = 0; n < inputs; ++n) {
-        models::Neuron neuron;
-        neuron.setBias(0);
-        //neuron.setBias(0);
-        input.addNeuron(neuron);
+        input.addNeuron(0);
     }
+    input.setIsInput(true);
     _layers.push_back(input);
     Layer output;
     for (auto n = 0; n < outputs; ++n) {
-        models::Neuron neuron;
-        neuron.setBias(static_cast<double>(rand()%100)/10000.);
-        //neuron.setBias(0);
-        output.addNeuron(neuron);
+        output.addNeuron(static_cast<double>(rand()%100)/10000.);
     }
     _layers.push_back(output);
 }
@@ -80,9 +38,7 @@ void NeuronNet::addHiddenLayer(int numNeurons)
     }
     Layer l;
     for (auto n = 0; n < numNeurons; ++n) {
-        models::Neuron neuron;
-        neuron.setBias(static_cast<double>(rand()%100)/-1000.);
-        l.addNeuron(neuron);
+        l.addNeuron(static_cast<double>(rand()%100)/-1000.);
     }
     _layers.insert(_layers.end() -1, l);
 }
@@ -118,7 +74,7 @@ std::vector<double> NeuronNet::run(std::vector<double> inputs)
 
 std::vector<double> NeuronNet::results()
 {
-    return _layers.back().values();
+    return _layers.back().input();
 }
 
 /**
@@ -151,7 +107,7 @@ void NeuronNet::backPropagate(const std::vector<std::vector<double>> &results, s
     auto y = expectations.begin();
     while (x != results.end()) {
         auto diff = *x - *y;
-        auto deltas = deltaNabla(diff);
+        auto deltas = deltaNabla(2.*diff);
         deltaNablaBiases = std::get<0>(deltas);
         deltaNablaWeights = std::get<1>(deltas);
         deltaBiases = addVectors(deltaBiases, deltaNablaBiases);
@@ -165,7 +121,7 @@ void NeuronNet::backPropagate(const std::vector<std::vector<double>> &results, s
     auto deltaWeight = deltaWeights.begin();
     auto deltaBias = deltaBiases.begin();
     for (auto &layer : _layers) {
-        layer.setBiases(layer.biases() - (helpers::toArray(*deltaBias)  * eta));
+        layer.setBiases(layer.biases() - *deltaBias  * eta);
         if (layer.isConnected()) {
             auto applyDeltaWeight = *deltaWeight;
             applyDeltaWeight *= oneByM;
@@ -181,6 +137,21 @@ void NeuronNet::backPropagate(const std::vector<std::vector<double>> &results, s
 size_t NeuronNet::outputSize() const
 {
     return _layers.back().size();
+}
+
+void NeuronNet::setBias(size_t layer, size_t neuron, double value)
+{
+    _layers[layer].setBias(neuron, value);
+}
+
+void NeuronNet::setWeight(size_t layer, size_t neuron, size_t nextLayerNeuron, double value)
+{
+    _layers[layer].setWeight(neuron, nextLayerNeuron, value);
+}
+
+void NeuronNet::setWeigths(size_t layer, const models::Matrix &weights)
+{
+    _layers[layer].setWeights(weights);
 }
 
 std::tuple<std::vector<std::vector<double> >, std::vector<models::Matrix> >
@@ -204,13 +175,13 @@ std::tuple<std::vector<std::vector<double> >, std::vector<models::Matrix> >
 
     auto layer = _layers.rbegin();
 
-    auto delta = costDerivative * helpers::toVector(layer->sigmoidPrime());
+    auto delta = costDerivative * layer->sigmoidPrime();
     *deltaNablaBias = delta;
     *deltaNablaWeight = (Matrix((delta)) * helpers::toArray(*(activation )));
     ++deltaNablaBias; ++deltaNablaWeight; ++activation;
     ++layer;
     while (deltaNablaBias != deltaNablaBiases.rend()) {
-        auto weightsTimesDelta = (*layer).weights() * delta;
+        auto weightsTimesDelta = (helpers::toArray(delta) * (*layer).weights().transposed()).transpose();
         assert(weightsTimesDelta.cols() == 1);
         delta = weightsTimesDelta.column(0) * layer->sigmoidPrime();
                 //helpers::toVector(helpers::toArray(((*(layer+1)).weights() * delta).column(0)) * layer->sigmoidPrime());

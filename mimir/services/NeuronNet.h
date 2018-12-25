@@ -21,6 +21,9 @@ public:
     void backPropagate(const std::vector<std::vector<double> > &results, const std::vector<std::vector<double> > &expectations, double eta);
     size_t outputSize() const;
     inline std::vector<models::Layer> const &layers() const { return  _layers; }
+    void setBias(size_t layer, size_t neuron, double value);
+    void setWeight(size_t layer, size_t neuron, size_t nextLayerNeuron, double value);
+    void setWeigths(size_t layer, models::Matrix const &);
 private:
     std::tuple<std::vector<std::vector<double>>, std::vector<models::Matrix>>
     deltaNabla(const std::vector<double> &costDerivative) const;

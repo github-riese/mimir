@@ -8,26 +8,28 @@
 #include <cstdlib>
 
 #include "helpers/helpers.h"
+#include "helpers/math.h"
+
+using namespace mimir::helpers::math;
 
 namespace mimir {
 namespace models {
 
-void Layer::addNeuron(const Neuron &neuron)
+void Layer::addNeuron(double bias)
 {
-    _neurons.push_back(neuron);
     _dirty = true;
+    _biases.push_back(bias);
+    _inputs.push_back(0);
+    _values.push_back(0);
 }
 
 std::vector<double> Layer::values()
 {
     if (_dirty) {
+        auto z = _inputs + _biases;
+        _values.assign(z.size(), 0);
+        std::transform(z.begin(), z.end(), _values.begin(), [this](double z) -> double {return activate(z);});
         _dirty = false;
-        std::valarray<double> values(_neurons.size());
-        size_t idx = 0;
-        for (auto& neuron : _neurons)
-            values[idx++] = neuron;
-        _values.resize(values.size());
-        std::copy(std::begin(values), std::end(values), std::begin(_values));
     }
     return _values;
 }
@@ -37,21 +39,11 @@ bool Layer::connect(Layer &next)
     if (_weights.rows() > 0) {
         return false;
     }
-    auto nextLayerNeuronCount = next.neurons().size();
-    _weights = Matrix{_neurons.size(), nextLayerNeuronCount, [](auto, auto) ->auto { return static_cast<double>(rand()%100)/10000.;}};
+    auto nextLayerNeuronCount = next._inputs.size();
+    _weights = Matrix{_inputs.size(), nextLayerNeuronCount, [](auto, auto) ->auto { return static_cast<double>(std::rand()%100)/10000.;}};
     _nextLayer = &next;
     _dirty = true;
     return true;
-}
-
-const std::vector<Neuron> &Layer::neurons() const
-{
-    return _neurons;
-}
-
-std::vector<Neuron> &Layer::neurons()
-{
-    return _neurons;
 }
 
 double Layer::weight(size_t idxMyNeuron, size_t idxNextLayerNeuron) const
@@ -59,8 +51,8 @@ double Layer::weight(size_t idxMyNeuron, size_t idxNextLayerNeuron) const
     if (_nextLayer == nullptr) {
         throw std::logic_error("not connected");
     }
-    size_t numNextNodes = _nextLayer->neurons().size();
-    if (idxMyNeuron >= _neurons.size() || idxNextLayerNeuron >= numNextNodes) {
+    size_t numNextNodes = _nextLayer->size();
+    if (idxMyNeuron >= size() || idxNextLayerNeuron >= numNextNodes) {
         throw std::out_of_range("no such edge");
     }
     return _weights.value(idxNextLayerNeuron, idxMyNeuron);
@@ -73,66 +65,44 @@ const Matrix &Layer::weights() const
 
 void Layer::addInput(const std::vector<double> &values)
 {
-    if (values.size() != _neurons.size()) {
+    if (values.size() != size()) {
         throw std::logic_error("wrong number of inputs for setValues");
     }
     _dirty = true;
-    auto value = values.begin();
-    auto neuron = _neurons.begin();
-    while (value != values.end()) {
-        (*neuron) << (*value);
-        ++neuron; ++value;
-    }
+    _inputs += values;
 }
 
-std::valarray<double> Layer::input() const
+std::vector<double> Layer::input() const
 {
-    std::valarray<double> result(_neurons.size());
-    size_t idx = 0;
-    for (auto neuron : _neurons) {
-        result[idx++] = neuron.input();
-    }
-    return result;
+    return _inputs;
 }
 
-std::valarray<double> Layer::biases() const
+std::vector<double> Layer::biases() const
 {
-    std::valarray<double> result(_neurons.size());
-    unsigned i = 0;
-    for (auto neuron : neurons()) {
-        result[i++] = neuron.bias();
-    }
-    return result;
+    return _biases;
 }
 
-void Layer::setBiases(const std::valarray<double> &biasValues)
+void Layer::setBiases(const std::vector<double> &biasValues)
 {
-    if (biasValues.size() != _neurons.size()) {
+    if (biasValues.size() != _biases.size()) {
         throw std::logic_error("wrong number of biases for layer");
     }
     _dirty = true;
-    auto bias = std::begin(biasValues);
-    auto neuron = std::begin(_neurons);
-    auto end = std::end(biasValues);
-    while (bias != end) {
-        (*neuron).setBias(*bias);
-        ++neuron; ++bias;
-    }
+    _biases = biasValues;
 }
 
-void Layer::changeBiases(const std::valarray<double> &deltas)
+void Layer::setBias(size_t neuron, double value)
 {
-    if (deltas.size() != _neurons.size()) {
+    _biases[neuron] = value;
+}
+
+void Layer::changeBiases(const std::vector<double> &deltas)
+{
+    if (deltas.size() != _biases.size()) {
         throw std::logic_error("wrong number of biases for layer");
     }
     _dirty = true;
-    auto delta = std::begin(deltas);
-    auto end = std::end(deltas);
-    auto neuron = std::begin(_neurons);
-    while (delta != end) {
-        (*neuron).setBias((*neuron).bias() - *delta);
-        ++neuron; ++delta;
-    }
+    _biases -= deltas;
 }
 
 void Layer::setWeights(const Matrix &weights)
@@ -140,14 +110,19 @@ void Layer::setWeights(const Matrix &weights)
     if (_nextLayer == nullptr) {
         throw std::logic_error("no weights applyable on unconnected layer.");
     }
-    if (weights.rows() != _neurons.size()) {
+    if (weights.rows() != _inputs.size()) {
         throw std::logic_error("wrong number of weights for layer.");
     }
-    if (weights.cols() != _nextLayer->_neurons.size()) {
+    if (weights.cols() != _nextLayer->_inputs.size()) {
         throw std::logic_error("wrong number of weights for subsequent layer.");
     }
     _weights = weights;
     _dirty = true;
+}
+
+void Layer::setWeight(size_t neuron, size_t nextLayerNeuron, double value)
+{
+    _weights.setValue(neuron, nextLayerNeuron, value);
 }
 
 void Layer::changeWeights(const Matrix &delta)
@@ -155,32 +130,16 @@ void Layer::changeWeights(const Matrix &delta)
     _weights -= delta.column(0);
 }
 
-std::valarray<double> Layer::zValues() const
+std::vector<double> Layer::zValues() const
 {
-    std::valarray<double> result(_neurons.size());
-    unsigned idx = 0;
-    for (auto neuron : _neurons) {
-        result[idx++] = neuron.z();
-    }
-    return result;
+    return _inputs + _biases;
 }
 
-std::valarray<double> Layer::sigmoidPrime() const
+std::vector<double> Layer::sigmoidPrime() const
 {
-    std::valarray<double> result(size());
-    size_t idx = 0;
-    for (auto neuron : _neurons) {
-        result[idx++] = neuron.sigmoidPrime();
-    }
+    std::vector<double> result = zValues();
+    std::transform(result.begin(), result.end(), result.begin(), [this](double z) -> double { return derivativeActivate(z); });
     return result;
-}
-
-Neuron &Layer::neuron(long index)
-{
-    if (index >= static_cast<long>(_neurons.size())) {
-        throw std::out_of_range("no such neuron in layer");
-    }
-    return _neurons.at(static_cast<size_t>(index));
 }
 
 void Layer::run()
@@ -188,9 +147,15 @@ void Layer::run()
     if (_nextLayer == nullptr) {
         throw std::logic_error("can't run a layer without subsequent layer.");
     }
-    Matrix nextInput = _weights.transposed() * values();
+    std::vector<double> vals;
+    if (_isInputLayer) {
+        // line vector from input
+        vals = (helpers::toArray(_inputs) * _weights).transpose().column(0);
+    } else {
+        vals = (helpers::toArray(values()) * _weights).transpose().column(0);
+    }
     _nextLayer->reset();
-    _nextLayer->addInput(nextInput.column(0));
+    _nextLayer->addInput(vals);
 }
 
 bool Layer::isConnected() const
@@ -201,10 +166,7 @@ bool Layer::isConnected() const
 void Layer::reset()
 {
     _dirty = true;
-    std::for_each(_neurons.begin(), _neurons.end(),
-        [](auto &neuron){
-            neuron.resetInput();
-    });
+    _inputs.assign(_inputs.size(), 0);
     if (_nextLayer != nullptr) {
         _nextLayer->reset();
     }
@@ -212,12 +174,28 @@ void Layer::reset()
 
 size_t Layer::size() const noexcept
 {
-    return _neurons.size();
+    return _inputs.size();
 }
 
 size_t Layer::nextSize() const noexcept
 {
     return _nextLayer == nullptr ? 0 : _nextLayer->size();
+}
+
+void Layer::setIsInput(bool isInput)
+{
+    _isInputLayer = isInput;
+}
+
+double Layer::activate(double z) const
+{
+    return 1./(1.+std::exp(-z));
+}
+
+double Layer::derivativeActivate(double z) const
+{
+    auto sigmoid = activate(z);
+    return sigmoid * (1 - sigmoid);
 }
 
 } // namespace models

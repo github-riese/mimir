@@ -42,8 +42,7 @@ Matrix::Matrix(size_t rows, size_t colums, double initalValue) noexcept :
 
 Matrix Matrix::transposed() const
 {
-    Matrix tmp = *this;
-    return tmp.transpose();
+    return Matrix{*this}.transpose();
 }
 
 std::vector<std::valarray<double>> Matrix::data() const
@@ -112,32 +111,32 @@ Matrix &Matrix::operator*=(const Matrix &rhs)
 
 Matrix Matrix::operator *(const Matrix &rhs) const
 {
-    Matrix result = *this;
-    return result *= rhs;
+    return Matrix{*this} *= rhs;
 }
 
 Matrix Matrix::operator *(const std::vector<double> &vector) const
 {
-    Matrix t{*this};
-    return t *= Matrix{vector};
+    return Matrix{*this} *= Matrix{vector};
+}
+
+Matrix Matrix::operator *(const std::valarray<double> &array) const
+{
+    return Matrix{*this} *= array;
 }
 
 Matrix Matrix::operator *(double v) const
 {
-    Matrix m(*this);
-    return m *= v;
+    return Matrix{*this} *= v;
 }
 
 Matrix &Matrix::operator *=(const std::vector<double> &vector)
 {
-    Matrix t{vector};
-    return *this *= t;
+    return *this *= Matrix {vector};
 }
 
 Matrix &Matrix::operator *=(const std::valarray<double> &valarray)
 {
-    Matrix t{{valarray}};
-    return *this *= t;
+    return *this *= Matrix{{valarray}};
 }
 
 Matrix &Matrix::operator *=(double value)
@@ -148,8 +147,7 @@ Matrix &Matrix::operator *=(double value)
 
 Matrix Matrix::operator -(const Matrix &rhs) const
 {
-    Matrix l(*this);
-    return l -= rhs;
+    return Matrix{*this} -= rhs;
 }
 
 Matrix &Matrix::operator -=(const Matrix &rhs)
@@ -177,22 +175,35 @@ Matrix &Matrix::operator -=(const std::vector<double> &rhs)
     return *this;
 }
 
+Matrix &Matrix::operator -=(const std::valarray<double> &sub)
+{
+    if (sub.size() != cols()) {
+        throw std::logic_error("Rowise add needs an array as wide as the matrix.");
+    }
+    auto result = _data.begin();
+    auto lastElement = std::end(sub);
+    auto lastRow = _data.end();
+    while (result != lastRow) {
+        auto element = std::begin(sub);
+        while (element != lastElement) {
+            *result -= *element;
+            ++element; ++result;
+        }
+    }
+    return *this;
+}
+
 Matrix Matrix::operator +(const Matrix &rhs) const
 {
-//    if (cols() != rhs.cols() && rhs.cols() == 1 && rows() == rhs.rows()) {
-//        return operator +(rhs.column(0));
-//    }
     if (cols() != rhs.cols() || rows() != rhs.rows()) {
         throw std::logic_error("Can't piecewise add matrices of unequal size.");
     }
-    Matrix out(*this);
-    return out += rhs;
+    return Matrix{*this} += rhs;
 }
 
 Matrix Matrix::operator +(double v) const
 {
-    Matrix result(*this);
-    return result += v;
+    return Matrix{*this} += v;
 }
 
 Matrix &Matrix::operator +=(double v)
@@ -208,6 +219,29 @@ Matrix &Matrix::operator +=(const Matrix &rhs)
     }
     std::transform(_data.begin(), _data.end(), rhs._data.begin(), _data.begin(), [] (double left, double right) -> double { return left + right; });
     return *this;
+}
+
+Matrix &Matrix::operator +=(const std::valarray<double> &add)
+{
+    if (add.size() != cols()) {
+        throw std::logic_error("Rowise add needs an array as wide as the matrix.");
+    }
+    auto result = _data.begin();
+    auto lastElement = std::end(add);
+    auto lastRow = _data.end();
+    while (result != lastRow) {
+        auto element = std::begin(add);
+        while (element != lastElement) {
+            *result += *element;
+            ++element; ++result;
+        }
+    }
+    return *this;
+}
+
+Matrix Matrix::operator +(const std::valarray<double> &add) const
+{
+    return Matrix{*this} += add;
 }
 
 size_t Matrix::cols() const
@@ -280,6 +314,16 @@ Matrix& Matrix::transpose()
     std::swap(_rows, _cols);
     _data = tmp;
     return *this;
+}
+
+Matrix operator*(std::vector<double> const &vect, Matrix const &matrix)
+{
+    return Matrix{vect} *= matrix;
+}
+
+Matrix operator*(std::valarray<double> const &arr, Matrix const &matrix)
+{
+    return Matrix{arr} *= matrix;
 }
 
 } // namespace models

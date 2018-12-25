@@ -140,7 +140,13 @@ void TestMatrix::testDiff()
                              { .9, .9, .9, .9, .9},
                              { .9, .9, .9, .9, .9},
                          }));
-
+    m1 = Matrix({
+                    {1, 2, 3},
+                    {4, 5, 6}
+                  });
+    m1 -= std::valarray<double>{1, 2, 3};
+    QVERIFY(m1 == Matrix ({{0, 0, 0},
+                           {3, 3, 3}}));
 }
 
 void TestMatrix::testCallbackConstructor()

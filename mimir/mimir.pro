@@ -30,7 +30,6 @@ SOURCES += \
     services/DependencyDetector.cpp \
     services/Evaluator.cpp \
     services/NameResolver.cpp \
-    models/Neuron.cpp \
     models/Layer.cpp \
     helpers/math.cpp \
     models/Matrix.cpp \
@@ -54,7 +53,6 @@ HEADERS += \
     services/Evaluator.h \
     services/NameResolver.h \
     traits/Timing.h \
-    models/Neuron.h \
     models/Layer.h \
     helpers/math.h \
     models/Matrix.h \
