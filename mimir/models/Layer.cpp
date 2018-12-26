@@ -1,4 +1,5 @@
 #include "Layer.h"
+#include "Layer.h"
 
 #include <algorithm>
 #include <exception>
@@ -15,6 +16,11 @@ using namespace mimir::helpers::math;
 namespace mimir {
 namespace models {
 
+Layer::Layer(std::shared_ptr<helpers::Activation> activate) :
+    _activator(activate)
+{
+}
+
 void Layer::addNeuron(double bias)
 {
     _dirty = true;
@@ -26,9 +32,11 @@ void Layer::addNeuron(double bias)
 std::vector<double> Layer::values()
 {
     if (_dirty) {
-        auto z = _inputs + _biases;
-        _values.assign(z.size(), 0);
-        std::transform(z.begin(), z.end(), _values.begin(), [this](double z) -> double {return activate(z);});
+        if (!_isInputLayer) {
+            auto z = _inputs + _biases;
+            _values.assign(z.size(), 0);
+            std::transform(z.begin(), z.end(), _values.begin(), [this](double z) -> double {return _activator->activate(z);});
+        }
         _dirty = false;
     }
     return _values;
@@ -63,13 +71,18 @@ const Matrix &Layer::weights() const
     return _weights;
 }
 
-void Layer::addInput(const std::vector<double> &values)
+void Layer::setInput(const std::vector<double> &values)
 {
     if (values.size() != size()) {
         throw std::logic_error("wrong number of inputs for setValues");
     }
-    _dirty = true;
-    _inputs += values;
+    if (_isInputLayer) {
+        _values = values;
+        _dirty = false;
+    } else {
+        _dirty = true;
+        _inputs = values;
+    }
 }
 
 std::vector<double> Layer::input() const
@@ -138,7 +151,7 @@ std::vector<double> Layer::zValues() const
 std::vector<double> Layer::sigmoidPrime() const
 {
     std::vector<double> result = zValues();
-    std::transform(result.begin(), result.end(), result.begin(), [this](double z) -> double { return derivativeActivate(z); });
+    std::transform(result.begin(), result.end(), result.begin(), [this](double z) -> double { return _activator->derivative(z); });
     return result;
 }
 
@@ -148,14 +161,9 @@ void Layer::run()
         throw std::logic_error("can't run a layer without subsequent layer.");
     }
     std::vector<double> vals;
-    if (_isInputLayer) {
-        // line vector from input
-        vals = (helpers::toArray(_inputs) * _weights).transpose().column(0);
-    } else {
-        vals = (helpers::toArray(values()) * _weights).transpose().column(0);
-    }
-    _nextLayer->reset();
-    _nextLayer->addInput(vals);
+    // line vector from input
+    vals = (helpers::toArray(values()) * _weights).transpose().column(0);
+    _nextLayer->setInput(vals);
 }
 
 bool Layer::isConnected() const
@@ -163,13 +171,9 @@ bool Layer::isConnected() const
     return _nextLayer != nullptr;
 }
 
-void Layer::reset()
+bool Layer::isInputLayer() const
 {
-    _dirty = true;
-    _inputs.assign(_inputs.size(), 0);
-    if (_nextLayer != nullptr) {
-        _nextLayer->reset();
-    }
+    return _isInputLayer;
 }
 
 size_t Layer::size() const noexcept
@@ -185,17 +189,6 @@ size_t Layer::nextSize() const noexcept
 void Layer::setIsInput(bool isInput)
 {
     _isInputLayer = isInput;
-}
-
-double Layer::activate(double z) const
-{
-    return 1./(1.+std::exp(-z));
-}
-
-double Layer::derivativeActivate(double z) const
-{
-    auto sigmoid = activate(z);
-    return sigmoid * (1 - sigmoid);
 }
 
 } // namespace models

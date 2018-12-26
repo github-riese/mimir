@@ -13,8 +13,8 @@ namespace services {
 class NeuronNet
 {
 public:
-    NeuronNet(long inputs, long outputs);
-    void addHiddenLayer(int numNeurons);
+    NeuronNet(long inputs, long outputs, std::shared_ptr<helpers::Activation> = std::make_shared<helpers::Sigmoid>());
+    void addHiddenLayer(int numNeurons, std::shared_ptr<helpers::Activation> = std::make_shared<helpers::Sigmoid>());
     void connect();
     std::vector<double> run(std::vector<double> inputs);
     std::vector<double> results();
@@ -31,7 +31,6 @@ private:
     std::vector<std::vector<double>> addVectors(std::vector<std::vector<double>> const &, std::vector<std::vector<double>> const &) const;
 private:
     std::vector<models::Layer> _layers;
-    models::Layer _output;
 };
 
 }

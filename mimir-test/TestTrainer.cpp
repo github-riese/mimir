@@ -62,16 +62,17 @@ TestTrainer::TestTrainer(QObject *parent) : QObject(parent)
 void TestTrainer::testXOR()
 {
     srand(static_cast<unsigned>(time(nullptr)));
-    mimir::services::NeuronNet net(2, 1);
-    net.addHiddenLayer(2);
+    auto activateRectifiedLinear = std::make_shared<mimir::helpers::RectifiedLinear>();
+    mimir::services::NeuronNet net(2, 1, activateRectifiedLinear);
+    net.addHiddenLayer(2, activateRectifiedLinear);
     net.connect();
     net.setWeigths(0, mimir::models::Matrix({
-                                                {0, 1},
+                                                {1, 1},
                                                 {1, 1}
                                             }));
     net.setWeigths(1, mimir::models::Matrix(std::vector<std::valarray<double>>{
                                                 {1},
-                                                {2}
+                                                {-2}
                                             }));
 
     net.setBias(1, 0, 0);
@@ -79,14 +80,12 @@ void TestTrainer::testXOR()
 
     net.setBias(2, 0, 0);
 
-    /*
-    mimir::services::Trainer trainer(net);
-    trainer.addBatch({1, 0}, {1});
-    trainer.addBatch({0, 1}, {1});
+    /*mimir::services::Trainer trainer(net);
     trainer.addBatch({0, 0}, {0});
+    trainer.addBatch({0, 1}, {1});
+    trainer.addBatch({1, 0}, {1});
     trainer.addBatch({1, 1}, {0});
-    auto epochs = trainer.run(1000, .00000001, 0.01);
-    */
+    auto epochs = trainer.run(1000, .00000001, 0.01);*/
     qDebug() << "0 xor 0" << net.run({0, 0});
     qDebug() << "0 xor 1" << net.run({0, 1});
     qDebug() << "1 xor 0" << net.run({1, 0});
@@ -122,7 +121,7 @@ void saveImage(std::string const &name, std::vector<double> const &pixels, int e
 
 void TestTrainer::testImageDetect()
 {
-    //return;
+//    return;
     std::ifstream labels("/Users/riese/c-stuff/mimir/mimir-test/assets/train-labels-idx1-ubyte");
     std::ifstream data("/Users/riese/c-stuff/mimir/mimir-test/assets/train-images-idx3-ubyte");
     char x[32] = {};
@@ -143,7 +142,7 @@ void TestTrainer::testImageDetect()
     long detectedAs = 0;
     std::vector<double> test;
     std::vector<double> expectedResult;
-    double eta = .01;// * batch->size();
+    double eta = .007;// * batch->size();
     while (batch != batches.end()) {
         auto b = (*batch).begin();
         auto e = (*expect).begin();

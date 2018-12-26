@@ -7,6 +7,7 @@
 
 #include "helpers/math.h"
 #include "helpers/helpers.h"
+#include "helpers/activations.h"
 
 using mimir::models::Layer;
 using mimir::models::Matrix;
@@ -15,28 +16,27 @@ using namespace mimir::helpers::math;
 namespace mimir {
 namespace services {
 
-NeuronNet::NeuronNet(long inputs, long outputs) :
-    _output()
+NeuronNet::NeuronNet(long inputs, long outputs, std::shared_ptr<helpers::Activation> activation)
 {
-    Layer input;
+    Layer input(nullptr);
     for (auto n = 0; n < inputs; ++n) {
         input.addNeuron(0);
     }
     input.setIsInput(true);
     _layers.push_back(input);
-    Layer output;
+    Layer output(activation);
     for (auto n = 0; n < outputs; ++n) {
         output.addNeuron(static_cast<double>(rand()%100)/10000.);
     }
     _layers.push_back(output);
 }
 
-void NeuronNet::addHiddenLayer(int numNeurons)
+void NeuronNet::addHiddenLayer(int numNeurons, std::shared_ptr<helpers::Activation> activation)
 {
     if (_layers[0].isConnected()) {
         throw std::logic_error("can't add layers after net is connected.");
     }
-    Layer l;
+    Layer l(activation);
     for (auto n = 0; n < numNeurons; ++n) {
         l.addNeuron(static_cast<double>(rand()%100)/-1000.);
     }
@@ -60,8 +60,7 @@ void NeuronNet::connect()
 std::vector<double> NeuronNet::run(std::vector<double> inputs)
 {
     Layer &input = _layers.front();
-    input.reset();
-    input.addInput(inputs);
+    input.setInput(inputs);
     auto layer = _layers.begin();
     size_t n = _layers.size() -1;
     while (n-- > 0) {
@@ -74,7 +73,7 @@ std::vector<double> NeuronNet::run(std::vector<double> inputs)
 
 std::vector<double> NeuronNet::results()
 {
-    return _layers.back().input();
+    return _layers.back().values();
 }
 
 /**
@@ -97,7 +96,9 @@ void NeuronNet::backPropagate(const std::vector<std::vector<double>> &results, s
     double lambda = 1.;
 
     for (auto layer : _layers) {
-        deltaBiases.push_back(std::vector<double>(layer.size(), 1.));
+        if (!layer.isInputLayer()) {
+            deltaBiases.push_back(std::vector<double>(layer.size(), 1.));
+        }
         if (layer.isConnected()) {
             deltaWeights.push_back(Matrix(layer.size(), layer.nextSize() == 0 ? 1 : layer.nextSize(), .1));
         }
@@ -107,7 +108,7 @@ void NeuronNet::backPropagate(const std::vector<std::vector<double>> &results, s
     auto y = expectations.begin();
     while (x != results.end()) {
         auto diff = *x - *y;
-        auto deltas = deltaNabla(2.*diff);
+        auto deltas = deltaNabla(diff);
         deltaNablaBiases = std::get<0>(deltas);
         deltaNablaWeights = std::get<1>(deltas);
         deltaBiases = addVectors(deltaBiases, deltaNablaBiases);
@@ -121,15 +122,18 @@ void NeuronNet::backPropagate(const std::vector<std::vector<double>> &results, s
     auto deltaWeight = deltaWeights.begin();
     auto deltaBias = deltaBiases.begin();
     for (auto &layer : _layers) {
-        layer.setBiases(layer.biases() - *deltaBias  * eta);
+        if (!layer.isInputLayer()) {
+            layer.setBiases(layer.biases() - *deltaBias  * eta);
+            ++deltaBias;
+        }
         if (layer.isConnected()) {
             auto applyDeltaWeight = *deltaWeight;
             applyDeltaWeight *= oneByM;
             auto currentWeight = layer.weights();
             currentWeight *= lambda;
             layer.setWeights(layer.weights() - (applyDeltaWeight + currentWeight)*eta);
+            ++deltaWeight;
         }
-        ++deltaWeight; ++deltaBias;
     }
 
 }
@@ -162,7 +166,9 @@ std::tuple<std::vector<std::vector<double> >, std::vector<models::Matrix> >
     std::vector<std::vector<double>> activations;
 
     for (auto layer : _layers) {
-        deltaNablaBiases.push_back(std::vector<double>(layer.size(), 0));
+        if (!layer.isInputLayer()) {
+            deltaNablaBiases.push_back(std::vector<double>(layer.size(), 0));
+        }
         if (layer.isConnected()) {
             deltaNablaWeights.push_back(Matrix(layer.size(), layer.nextSize() == 0 ? 1 : layer.nextSize(), 0.));
         }
