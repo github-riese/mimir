@@ -67,6 +67,7 @@ private:
 
 Matrix operator*(std::vector<double> const &vect, Matrix const &matrix);
 Matrix operator*(std::valarray<double> const &arr, Matrix const &matrix);
+Matrix operator*(double d, Matrix const &matrix);
 
 } // namespace models
 } // namespace mimir

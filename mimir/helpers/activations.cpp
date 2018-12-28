@@ -9,7 +9,7 @@ namespace helpers {
 
 double Sigmoid::activate(double z) const
 {
-    return 1./1.+(std::exp(-z));
+    return 1./(1.+(std::exp(-z)));
 }
 
 double Sigmoid::derivative(double z) const

@@ -26,7 +26,7 @@ public:
     void setWeigths(size_t layer, models::Matrix const &);
 private:
     std::tuple<std::vector<std::vector<double>>, std::vector<models::Matrix>>
-    deltaNabla(const std::vector<double> &costDerivative) const;
+    deltaNabla(const std::vector<double> &costDerivative);
     std::vector<models::Matrix> addMatices(std::vector<models::Matrix> const &, std::vector<models::Matrix> const &) const;
     std::vector<std::vector<double>> addVectors(std::vector<std::vector<double>> const &, std::vector<std::vector<double>> const &) const;
 private:

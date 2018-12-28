@@ -39,13 +39,13 @@ std::vector<std::vector<std::vector<double>>> makeInput(std::ifstream &in, unsig
         std::vector<std::vector<double>> batch;
         for(unsigned item = 0; item < batchSize; ++item) {
             std::istreambuf_iterator<char> reader(in);
-            std::vector<double> expectation;
+            std::vector<double> input;
             for(size_t n = 0; n < 28*28; ++n) {
                 char c;
                 in.read(&c, 1);
-                expectation.push_back(static_cast<double>(static_cast<unsigned char>(c))*255.);
+                input.push_back(static_cast<double>(static_cast<unsigned char>(c))/255.);
             }
-            batch.push_back(expectation);
+            batch.push_back(input);
             if (in.eof()) break;
         }
         result.push_back(batch);
@@ -66,6 +66,7 @@ void TestTrainer::testXOR()
     mimir::services::NeuronNet net(2, 1, activateRectifiedLinear);
     net.addHiddenLayer(2, activateRectifiedLinear);
     net.connect();
+
     net.setWeigths(0, mimir::models::Matrix({
                                                 {1, 1},
                                                 {1, 1}
@@ -85,7 +86,7 @@ void TestTrainer::testXOR()
     trainer.addBatch({0, 1}, {1});
     trainer.addBatch({1, 0}, {1});
     trainer.addBatch({1, 1}, {0});
-    auto epochs = trainer.run(1000, .00000001, 0.01);*/
+    auto epochs = trainer.run(1000, .00000001, 1);*/
     qDebug() << "0 xor 0" << net.run({0, 0});
     qDebug() << "0 xor 1" << net.run({0, 1});
     qDebug() << "1 xor 0" << net.run({1, 0});
@@ -121,7 +122,7 @@ void saveImage(std::string const &name, std::vector<double> const &pixels, int e
 
 void TestTrainer::testImageDetect()
 {
-//    return;
+    //return;
     std::ifstream labels("/Users/riese/c-stuff/mimir/mimir-test/assets/train-labels-idx1-ubyte");
     std::ifstream data("/Users/riese/c-stuff/mimir/mimir-test/assets/train-images-idx3-ubyte");
     char x[32] = {};
@@ -142,7 +143,7 @@ void TestTrainer::testImageDetect()
     long detectedAs = 0;
     std::vector<double> test;
     std::vector<double> expectedResult;
-    double eta = .007;// * batch->size();
+    double eta = .07;// * batch->size();
     while (batch != batches.end()) {
         auto b = (*batch).begin();
         auto e = (*expect).begin();

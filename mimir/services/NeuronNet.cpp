@@ -38,7 +38,7 @@ void NeuronNet::addHiddenLayer(int numNeurons, std::shared_ptr<helpers::Activati
     }
     Layer l(activation);
     for (auto n = 0; n < numNeurons; ++n) {
-        l.addNeuron(static_cast<double>(rand()%100)/-1000.);
+        l.addNeuron(static_cast<double>(rand()%100)/1000.);
     }
     _layers.insert(_layers.end() -1, l);
 }
@@ -73,7 +73,7 @@ std::vector<double> NeuronNet::run(std::vector<double> inputs)
 
 std::vector<double> NeuronNet::results()
 {
-    return _layers.back().values();
+    return _layers.back().hypothesis();
 }
 
 /**
@@ -83,59 +83,71 @@ std::vector<double> NeuronNet::results()
  */
 void NeuronNet::backPropagate(const std::vector<std::vector<double>> &results, std::vector<std::vector<double>> const &expectations, double eta)
 {
-    std::vector<std::vector<double>> deltaBiases;
-    std::vector<Matrix> deltaWeights;
+    std::vector<std::vector<double>> biasChanges;
+    std::vector<Matrix> weightChanges;
+    double batchSize = static_cast<double>(results.size());
+    double oneByBatchSize = 1./batchSize;
+    double lambda = 0.1;
 
-    std::vector<std::vector<double>> deltaNablaBiases;
-    std::vector<Matrix> deltaNablaWeights;
-
-    std::vector<std::vector<double>> biases;
-    std::vector<Matrix> weights;
-
-    double oneByM = 1./static_cast<double>(results.size());
-    double lambda = 1.;
-
-    for (auto layer : _layers) {
-        if (!layer.isInputLayer()) {
-            deltaBiases.push_back(std::vector<double>(layer.size(), 1.));
+    for (auto l : _layers) {
+        if (!l.isInputLayer()) {
+            biasChanges.push_back(std::vector<double>(l.size(), 0.));
         }
-        if (layer.isConnected()) {
-            deltaWeights.push_back(Matrix(layer.size(), layer.nextSize() == 0 ? 1 : layer.nextSize(), .1));
+        if (l.isConnected()) {
+            weightChanges.push_back(Matrix(l.size(), l.nextSize(), 0.));
         }
     }
-
-    auto x = results.begin();
-    auto y = expectations.begin();
-    while (x != results.end()) {
-        auto diff = *x - *y;
-        auto deltas = deltaNabla(diff);
-        deltaNablaBiases = std::get<0>(deltas);
-        deltaNablaWeights = std::get<1>(deltas);
-        deltaBiases = addVectors(deltaBiases, deltaNablaBiases);
-        deltaWeights = addMatices(deltaWeights, deltaNablaWeights);
-
-        ++x; ++y;
+    auto resultItem = results.begin();
+    auto expectItem = expectations.begin();
+    for(;resultItem != results.end(); ++expectItem, ++resultItem) {
+        auto [nablaBias, nablaWeight] = deltaNabla(*expectItem - *resultItem);
+        biasChanges += nablaBias;
+        weightChanges += nablaWeight;
     }
-
-    eta = eta * oneByM;
-
-    auto deltaWeight = deltaWeights.begin();
-    auto deltaBias = deltaBiases.begin();
-    for (auto &layer : _layers) {
-        if (!layer.isInputLayer()) {
-            layer.setBiases(layer.biases() - *deltaBias  * eta);
-            ++deltaBias;
+    auto deltaW = weightChanges.begin();
+    auto deltaB = biasChanges.begin();
+    for (auto &l : _layers) {
+        if (!l.isInputLayer()) {
+            l.setBiases(l.biases() - eta * (oneByBatchSize * *deltaB));
+            ++deltaB;
         }
-        if (layer.isConnected()) {
-            auto applyDeltaWeight = *deltaWeight;
-            applyDeltaWeight *= oneByM;
-            auto currentWeight = layer.weights();
-            currentWeight *= lambda;
-            layer.setWeights(layer.weights() - (applyDeltaWeight + currentWeight)*eta);
+        if (l.isConnected()) {
+            l.setWeights(l.weights() - eta * ((oneByBatchSize * *deltaW) + lambda * l.weights()));
+            ++deltaW;
+        }
+    }
+}
+
+std::tuple<std::vector<std::vector<double> >, std::vector<models::Matrix> >
+  NeuronNet::deltaNabla(std::vector<double> const &costDerivative)
+{
+    std::vector<std::vector<double>> biasChanges;
+    std::vector<Matrix> weightChanges;
+    for (auto l : _layers) {
+        if (!l.isInputLayer()) {
+            biasChanges.push_back(std::vector<double>(l.size(), .0));
+        }
+        if (l.isConnected()) {
+            weightChanges.push_back(Matrix(l.size(), l.nextSize(), .0));
+        }
+    }
+    auto deltaBias = biasChanges.rbegin();
+    auto deltaWeight = weightChanges.rbegin();
+    auto rlayer = _layers.rbegin();
+    auto delta = - costDerivative * (*rlayer).sigmoidPrime();
+    ++rlayer;
+    for (; rlayer != _layers.rend(); ++rlayer) {
+        if ((*rlayer).isConnected()) {
+            *deltaWeight = (Matrix(delta) * helpers::toArray((*rlayer).hypothesis())).transpose();
             ++deltaWeight;
         }
+        if (!(*rlayer).isInputLayer()) {
+            *deltaBias = delta;
+            delta = ((*rlayer).weights() * delta).column(0) * (*rlayer).sigmoidPrime();
+            ++deltaBias;
+        }
     }
-
+    return {biasChanges, weightChanges};
 }
 
 size_t NeuronNet::outputSize() const
@@ -156,48 +168,6 @@ void NeuronNet::setWeight(size_t layer, size_t neuron, size_t nextLayerNeuron, d
 void NeuronNet::setWeigths(size_t layer, const models::Matrix &weights)
 {
     _layers[layer].setWeights(weights);
-}
-
-std::tuple<std::vector<std::vector<double> >, std::vector<models::Matrix> >
-  NeuronNet::deltaNabla(std::vector<double> const &costDerivative) const
-{
-    std::vector<std::vector<double>> deltaNablaBiases;
-    std::vector<Matrix> deltaNablaWeights;
-    std::vector<std::vector<double>> activations;
-
-    for (auto layer : _layers) {
-        if (!layer.isInputLayer()) {
-            deltaNablaBiases.push_back(std::vector<double>(layer.size(), 0));
-        }
-        if (layer.isConnected()) {
-            deltaNablaWeights.push_back(Matrix(layer.size(), layer.nextSize() == 0 ? 1 : layer.nextSize(), 0.));
-        }
-        activations.push_back(layer.values());
-    }
-
-    auto deltaNablaBias = deltaNablaBiases.rbegin();
-    auto deltaNablaWeight = deltaNablaWeights.rbegin();
-    auto activation = activations.rbegin();
-
-    auto layer = _layers.rbegin();
-
-    auto delta = costDerivative * layer->sigmoidPrime();
-    *deltaNablaBias = delta;
-    *deltaNablaWeight = (Matrix((delta)) * helpers::toArray(*(activation )));
-    ++deltaNablaBias; ++deltaNablaWeight; ++activation;
-    ++layer;
-    while (deltaNablaBias != deltaNablaBiases.rend()) {
-        auto weightsTimesDelta = (helpers::toArray(delta) * (*layer).weights().transposed()).transpose();
-        assert(weightsTimesDelta.cols() == 1);
-        delta = weightsTimesDelta.column(0) * layer->sigmoidPrime();
-                //helpers::toVector(helpers::toArray(((*(layer+1)).weights() * delta).column(0)) * layer->sigmoidPrime());
-        *deltaNablaBias = delta;
-        if (deltaNablaWeight != deltaNablaWeights.rend()) {
-            *deltaNablaWeight = (Matrix((delta)) * helpers::toArray(*(activation)));
-        }
-        ++deltaNablaBias; ++deltaNablaWeight; ++activation; ++layer;
-    }
-    return {deltaNablaBiases, deltaNablaWeights};
 }
 
 std::vector<models::Matrix> NeuronNet::addMatices(const std::vector<models::Matrix> &left, const std::vector<models::Matrix> &right) const

@@ -131,6 +131,14 @@ std::vector<T> operator*(T const &left, std::valarray<T> const &right)
     return result;
 }
 
+template <typename T>
+std::vector<T> operator-(std::vector<T> const &in)
+{
+    std::vector<T> result(in.size());
+    std::transform(in.begin(), in.end(), result.begin(), [](T const &v) { return  -v; });
+    return result;
+}
+
 /**
  * The dot product line vector times row vector
  */

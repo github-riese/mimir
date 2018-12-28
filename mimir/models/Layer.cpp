@@ -29,13 +29,17 @@ void Layer::addNeuron(double bias)
     _values.push_back(0);
 }
 
-std::vector<double> Layer::values()
+std::vector<double> Layer::hypothesis()
 {
     if (_dirty) {
         if (!_isInputLayer) {
             auto z = _inputs + _biases;
             _values.assign(z.size(), 0);
-            std::transform(z.begin(), z.end(), _values.begin(), [this](double z) -> double {return _activator->activate(z);});
+            struct call {
+                helpers::Activation *f;
+                double operator()(double z) { return  f->activate(z); }
+            };
+            std::transform(z.begin(), z.end(), _values.begin(), call{_activator.get()});
         }
         _dirty = false;
     }
@@ -151,7 +155,11 @@ std::vector<double> Layer::zValues() const
 std::vector<double> Layer::sigmoidPrime() const
 {
     std::vector<double> result = zValues();
-    std::transform(result.begin(), result.end(), result.begin(), [this](double z) -> double { return _activator->derivative(z); });
+    struct call {
+        helpers::Activation*f;
+        double operator()(double z) { return f->derivative(z); }
+    };
+    std::transform(result.begin(), result.end(), result.begin(), call{_activator.get()});
     return result;
 }
 
@@ -162,7 +170,7 @@ void Layer::run()
     }
     std::vector<double> vals;
     // line vector from input
-    vals = (helpers::toArray(values()) * _weights).transpose().column(0);
+    vals = (_weights.transposed() * hypothesis()).column(0);
     _nextLayer->setInput(vals);
 }
 
