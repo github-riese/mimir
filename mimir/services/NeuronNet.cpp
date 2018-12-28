@@ -87,7 +87,7 @@ void NeuronNet::backPropagate(const std::vector<std::vector<double>> &results, s
     std::vector<Matrix> weightChanges;
     double batchSize = static_cast<double>(results.size());
     double oneByBatchSize = 1./batchSize;
-    double lambda = 0.1;
+    double lambda = 0.;
 
     for (auto l : _layers) {
         if (!l.isInputLayer()) {
@@ -100,7 +100,7 @@ void NeuronNet::backPropagate(const std::vector<std::vector<double>> &results, s
     auto resultItem = results.begin();
     auto expectItem = expectations.begin();
     for(;resultItem != results.end(); ++expectItem, ++resultItem) {
-        auto [nablaBias, nablaWeight] = deltaNabla(*expectItem - *resultItem);
+        auto [nablaBias, nablaWeight] = deltaNabla(*expectItem - *resultItem, oneByBatchSize);
         biasChanges += nablaBias;
         weightChanges += nablaWeight;
     }
@@ -108,18 +108,18 @@ void NeuronNet::backPropagate(const std::vector<std::vector<double>> &results, s
     auto deltaB = biasChanges.begin();
     for (auto &l : _layers) {
         if (!l.isInputLayer()) {
-            l.setBiases(l.biases() - eta * (oneByBatchSize * *deltaB));
+            l.setBiases(l.biases() - eta * *deltaB);
             ++deltaB;
         }
         if (l.isConnected()) {
-            l.setWeights(l.weights() - eta * ((oneByBatchSize * *deltaW) + lambda * l.weights()));
+            l.setWeights(l.weights() - eta * (*deltaW + lambda * l.weights()));
             ++deltaW;
         }
     }
 }
 
 std::tuple<std::vector<std::vector<double> >, std::vector<models::Matrix> >
-  NeuronNet::deltaNabla(std::vector<double> const &costDerivative)
+  NeuronNet::deltaNabla(std::vector<double> const &costDerivative, double gradientWeight)
 {
     std::vector<std::vector<double>> biasChanges;
     std::vector<Matrix> weightChanges;
@@ -138,11 +138,11 @@ std::tuple<std::vector<std::vector<double> >, std::vector<models::Matrix> >
     ++rlayer;
     for (; rlayer != _layers.rend(); ++rlayer) {
         if ((*rlayer).isConnected()) {
-            *deltaWeight = (Matrix(delta) * helpers::toArray((*rlayer).hypothesis())).transpose();
+            *deltaWeight = (Matrix(delta) * helpers::toArray((*rlayer).hypothesis())).transpose() * gradientWeight;
             ++deltaWeight;
         }
         if (!(*rlayer).isInputLayer()) {
-            *deltaBias = delta;
+            *deltaBias = delta * gradientWeight;
             delta = ((*rlayer).weights() * delta).column(0) * (*rlayer).sigmoidPrime();
             ++deltaBias;
         }

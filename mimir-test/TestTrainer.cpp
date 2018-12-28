@@ -128,7 +128,7 @@ void TestTrainer::testImageDetect()
     char x[32] = {};
     labels.read(x, 8);
     data.read(x, 16);
-    unsigned int batchSize = 30;
+    unsigned int batchSize = 10;
     mimir::services::NeuronNet detector(28*28, 10);
     detector.addHiddenLayer(15);
     detector.connect();
@@ -143,7 +143,7 @@ void TestTrainer::testImageDetect()
     long detectedAs = 0;
     std::vector<double> test;
     std::vector<double> expectedResult;
-    double eta = .07;// * batch->size();
+    double eta = .2;// * batch->size();
     while (batch != batches.end()) {
         auto b = (*batch).begin();
         auto e = (*expect).begin();
@@ -164,7 +164,7 @@ void TestTrainer::testImageDetect()
         auto maxPtr = std::max_element(result.begin(), result.end());
         detectedAs = std::distance(result.begin(), maxPtr);
         qDebug() << "we've seen a" << itIs << "as a " << detectedAs << "with" << (*maxPtr * 100.) << "% confidence.";
-        qDebug() << "detection  " << result;
+        qDebug() << "detection  " << result << "sum" << std::accumulate(result.begin(), result.end(), 0.);
         qDebug() << "expectation" << expectedResult;
         qDebug() << "eta was" << eta;
  //       eta *= 1.1111111;

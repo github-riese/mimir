@@ -152,7 +152,6 @@ T operator *(std::valarray<T> const & left, std::vector<T> const &right)
     auto lfirst = std::begin(left);
     auto llast = std::end(left);
     auto rfirst = right.begin();
-    auto rlas = right.end();
     for (; lfirst != llast; ++lfirst, ++rfirst) {
         result += *lfirst * *rfirst;
     }
