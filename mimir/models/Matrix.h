@@ -55,6 +55,8 @@ public:
     size_t rows() const;
     double value(size_t row, size_t column) const;
     void setValue(size_t row, size_t column, double value);
+    void fill(double value);
+    Matrix &makeIdentity();
     bool operator==(Matrix const&) const;
     bool operator!=(Matrix const&) const;
 private:

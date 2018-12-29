@@ -17,6 +17,7 @@ public:
     Layer(std::shared_ptr<helpers::Activation>);
     void addNeuron(double);
     std::vector<double> hypothesis();
+    std::vector<double> hypothesis() const;
     bool connect(Layer &next);
     double weight(size_t idxMyNeuron, size_t idxNextLayerNeuron) const;
     const Matrix &weights() const;

@@ -46,6 +46,11 @@ std::vector<double> Layer::hypothesis()
     return _values;
 }
 
+std::vector<double> Layer::hypothesis() const
+{
+    return _values;
+}
+
 bool Layer::connect(Layer &next)
 {
     if (_weights.rows() > 0) {

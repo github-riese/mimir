@@ -87,7 +87,7 @@ void NeuronNet::backPropagate(const std::vector<std::vector<double>> &results, s
     std::vector<Matrix> weightChanges;
     double batchSize = static_cast<double>(results.size());
     double oneByBatchSize = 1./batchSize;
-    double lambda = 0.;
+    double lambda = .0002;
 
     for (auto l : _layers) {
         if (!l.isInputLayer()) {

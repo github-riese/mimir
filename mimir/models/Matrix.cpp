@@ -270,6 +270,21 @@ void Matrix::setValue(size_t row, size_t column, double value)
     _data[row * _cols + column] = value;
 }
 
+void Matrix::fill(double value)
+{
+    _data.assign(_data.size(), value);
+}
+
+Matrix &Matrix::makeIdentity()
+{
+    auto entries = std::min(_cols, _rows);
+    fill(0.);
+    for (auto n = 0u; n < entries; ++n) {
+        setValue(n, n, 1.);
+    }
+    return *this;
+}
+
 bool Matrix::operator==(const Matrix &rhs) const
 {
     if (rows() != rhs.rows()) {

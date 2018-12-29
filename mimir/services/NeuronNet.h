@@ -20,7 +20,7 @@ public:
     std::vector<double> results();
     void backPropagate(const std::vector<std::vector<double> > &results, const std::vector<std::vector<double> > &expectations, double eta);
     size_t outputSize() const;
-    inline std::vector<models::Layer> const &layers() const { return  _layers; }
+    inline std::vector<models::Layer> &layers() { return  _layers; }
     void setBias(size_t layer, size_t neuron, double value);
     void setWeight(size_t layer, size_t neuron, size_t nextLayerNeuron, double value);
     void setWeigths(size_t layer, models::Matrix const &);

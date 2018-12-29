@@ -1,42 +1,41 @@
 #ifndef TRAINER_H
 #define TRAINER_H
 
-#include <deque>
+#include <vector>
 
+#include "models/Matrix.h"
 #include "services/NeuronNet.h"
+
 
 namespace mimir {
 namespace services {
 
 class Trainer
 {
+    struct BatchItem {
+        std::vector<double> input;
+        std::vector<double> expectation;
+    };
 public:
+    using MinibatchResultCallback = std::function<void(double currentError, double detectRate, unsigned epochsNeeded)>;
     Trainer(NeuronNet &net);
     void addBatch(std::vector<double> input, std::vector<double> expectation);
-    unsigned run(unsigned maxEpochs, double maxError, double eta);
+    unsigned run(size_t batchSize, unsigned maxEpochs, double maxError, double eta, MinibatchResultCallback resultCallback = nullptr);
     double currentError() const;
-    void reset();
+private:
+    void createGradients();
+    void resetGradients();
+    void backPropagate(std::vector<std::vector<double>> const &results, std::vector<std::vector<double>> const &expectations, double eta);
+    std::tuple<unsigned, double, double> runMinibatch(std::vector<BatchItem> const &, unsigned maxEpochs, double maxError, double eta);
+    double mse(std::vector<std::vector<double>> const &results, const std::vector<std::vector<double> > &miniBatch) const;
+    double detectRate(std::vector<std::vector<double>> const &results, std::vector<std::vector<double>> const &expectations);
 private:
     NeuronNet &_net;
-    struct Batch
-    {
-        std::vector<double> input;
-        std::vector<double> expectedResult;
-    };
-
-    struct Epoch {
-        void addResult(std::vector<double> const&result, std::vector<double> const &expected);
-        int hitrate() const;
-        std::vector<std::vector<double>> results;
-        std::vector<std::vector<double>> expectations;
-        std::vector<std::vector<double>> deltas;
-        std::vector<double> mses;
-    };
-    std::vector<int> expectedSums;
-    std::vector<double> detectedSums;
-    std::vector<double> misDetectSums;
-    std::deque<Batch> _batches;
-    double _currentError = -1;
+    MinibatchResultCallback _callback = nullptr;
+    std::vector<std::vector<double>> _biasGradient;
+    std::vector<models::Matrix> _weightGradient;
+    std::vector<BatchItem> _batch;
+    double _currentError;
 };
 
 } // namespace services
