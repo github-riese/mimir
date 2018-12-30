@@ -40,6 +40,19 @@ Matrix::Matrix(size_t rows, size_t colums, double initalValue) noexcept :
     _data.assign(_rows * _cols, initalValue);
 }
 
+Matrix::Matrix(size_t rows, size_t columns, std::function<double(size_t, size_t)> setter) :
+    _rows(rows),
+    _cols(columns)
+{
+    size_t elements = _rows * _cols;
+    _data.reserve(elements);
+    size_t offset = 0;
+    while (offset < elements) {
+        _data.push_back(setter(offset/_cols, offset%_cols));
+        ++offset;
+    }
+}
+
 Matrix Matrix::transposed() const
 {
     return Matrix{*this}.transpose();

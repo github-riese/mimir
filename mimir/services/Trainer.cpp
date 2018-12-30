@@ -126,7 +126,7 @@ void Trainer::backPropagate(const std::vector<std::vector<double> > &results, co
         }
         ++result; ++expect;
     }
-    double lambda = .00;
+    double weightDecay = .000;//5;
     auto deltaB = _biasGradient.begin();
     auto deltaW = _weightGradient.begin();
     for (auto &l : _net.layers()) {
@@ -135,7 +135,7 @@ void Trainer::backPropagate(const std::vector<std::vector<double> > &results, co
             ++deltaB;
         }
         if (l.isConnected()) {
-            l.setWeights(l.weights() - eta * (*deltaW + lambda * l.weights()));
+            l.setWeights(l.weights() - eta * (*deltaW + weightDecay * l.weights()));
             ++deltaW;
         }
     }
@@ -147,6 +147,7 @@ std::tuple<unsigned, double, double> Trainer::runMinibatch(const std::vector<Tra
     double error = 0.;
     double rate = 0.;
     while (epoch < maxEpochs) {
+        ++epoch;
         std::vector<std::vector<double>> results;
         std::vector<std::vector<double>> expectations;
         for (auto item : miniBatch) {
@@ -161,7 +162,6 @@ std::tuple<unsigned, double, double> Trainer::runMinibatch(const std::vector<Tra
             break;
         }
         backPropagate(results, expectations, eta);
-        ++epoch;
     }
     return {epoch, rate/static_cast<double>(epoch), error/static_cast<double>(epoch)};
 }

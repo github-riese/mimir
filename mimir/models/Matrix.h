@@ -15,19 +15,7 @@ public:
     explicit Matrix(std::vector<double> const&) noexcept;
     explicit Matrix(std::valarray<double> const&) noexcept;
     Matrix(size_t rows, size_t colums, double initalValue = 1.) noexcept;
-    template<typename BinaryOp>
-    explicit Matrix(size_t rows, size_t columns, BinaryOp setter) :
-        _rows(rows),
-        _cols(columns)
-    {
-        size_t elements = _rows * _cols;
-        _data.reserve(elements);
-        size_t offset = 0;
-        while (offset < elements) {
-            _data.push_back(setter(offset/_cols, offset%_cols));
-            ++offset;
-        }
-    }
+    explicit Matrix(size_t rows, size_t columns, std::function<double(size_t, size_t)> setter);
     Matrix &transpose();
     Matrix transposed() const;
     std::vector<std::valarray<double> > data() const;

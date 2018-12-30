@@ -14,7 +14,7 @@ namespace models {
 class Layer
 {
 public:
-    Layer(std::shared_ptr<helpers::Activation>);
+    Layer(helpers::Activation*);
     void addNeuron(double);
     std::vector<double> hypothesis();
     std::vector<double> hypothesis() const;
@@ -38,6 +38,8 @@ public:
     size_t size() const noexcept;
     size_t nextSize() const noexcept;
     void setIsInput(bool isInput);
+    helpers::Activation *activation() const;
+    void setActivation(helpers::Activation *act);
 protected:
 private:
     Layer * _nextLayer = nullptr;
@@ -45,7 +47,7 @@ private:
     std::vector<double> _biases;
     std::vector<double> _values;
     Matrix _weights;
-    std::shared_ptr<helpers::Activation> _activator = nullptr;
+    helpers::Activation *_activator = nullptr;
     bool _dirty = false;
     bool _isInputLayer = false;
 };

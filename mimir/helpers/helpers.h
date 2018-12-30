@@ -54,6 +54,16 @@ long double deviation(const std::vector<mimir::models::Probability> &);
 std::vector<double> toVector(std::valarray<double> const&);
 std::valarray<double> toArray(std::vector<double> const &);
 
+struct PackDouble
+{
+    uint64_t operator()(double value);
+};
+
+struct UnpackDouble
+{
+    double operator()(uint64_t packed);
+};
+
 } // namespace helpers
 } // namespace mimir
 

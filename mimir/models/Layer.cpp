@@ -8,6 +8,7 @@
 #include <valarray>
 #include <cstdlib>
 
+#include "helpers/activations.h"
 #include "helpers/helpers.h"
 #include "helpers/math.h"
 
@@ -16,7 +17,7 @@ using namespace mimir::helpers::math;
 namespace mimir {
 namespace models {
 
-Layer::Layer(std::shared_ptr<helpers::Activation> activate) :
+Layer::Layer(helpers::Activation *activate) :
     _activator(activate)
 {
 }
@@ -35,11 +36,11 @@ std::vector<double> Layer::hypothesis()
         if (!_isInputLayer) {
             auto z = _inputs + _biases;
             _values.assign(z.size(), 0);
-            struct call {
+            struct activate {
                 helpers::Activation *f;
                 double operator()(double z) { return  f->activate(z); }
             };
-            std::transform(z.begin(), z.end(), _values.begin(), call{_activator.get()});
+            std::transform(z.begin(), z.end(), _values.begin(), activate{_activator});
         }
         _dirty = false;
     }
@@ -160,11 +161,11 @@ std::vector<double> Layer::zValues() const
 std::vector<double> Layer::sigmoidPrime() const
 {
     std::vector<double> result = zValues();
-    struct call {
-        helpers::Activation*f;
-        double operator()(double z) { return f->derivative(z); }
+    struct derivative {
+        helpers::Activation *f;
+        double operator()(double v) { return f->derivative(v); }
     };
-    std::transform(result.begin(), result.end(), result.begin(), call{_activator.get()});
+    std::transform(result.begin(), result.end(), result.begin(), derivative{_activator});
     return result;
 }
 
@@ -203,6 +204,18 @@ void Layer::setIsInput(bool isInput)
 {
     _isInputLayer = isInput;
 }
+
+helpers::Activation *Layer::activation() const
+{
+    return _activator;
+}
+
+void Layer::setActivation(helpers::Activation *act)
+{
+    _activator = act;
+}
+
+
 
 } // namespace models
 } // namespace mimir
