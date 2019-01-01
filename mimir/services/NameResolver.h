@@ -17,6 +17,8 @@ public:
     std::string nameFromIndex(const mimir::models::ValueIndex &) const;
     mimir::models::ValueIndex indexFromName(const std::string &);
     mimir::models::ValueIndex indexFromName(const std::string &) const;
+    std::vector<std::string> const &wordList() const;
+    void setWordList(std::vector<std::string> const &);
 private:
     std::vector<std::string> _lookup;
 };

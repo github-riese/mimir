@@ -37,7 +37,8 @@ SOURCES += \
     services/Trainer.cpp \
     helpers/activations.cpp \
     services/NeuronNetSerializer.cpp \
-    services/ActivationsManager.cpp
+    services/ActivationsManager.cpp \
+    services/NameResolveSerializer.cpp
 
 HEADERS += \
     helpers/AccumulateHelper.h \
@@ -63,4 +64,5 @@ HEADERS += \
     services/Trainer.h \
     helpers/activations.h \
     services/NeuronNetSerializer.h \
-    services/ActivationsManager.h
+    services/ActivationsManager.h \
+    services/NameResolveSerializer.h

@@ -32,11 +32,14 @@ public:
         return _knownActivations.size() - 1;
     }
     size_t indexOf(helpers::Activation *) const;
+    size_t indexOf(std::string const&) const;
     helpers::Activation *get(size_t) const;
+    helpers::Activation *get(std::string const &) const;
 private:
     std::vector<std::shared_ptr<helpers::Activation>> _knownActivations;
 };
 
+ActivationsManager &getActivationsManager();
 } // namespace services
 } // namespace mimir
 

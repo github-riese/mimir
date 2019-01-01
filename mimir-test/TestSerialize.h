@@ -16,6 +16,7 @@ private slots:
     void testActivationManager();
     void testPackUnpack();
     void testSerialize();
+    void testNameResolveSerialize();
 };
 
 #endif // TESTSERIALIZE_H

@@ -30,9 +30,9 @@ class NeuronNetSerializer
 
     struct LayerHeader {
         char magic[((sizeof (LAYER_MAGIC)/4)+1)*4];
-        size_t activation;
         size_t nodes;
         size_t nextLayerNodes;
+        uint32_t activationNameLength;
     };
 
 public:

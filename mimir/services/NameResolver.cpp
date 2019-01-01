@@ -32,7 +32,7 @@ ValueIndex NameResolver::indexFromName(const string &value)
         _lookup.push_back(value);
         return ValueIndex(_lookup.size() -1);
     }
-    return ValueIndex(static_cast<size_t>(existing - _lookup.begin()));
+    return ValueIndex(static_cast<size_t>(std::distance(_lookup.begin(), existing)));
 }
 
 ValueIndex NameResolver::indexFromName(const std::string &value) const
@@ -43,7 +43,17 @@ ValueIndex NameResolver::indexFromName(const std::string &value) const
     if (existing == _lookup.end()) {
         return ValueIndex();
     }
-    return ValueIndex(static_cast<size_t>(existing - _lookup.begin()));
+    return ValueIndex(static_cast<size_t>(std::distance(_lookup.begin(), existing)));
+}
+
+const std::vector<std::string> &NameResolver::wordList() const
+{
+    return _lookup;
+}
+
+void NameResolver::setWordList(const std::vector<std::string> &words)
+{
+    _lookup = words;
 }
 
 } // namespace services

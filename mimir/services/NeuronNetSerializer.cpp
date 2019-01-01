@@ -11,7 +11,6 @@ namespace services {
 
 const static unsigned short littleEndian = 0xf00f;
 const static unsigned short bigEndian = 0x0ff0;
-static ActivationsManager _activationManager;
 
 union u16Write {
     uint16_t v;
@@ -47,6 +46,7 @@ int NeuronNetSerializer::serialize(NeuronNet &net, std::ostream &out)
     for (auto layer : net.layers()) {
         writeLayer(out, layer);
     }
+    return 0;
 }
 
 int NeuronNetSerializer::deserialize(NeuronNet &net, std::istream &in)
@@ -67,8 +67,10 @@ int NeuronNetSerializer::deserialize(NeuronNet &net, std::istream &in)
     }
     std::string netName = readName(in, netHeader.nameLength);
     net.setName(netName);
-    rebuildLayers(in, netHeader, net);
-    return true;
+    if (!rebuildLayers(in, netHeader, net)) {
+        return -1;
+    }
+    return 0;
 }
 
 bool NeuronNetSerializer::canRead(std::istream &in) const
@@ -112,9 +114,9 @@ NeuronNetSerializer::LayerHeader NeuronNetSerializer::readLayerHeader(std::istre
 {
     LayerHeader header;
     in.read(header.magic, sizeof (header.magic));
-    header.activation = readSizeT(in);
     header.nodes = readSizeT(in);
     header.nextLayerNodes = readSizeT(in);
+    header.activationNameLength = readUInt32(in);
     return header;
 }
 
@@ -170,6 +172,8 @@ bool NeuronNetSerializer::rebuildLayers(std::istream &in, const NeuronNetSeriali
         if (std::string(desc.header.magic) != std::string(LAYER_MAGIC)) {
             return false;
         }
+        std::string activationName = readName(in, desc.header.activationNameLength);
+        desc.activationId = getActivationsManager().indexOf(activationName);
         if (n > 0) {
             desc.biases = readBiases(in, desc.header.nodes);
         }
@@ -179,7 +183,11 @@ bool NeuronNetSerializer::rebuildLayers(std::istream &in, const NeuronNetSeriali
         layerDesc.push_back(desc);
     }
     for (auto layer : layerDesc) {
-        net.appendLayer(layer.header.nodes, layer.header.activation != -1ul ? _activationManager.get(layer.header.activation) : nullptr);
+        helpers::Activation *activation = nullptr;
+        if (layer.activationId != -1ul) {
+            activation = getActivationsManager().get(layer.activationId);
+        }
+        net.appendLayer(layer.header.nodes, activation);
     }
     net.layers()[0].setIsInput(true);
     net.connect();
@@ -224,16 +232,22 @@ void NeuronNetSerializer::writeNetHeader(std::ostream &out, const NeuronNet &net
 
 void NeuronNetSerializer::writeLayer(std::ostream &out, const models::Layer &layer)
 {
+    auto activation = layer.activation();
+    std::string activationName = activation != nullptr ? activation->name() : "";
     LayerHeader header{
         LAYER_MAGIC,
-        _activationManager.indexOf(layer.activation()),
         layer.size(),
-        layer.nextSize()
+        layer.nextSize(),
+        static_cast<uint32_t>(activationName.size() + (4-activationName.size()%4))
     };
     out.write(header.magic, sizeof (header.magic));
-    writeSizeT(out, header.activation);
     writeSizeT(out, header.nodes);
     writeSizeT(out, header.nextLayerNodes);
+    writeUInt32(out, header.activationNameLength);
+    out << activationName;
+    char padding[4] = {};
+    long paddingLength = static_cast<long>(header.activationNameLength - activationName.size());
+    out.write(padding, paddingLength);
     helpers::PackDouble pack;
     if (!layer.isInputLayer()) {
         std::vector<uint64_t> transportable(layer.size());

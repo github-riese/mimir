@@ -7,6 +7,7 @@
 #include <sstream>
 
 #include "services/NeuronNetSerializer.h"
+#include "services/NameResolveSerializer.h"
 #include "services/ActivationsManager.h"
 #include "helpers/helpers.h"
 
@@ -64,4 +65,19 @@ void TestSerialize::testSerialize()
     QVERIFY(reread.layers().size() == net.layers().size());
 
     QVERIFY(net.run({0, 1}) == reread.run({0, 1}));
+}
+
+void TestSerialize::testNameResolveSerialize()
+{
+    mimir::services::NameResolver resolver;
+    resolver.indexFromName("Hello");
+    resolver.indexFromName("World");
+    resolver.indexFromName("42");
+    resolver.indexFromName("3.1459");
+    std::stringstream stream;
+    mimir::services::NameResolveSerializer serializer;
+    serializer.serialize(stream, resolver);
+    stream.seekg(0);
+    auto restored = serializer.deserialize(stream);
+    QVERIFY(restored.wordList() == resolver.wordList());
 }
