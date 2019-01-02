@@ -44,8 +44,7 @@ void TestSerialize::testPackUnpack()
 void TestSerialize::testSerialize()
 {
     mimir::services::NeuronNetSerializer serializer;
-    mimir::helpers::RectifiedLinear rectifiedLinear;
-    mimir::services::NeuronNet net(2, 1, &rectifiedLinear);
+    mimir::services::NeuronNet net(2, 1, "rectifiedLinear");
     net.addHiddenLayer(4);
     net.connect();
     net.layers().front().setWeights({{{1, 2, 3, 4},{5, 6, 7, 8}}});

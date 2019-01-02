@@ -20,14 +20,14 @@ public:
     using MinibatchResultCallback = std::function<void(double currentError, double detectRate, unsigned epochsNeeded)>;
     Trainer(NeuronNet &net);
     void addBatch(std::vector<double> input, std::vector<double> expectation);
-    unsigned run(size_t batchSize, unsigned maxEpochs, double maxError, double eta, MinibatchResultCallback resultCallback = nullptr);
+    unsigned run(size_t batchSize, unsigned maxEpochs, double maxError, double minRate, double eta, MinibatchResultCallback resultCallback = nullptr);
     double currentError() const;
     void createGradients();
     void resetBatches();
 private:
     void resetGradients();
     void backPropagate(std::vector<std::vector<double>> const &results, std::vector<std::vector<double>> const &expectations, double eta);
-    std::tuple<unsigned, double, double> runMinibatch(std::vector<BatchItem> const &, unsigned maxEpochs, double maxError, double eta);
+    std::tuple<unsigned, double, double> runMinibatch(std::vector<BatchItem> const &, unsigned maxEpochs, double maxError, double minRate, double eta);
     double mse(std::vector<std::vector<double>> const &results, const std::vector<std::vector<double> > &miniBatch) const;
     double detectRate(std::vector<std::vector<double>> const &results, std::vector<std::vector<double>> const &expectations);
 private:

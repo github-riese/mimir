@@ -15,9 +15,9 @@ class NeuronNet
 {
 public:
     NeuronNet();
-    NeuronNet(long inputs, long outputs, helpers::Activation *);
-    void addHiddenLayer(size_t numNeurons, helpers::Activation * = nullptr);
-    void appendLayer(size_t numNeurons, helpers::Activation * = nullptr);
+    NeuronNet(size_t inputs, size_t outputs, const std::string &);
+    void addHiddenLayer(size_t numNeurons, const std::string & = std::string());
+    void appendLayer(size_t numNeurons, const std::string & = std::string());
     void connect();
     std::vector<double> run(std::vector<double> inputs);
     std::vector<double> results();

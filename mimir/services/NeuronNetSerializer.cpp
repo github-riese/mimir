@@ -161,7 +161,7 @@ bool NeuronNetSerializer::rebuildLayers(std::istream &in, const NeuronNetSeriali
 {
     struct LayerDescription {
         LayerHeader header;
-        size_t activationId;
+        std::string activationName;
         std::vector<double> biases;
         models::Matrix weights;
     };
@@ -172,8 +172,7 @@ bool NeuronNetSerializer::rebuildLayers(std::istream &in, const NeuronNetSeriali
         if (std::string(desc.header.magic) != std::string(LAYER_MAGIC)) {
             return false;
         }
-        std::string activationName = readName(in, desc.header.activationNameLength);
-        desc.activationId = getActivationsManager().indexOf(activationName);
+        desc.activationName = readName(in, desc.header.activationNameLength);
         if (n > 0) {
             desc.biases = readBiases(in, desc.header.nodes);
         }
@@ -183,11 +182,7 @@ bool NeuronNetSerializer::rebuildLayers(std::istream &in, const NeuronNetSeriali
         layerDesc.push_back(desc);
     }
     for (auto layer : layerDesc) {
-        helpers::Activation *activation = nullptr;
-        if (layer.activationId != -1ul) {
-            activation = getActivationsManager().get(layer.activationId);
-        }
-        net.appendLayer(layer.header.nodes, activation);
+        net.appendLayer(layer.header.nodes, layer.activationName);
     }
     net.layers()[0].setIsInput(true);
     net.connect();

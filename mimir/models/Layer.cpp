@@ -58,7 +58,7 @@ bool Layer::connect(Layer &next)
         return false;
     }
     auto nextLayerNeuronCount = next._inputs.size();
-    _weights = Matrix{_inputs.size(), nextLayerNeuronCount, [](auto, auto) ->auto { return static_cast<double>(std::rand()%100)/10000.;}};
+    _weights = Matrix{_inputs.size(), nextLayerNeuronCount, [](auto, auto) ->auto { return static_cast<double>(std::rand()%200)/10000. - .001;}};
     _nextLayer = &next;
     _dirty = true;
     return true;

@@ -8,6 +8,7 @@
 #include "helpers/math.h"
 #include "helpers/helpers.h"
 #include "helpers/activations.h"
+#include "ActivationsManager.h"
 
 using mimir::models::Layer;
 using mimir::models::Matrix;
@@ -20,38 +21,38 @@ NeuronNet::NeuronNet()
 {
 }
 
-NeuronNet::NeuronNet(long inputs, long outputs, helpers::Activation* outputActivation)
+NeuronNet::NeuronNet(size_t inputs, size_t outputs, std::string const &outputActivation)
 {
     Layer input(nullptr);
-    for (auto n = 0; n < inputs; ++n) {
+    for (auto n = 0u; n < inputs; ++n) {
         input.addNeuron(0);
     }
     input.setIsInput(true);
     _layers.push_back(input);
-    Layer output(outputActivation);
-    for (auto n = 0; n < outputs; ++n) {
+    Layer output(getActivationsManager().get(outputActivation));
+    for (auto n = 0u; n < outputs; ++n) {
         output.addNeuron(static_cast<double>(rand()%100)/10000.);
     }
     _layers.push_back(output);
 }
 
-void NeuronNet::addHiddenLayer(size_t numNeurons, helpers::Activation* activation)
+void NeuronNet::addHiddenLayer(size_t numNeurons, std::string const &activation)
 {
     if (_layers[0].isConnected()) {
         throw std::logic_error("can't add layers after net is connected.");
     }
-    Layer l(activation == nullptr ? _layers.back().activation() : activation);
+    Layer l(activation.empty() ? _layers.back().activation() : getActivationsManager().get(activation));
     for (auto n = 0u; n < numNeurons; ++n) {
-        l.addNeuron(static_cast<double>(rand()%100)/1000.);
+        l.addNeuron(static_cast<double>(rand()%200)/10000. - .001);
     }
     _layers.insert(_layers.end() -1, l);
 }
 
-void NeuronNet::appendLayer(size_t numNeurons, helpers::Activation *activation)
+void NeuronNet::appendLayer(size_t numNeurons, const std::string &activation)
 {
-    Layer l(activation == nullptr && _layers.size() > 0 ? _layers.back().activation() : activation);
+    Layer l(activation.empty() && _layers.size() > 0 ? _layers.back().activation() : getActivationsManager().get(activation));
     for (auto n = 0u; n < numNeurons; ++n) {
-        l.addNeuron(static_cast<double>(rand()%100)/1000.);
+        l.addNeuron(static_cast<double>(rand()%200)/10000. -.001);
     }
     _layers.push_back(l);
 }

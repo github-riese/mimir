@@ -53,9 +53,8 @@ TestTrainer::TestTrainer(QObject *parent) : QObject(parent)
 void TestTrainer::testXOR()
 {
     srand(static_cast<unsigned>(time(nullptr)));
-    mimir::helpers::RectifiedLinear activateRectifiedLinear;
-    mimir::services::NeuronNet net(2, 1, &activateRectifiedLinear);
-    net.addHiddenLayer(2, &activateRectifiedLinear);
+    mimir::services::NeuronNet net(2, 1, "rectifiedLinear");
+    net.addHiddenLayer(2, "rectifiedLinear");
     net.connect();
 
     net.setWeigths(0, mimir::models::Matrix({
@@ -88,13 +87,12 @@ void TestTrainer::testXOR()
 void TestTrainer::testTrain()
 {
     return;
-    mimir::helpers::Sigmoid sigmoid;
-    mimir::services::NeuronNet net(2, 2, &sigmoid);
+    mimir::services::NeuronNet net(2, 2, "sigmoid");
     net.addHiddenLayer(2);
     net.connect();
     mimir::services::Trainer testee(net);
     testee.addBatch({.05, .1}, {.01, 2});
-    auto epochs = testee.run(1, 1500, .000000001, 1);
+    auto epochs = testee.run(1, 1500, .000000001, .8, 1);
     qDebug() << net.results();
     QVERIFY(epochs < 1500);
 //    QVERIFY(testee.currentError() < .000000001);
@@ -121,11 +119,11 @@ void TestTrainer::testImageDetect()
     labels.read(x, 8);
     data.read(x, 16);
     unsigned int batchSize = 10;
-    mimir::helpers::Sigmoid sigmoid;
-    mimir::services::NeuronNet detector(28*28, 10, &sigmoid);
+    mimir::services::NeuronNet detector(28*28, 10, "sigmoid");
     detector.addHiddenLayer(9);
     detector.connect();
     mimir::services::Trainer trainer(detector);
+    trainer.createGradients();
     auto batches = makeInput(data, 5000);
     auto expectations = makeExpectations(labels, 5000);
     auto batch = batches.begin();
@@ -143,9 +141,10 @@ void TestTrainer::testImageDetect()
             qDebug() << result << *(expectations.begin() + static_cast<unsigned>(minibatch)*batchSize-1);
         }
     };
-    trainer.run(batchSize, 200, .000001, eta, batchResult);
+    trainer.run(batchSize, 200, .000001, .9, eta, batchResult);
     minibatch = 0;
-    trainer.run(batchSize, 200, .000001, eta, batchResult);
+    batchSize /= 2;
+    trainer.run(batchSize, 100, .000001, .97, eta/2., batchResult);
     mimir::services::NeuronNetSerializer serializer;
     std::ofstream file("mnist_detect.mimir");
     serializer.serialize(detector, file);

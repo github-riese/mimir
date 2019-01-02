@@ -50,7 +50,7 @@ std::ostream &operator <<(std::ostream & stream, std::vector<T> const &data)
     return stream;
 }
 
-unsigned Trainer::run(size_t batchSize, unsigned maxEpochs, double maxError, double eta, MinibatchResultCallback resultCallback)
+unsigned Trainer::run(size_t batchSize, unsigned maxEpochs, double maxError, double minRate, double eta, MinibatchResultCallback resultCallback)
 {
     _callback = resultCallback;
     std::cout.setf(std::ios::fixed, std::ios::floatfield);
@@ -63,7 +63,7 @@ unsigned Trainer::run(size_t batchSize, unsigned maxEpochs, double maxError, dou
         for (auto n = 0u; n < batchSize && batchItem != _batch.end(); ++n, ++batchItem) {
             *miniBatchPtr++ = *batchItem;
         }
-        auto [epochs, detectRate, currentError] = runMinibatch(minibatch, maxEpochs, maxError, eta);
+        auto [epochs, detectRate, currentError] = runMinibatch(minibatch, maxEpochs, maxError, minRate, eta);
         if (resultCallback) {
             resultCallback(currentError, detectRate, epochs);
         }
@@ -96,6 +96,9 @@ void Trainer::createGradients()
 
 void Trainer::resetGradients()
 {
+    if (_biasGradient.size() == 0 || _weightGradient.size() == 0) {
+        createGradients();
+    }
     for (auto &bias : _biasGradient) {
         bias.assign(bias.size(), 0.);
     }
@@ -145,7 +148,7 @@ void Trainer::backPropagate(const std::vector<std::vector<double> > &results, co
     }
 }
 
-std::tuple<unsigned, double, double> Trainer::runMinibatch(const std::vector<Trainer::BatchItem> &miniBatch, unsigned maxEpochs, double maxError, double eta)
+std::tuple<unsigned, double, double> Trainer::runMinibatch(const std::vector<Trainer::BatchItem> &miniBatch, unsigned maxEpochs, double maxError, double minRate, double eta)
 {
     auto epoch = 0u;
     double error = 0.;
@@ -160,9 +163,10 @@ std::tuple<unsigned, double, double> Trainer::runMinibatch(const std::vector<Tra
             expectations.push_back(item.expectation);
         }
         error += mse(results, expectations);
-        rate += detectRate(results, expectations);
+        auto currentDetectRate = detectRate(results, expectations);
+        rate += currentDetectRate;
 
-        if (error <= maxError) {
+        if (error <= maxError && currentDetectRate >= minRate) {
             break;
         }
         backPropagate(results, expectations, eta);
