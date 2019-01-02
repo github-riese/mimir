@@ -27,7 +27,6 @@ std::vector<T> avg(std::vector<std::vector<T>> const &v) {
 Trainer::Trainer(NeuronNet &net) :
     _net(net)
 {
-    createGradients();
 }
 
 void Trainer::addBatch(std::vector<double> input, std::vector<double> expectation)
@@ -76,6 +75,11 @@ unsigned Trainer::run(size_t batchSize, unsigned maxEpochs, double maxError, dou
 double Trainer::currentError() const
 {
     return _currentError;
+}
+
+void Trainer::resetBatches()
+{
+    _batch.clear();
 }
 
 void Trainer::createGradients()

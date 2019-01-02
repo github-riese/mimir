@@ -5,8 +5,8 @@
 #include <valarray>
 #include <vector>
 
-#include "models/Matrix.h"
-#include "helpers/activations.h"
+#include "Matrix.h"
+#include "../helpers/activations.h"
 
 namespace mimir {
 namespace models {

@@ -37,8 +37,8 @@ class NeuronNetSerializer
 
 public:
     NeuronNetSerializer();
-    int serialize(NeuronNet &, std::ostream &);
-    int deserialize(NeuronNet&, std::istream &);
+    int serialize(NeuronNet const &, std::ostream &);
+    int deserialize(NeuronNet &, std::istream &);
     bool canRead(std::istream &) const;
 private:
     FileHeader readHeader(std::istream &) const;

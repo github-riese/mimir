@@ -1,10 +1,10 @@
-#ifndef TRAINER_H
-#define TRAINER_H
+#ifndef MIMIR_TRAINER_H
+#define MIMIR_TRAINER_H
 
 #include <vector>
 
-#include "models/Matrix.h"
-#include "services/NeuronNet.h"
+#include "../models/Matrix.h"
+#include "NeuronNet.h"
 
 
 namespace mimir {
@@ -22,8 +22,9 @@ public:
     void addBatch(std::vector<double> input, std::vector<double> expectation);
     unsigned run(size_t batchSize, unsigned maxEpochs, double maxError, double eta, MinibatchResultCallback resultCallback = nullptr);
     double currentError() const;
-private:
     void createGradients();
+    void resetBatches();
+private:
     void resetGradients();
     void backPropagate(std::vector<std::vector<double>> const &results, std::vector<std::vector<double>> const &expectations, double eta);
     std::tuple<unsigned, double, double> runMinibatch(std::vector<BatchItem> const &, unsigned maxEpochs, double maxError, double eta);
@@ -41,4 +42,4 @@ private:
 } // namespace services
 } // namespace mimir
 
-#endif // TRAINER_H
+#endif // MIMIR_TRAINER_H

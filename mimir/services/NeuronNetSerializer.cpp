@@ -39,7 +39,7 @@ NeuronNetSerializer::NeuronNetSerializer()
     }
 }
 
-int NeuronNetSerializer::serialize(NeuronNet &net, std::ostream &out)
+int NeuronNetSerializer::serialize(const mimir::services::NeuronNet &net, std::ostream &out)
 {
     writeFileHeader(out);
     writeNetHeader(out, net);

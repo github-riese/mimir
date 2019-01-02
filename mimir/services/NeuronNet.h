@@ -1,8 +1,8 @@
 #ifndef NET_H
 #define NET_H
 
-#include "models/Layer.h"
-#include "models/Matrix.h"
+#include "../models/Layer.h"
+#include "../models/Matrix.h"
 
 #include <valarray>
 #include <vector>
@@ -25,6 +25,7 @@ public:
     size_t outputSize() const;
     size_t numberOfLayers() const;
     inline std::vector<models::Layer> &layers() { return  _layers; }
+    inline std::vector<models::Layer> const &layers() const { return  _layers; }
     void setBias(size_t layer, size_t neuron, double value);
     void setBiases(size_t layer, std::vector<double> const &);
     void setWeight(size_t layer, size_t neuron, size_t nextLayerNeuron, double value);
