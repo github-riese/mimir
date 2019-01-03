@@ -118,7 +118,7 @@ void TestTrainer::testImageDetect()
     char x[32] = {};
     labels.read(x, 8);
     data.read(x, 16);
-    unsigned int batchSize = 10;
+    unsigned int batchSize = 5;
     mimir::services::NeuronNet detector(28*28, 10, "sigmoid");
     detector.addHiddenLayer(9);
     detector.connect();
@@ -141,10 +141,10 @@ void TestTrainer::testImageDetect()
             qDebug() << result << *(expectations.begin() + static_cast<unsigned>(minibatch)*batchSize-1);
         }
     };
-    trainer.run(batchSize, 200, .000001, .9, eta, batchResult);
-    minibatch = 0;
+    trainer.run(batchSize, 50, 1e-5, .9, eta, batchResult);
+/*    minibatch = 0;
     batchSize /= 2;
-    trainer.run(batchSize, 100, .000001, .97, eta/2., batchResult);
+    trainer.run(batchSize, 100, .000001, .97, eta/2., batchResult);*/
     mimir::services::NeuronNetSerializer serializer;
     std::ofstream file("mnist_detect.mimir");
     serializer.serialize(detector, file);
