@@ -78,8 +78,9 @@ std::vector<double> NeuronNet::run(std::vector<double> inputs)
     auto layer = _layers.begin();
     size_t n = _layers.size() -1;
     while (n-- > 0) {
-        layer->run();
+        auto nextInput = layer->run();
         ++layer;
+        layer->setInput(nextInput);
     }
     return results();
 }

@@ -57,13 +57,17 @@ void TestSerialize::testSerialize()
     net.setName("serializeTest");
     std::stringstream buffer;
     serializer.serialize(net, buffer);
-    mimir::services::NeuronNet reread;
-    buffer.seekg(0);
-    serializer.deserialize(reread, buffer);
-    QVERIFY(reread.name() == net.name());
-    QVERIFY(reread.layers().size() == net.layers().size());
+    mimir::services::NeuronNet rereadAndCopied;
+    {
+        mimir::services::NeuronNet reread;
+        buffer.seekg(0);
+        serializer.deserialize(reread, buffer);
+        QVERIFY(reread.name() == net.name());
+        QVERIFY(reread.layers().size() == net.layers().size());
+        rereadAndCopied = reread;
+    }
 
-    QVERIFY(net.run({0, 1}) == reread.run({0, 1}));
+    QVERIFY(net.run({0, 1}) == rereadAndCopied.run({0, 1}));
 }
 
 void TestSerialize::testNameResolveSerialize()

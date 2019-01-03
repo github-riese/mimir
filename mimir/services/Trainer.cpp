@@ -84,6 +84,8 @@ void Trainer::resetBatches()
 
 void Trainer::createGradients()
 {
+    _biasGradient.clear();
+    _weightGradient.clear();
     for (auto layer : _net.layers()) {
         if (!layer.isInputLayer()) {
             _biasGradient.push_back(std::vector<double>(layer.size()));

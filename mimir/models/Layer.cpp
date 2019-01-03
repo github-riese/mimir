@@ -59,18 +59,18 @@ bool Layer::connect(Layer &next)
     }
     auto nextLayerNeuronCount = next._inputs.size();
     _weights = Matrix{_inputs.size(), nextLayerNeuronCount, [](auto, auto) ->auto { return static_cast<double>(std::rand()%200)/10000. - .001;}};
-    _nextLayer = &next;
+    _isConnected = true;
+    _nextLayerSize = next.size();
     _dirty = true;
     return true;
 }
 
 double Layer::weight(size_t idxMyNeuron, size_t idxNextLayerNeuron) const
 {
-    if (_nextLayer == nullptr) {
+    if (!_isConnected) {
         throw std::logic_error("not connected");
     }
-    size_t numNextNodes = _nextLayer->size();
-    if (idxMyNeuron >= size() || idxNextLayerNeuron >= numNextNodes) {
+    if (idxMyNeuron >= size() || idxNextLayerNeuron >= _nextLayerSize) {
         throw std::out_of_range("no such edge");
     }
     return _weights.value(idxNextLayerNeuron, idxMyNeuron);
@@ -130,13 +130,13 @@ void Layer::changeBiases(const std::vector<double> &deltas)
 
 void Layer::setWeights(const Matrix &weights)
 {
-    if (_nextLayer == nullptr) {
+    if (!_isConnected) {
         throw std::logic_error("no weights applyable on unconnected layer.");
     }
     if (weights.rows() != _inputs.size()) {
         throw std::logic_error("wrong number of weights for layer.");
     }
-    if (weights.cols() != _nextLayer->_inputs.size()) {
+    if (weights.cols() != _nextLayerSize) {
         throw std::logic_error("wrong number of weights for subsequent layer.");
     }
     _weights = weights;
@@ -169,20 +169,19 @@ std::vector<double> Layer::sigmoidPrime() const
     return result;
 }
 
-void Layer::run()
+std::vector<double> Layer::run()
 {
-    if (_nextLayer == nullptr) {
+    if (!_isConnected) {
         throw std::logic_error("can't run a layer without subsequent layer.");
     }
     std::vector<double> vals;
-    // line vector from input
     vals = (_weights.transposed() * hypothesis()).column(0);
-    _nextLayer->setInput(vals);
+    return vals;
 }
 
 bool Layer::isConnected() const
 {
-    return _nextLayer != nullptr;
+    return _isConnected;
 }
 
 bool Layer::isInputLayer() const
@@ -197,7 +196,7 @@ size_t Layer::size() const noexcept
 
 size_t Layer::nextSize() const noexcept
 {
-    return _nextLayer == nullptr ? 0 : _nextLayer->size();
+    return _nextLayerSize;
 }
 
 void Layer::setIsInput(bool isInput)

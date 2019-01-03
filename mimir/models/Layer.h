@@ -32,7 +32,7 @@ public:
     void changeWeights(const Matrix &);
     std::vector<double> zValues() const;
     std::vector<double> sigmoidPrime() const;
-    void run();
+    std::vector<double> run();
     bool isConnected() const;
     bool isInputLayer() const;
     size_t size() const noexcept;
@@ -42,7 +42,8 @@ public:
     void setActivation(helpers::Activation *act);
 protected:
 private:
-    Layer * _nextLayer = nullptr;
+    bool _isConnected = false;
+    size_t _nextLayerSize = 0u;
     std::vector<double> _inputs;
     std::vector<double> _biases;
     std::vector<double> _values;
