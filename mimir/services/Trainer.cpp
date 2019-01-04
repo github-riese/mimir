@@ -57,10 +57,10 @@ unsigned Trainer::run(size_t batchSize, unsigned maxEpochs, double maxError, dou
     std::cout.precision(10);
 
     auto batchItem = _batch.begin();
-    std::vector<BatchItem> minibatch(batchSize);
+    std::vector<BatchItem> minibatch(std::min(batchSize, _batch.size()));
     while (batchItem != _batch.end()) {
         auto miniBatchPtr = minibatch.begin();
-        for (auto n = 0u; n < batchSize && batchItem != _batch.end(); ++n, ++batchItem) {
+        for (auto n = 0u; n < batchSize && (batchItem != _batch.end()); ++n, ++batchItem) {
             *miniBatchPtr++ = *batchItem;
         }
         auto [epochs, detectRate, currentError] = runMinibatch(minibatch, maxEpochs, maxError, minRate, eta);

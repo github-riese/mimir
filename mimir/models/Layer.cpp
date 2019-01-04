@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <exception>
 #include <numeric>
-#include <strstream>
+#include <sstream>
 #include <valarray>
 #include <cstdlib>
 
@@ -92,7 +92,9 @@ const Matrix &Layer::weights() const
 void Layer::setInput(const std::vector<double> &values)
 {
     if (values.size() != size()) {
-        throw std::logic_error("wrong number of inputs for setValues");
+        std::stringstream s;
+        s << "wrong number of inputs for setValues. expected " << size() << " but got " << values.size() << ".";
+        throw std::logic_error(s.str());
     }
     if (_isInputLayer) {
         _values = values;
