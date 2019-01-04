@@ -1,8 +1,11 @@
 TEMPLATE = lib
 QT -= gui
-QT += network
 
 CONFIG += c++1z library
+
+CONFIG(release, release|release) {
+mac: QMAKE_CXXFLAGS += -O3 -msse4.1
+}
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked deprecated (the exact warnings
