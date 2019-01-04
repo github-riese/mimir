@@ -58,9 +58,17 @@ bool Layer::connect(Layer &next)
         return false;
     }
     auto nextLayerNeuronCount = next._inputs.size();
-    _weights = Matrix{_inputs.size(), nextLayerNeuronCount, [](auto, auto) ->auto { return static_cast<double>(std::rand()%200)/10000. - .001;}};
+    auto nextSize = next.size();
+    _weights = Matrix{
+            _inputs.size(),
+            nextLayerNeuronCount,
+            [nextSize](auto, auto) ->auto {
+                return
+                        static_cast<double>(std::rand()%200)/10000. - .001 / (static_cast<double>(nextSize*nextSize));
+            }
+    };
     _isConnected = true;
-    _nextLayerSize = next.size();
+    _nextLayerSize = nextSize;
     _dirty = true;
     return true;
 }
