@@ -29,6 +29,8 @@ public:
     Matrix &operator *=(std::vector<double> const&);
     Matrix &operator *=(std::valarray<double> const &);
     Matrix &operator *=(double);
+    Matrix &pieceWiseMultiply(Matrix const &);
+    Matrix &operator /=(double);
     Matrix operator -(Matrix const &) const;
     Matrix &operator -=(Matrix const &);
     Matrix &operator -=(std::vector<double> const&);
@@ -36,6 +38,7 @@ public:
     Matrix operator +(Matrix const &) const;
     Matrix operator +(double) const;
     Matrix &operator +=(double);
+    Matrix &operator -=(double);
     Matrix& operator +=(Matrix const &);
     Matrix& operator += (const std::valarray<double> &);
     Matrix operator +(const std::valarray<double> &) const;
@@ -45,6 +48,9 @@ public:
     void setValue(size_t row, size_t column, double value);
     void fill(double value);
     Matrix &makeIdentity();
+    double sum() const;
+    double avg() const;
+    double mse() const;
     bool operator==(Matrix const&) const;
     bool operator!=(Matrix const&) const;
 private:

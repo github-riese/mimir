@@ -158,6 +158,23 @@ Matrix &Matrix::operator *=(double value)
     return *this;
 }
 
+mimir::models::Matrix &mimir::models::Matrix::pieceWiseMultiply(const mimir::models::Matrix &rhs)
+{
+    if (_rows != rhs._rows || _cols != rhs._cols) {
+        throw std::logic_error("Can't piecewise multiply two matrices of unequal size.");
+    }
+    std::transform(_data.begin(), _data.end(), rhs._data.begin(), _data.begin(), [](auto left, auto right) {
+        return left * right;
+    });
+    return *this;
+}
+
+Matrix &Matrix::operator /=(double value)
+{
+    std::transform(_data.begin(), _data.end(), _data.begin(), [value](double v) -> double { return v / value; });
+    return *this;
+}
+
 Matrix Matrix::operator -(const Matrix &rhs) const
 {
     return Matrix{*this} -= rhs;
@@ -222,6 +239,12 @@ Matrix Matrix::operator +(double v) const
 Matrix &Matrix::operator +=(double v)
 {
     std::transform(_data.begin(), _data.end(), _data.begin(), [v](double oldVal) -> double { return oldVal + v; });
+    return *this;
+}
+
+mimir::models::Matrix &mimir::models::Matrix::operator -=(double v)
+{
+    std::transform(_data.begin(), _data.end(), _data.begin(), [v](double oldVal) -> double { return oldVal - v; });
     return *this;
 }
 
@@ -296,6 +319,26 @@ Matrix &Matrix::makeIdentity()
         setValue(n, n, 1.);
     }
     return *this;
+}
+
+double Matrix::sum() const
+{
+    return std::accumulate(_data.begin(), _data.end(), 0.);
+}
+
+double Matrix::avg() const
+{
+    return sum() / static_cast<double>(_data.size());
+}
+
+double Matrix::mse() const
+{
+    auto avarage = avg();
+    auto distance = std::accumulate(_data.begin(), _data.end(), 0., [avarage](auto init, auto value) -> auto {
+        auto diff = value - avarage;
+        return init + (diff*diff);
+    });
+    return distance;
 }
 
 bool Matrix::operator==(const Matrix &rhs) const
