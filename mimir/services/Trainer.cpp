@@ -109,6 +109,14 @@ void Trainer::resetGradients()
     }
 }
 
+bool Trainer::detectedCorrectly(const std::vector<double> &left, const std::vector<double> &right, double maxError) const
+{
+    if (left.size() > 1) {
+        return std::distance(left.begin(), std::max_element(left.begin(), left.end())) == std::distance(right.begin(), std::max_element(right.begin(), right.end()));
+    }
+    return std::abs(left.front() - right.front()) <= maxError;
+}
+
 void Trainer::calculateGradients(const std::vector<double> &result, const std::vector<double> &expectation)
 {
     double gradientWeight = 1.;
@@ -162,7 +170,9 @@ std::tuple<unsigned, double, double> Trainer::runMinibatch(const std::vector<Tra
             auto result = _net.run(item.input);
             results.push_back(result);
             expectations.push_back(item.expectation);
-            calculateGradients(results.back(), expectations.back());
+            if (!detectedCorrectly(result, item.expectation, maxError) || mse(result, item.expectation) >= maxError) {
+                calculateGradients(results.back(), expectations.back());
+            }
         }
         error += mse(results, expectations);
         auto currentDetectRate = detectRate(results, expectations);
@@ -180,15 +190,20 @@ double Trainer::mse(const std::vector<std::vector<double> > &results, const std:
 {
     auto r = results.begin();
     auto e = expectations.begin();
-    double mse = 0;
+    double errorSum = 0;
     while (r != results.end()) {
-        auto diff = *r - *e;
-        diff = diff*diff;
-        auto error = std::accumulate(diff.begin(), diff.end(), 0.)/static_cast<double>(diff.size());
-        mse += error;
+        auto error = mse(*r, *e);
+        errorSum += error;
         ++r; ++e;
     }
-    return mse / static_cast<double>(results.size());
+    return errorSum / static_cast<double>(results.size());
+}
+
+double Trainer::mse(const std::vector<double> &result, const std::vector<double> &expectation) const
+{
+    auto diff = result - expectation;
+    diff = diff*diff;
+    return  std::accumulate(diff.begin(), diff.end(), 0.)/static_cast<double>(diff.size());
 }
 
 double Trainer::detectRate(const std::vector<std::vector<double> > &results, const std::vector<std::vector<double> > &expectations)
