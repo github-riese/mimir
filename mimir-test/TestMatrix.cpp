@@ -156,3 +156,21 @@ void TestMatrix::testCallbackConstructor()
     Matrix cbAssigned(2, 3, setter);
     QVERIFY(cbAssigned == Matrix({{1, 2, 3}, {4, 5, 6}}));
 }
+
+void TestMatrix::testInsertRow()
+{
+    Matrix m({
+                 {2, 4},
+                 {7, 9},
+                 {12, 14}
+             });
+    Matrix expect({
+                      { 1,  2,  3,  4,  5},
+                      { 6,  7,  8,  9, 10},
+                      {11, 12, 13, 14, 15}
+                  });
+    m.addColumn(0, {1, 6, 11}); // front insert
+    m.addColumn(2, {3, 8, 13}); // somewhere in the middle insert
+    m.addColumn(4, {5, 10, 15}); // past end. append that column
+    QVERIFY(m == expect);
+}

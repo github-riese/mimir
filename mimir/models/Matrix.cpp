@@ -87,6 +87,37 @@ std::vector<double> Matrix::column(size_t column) const
     return result;
 }
 
+void Matrix::addColumn(size_t before, const std::vector<double> &values)
+{
+    if (before != -1u && before > _cols) {
+        throw new std::logic_error("Cant' add a column behind the end of the matrix.");
+    }
+    if (!values.empty() && values.size() != _rows) {
+        throw std::logic_error("Can't add column: wrong size of column vector.");
+    }
+    auto value = values.rbegin();
+    _data.resize(_data.size() + _rows);
+    auto read = _data.rbegin() + static_cast<long>(_rows);
+    auto write = _data.rbegin();
+    if (before <= _cols) {
+        auto n = _cols - before;
+        while(n-- > 0) {
+            *write++ = *read++;
+        }
+        *write++ = (value == values.rend()) ? 0. : *value++;
+    }
+    while(read != _data.rend()) {
+        for (auto n = 0u; n < _cols && read != _data.rend(); ++n) {
+            *write++ = *read++;
+        }
+        if (write == _data.rend()) {
+            break;
+        }
+        *write++ = (value == values.rend()) ? 0. : *value++;
+    }
+    ++_cols;
+}
+
 void Matrix::addRow(const std::valarray<double> &row)
 {
     if (_rows != 0 && _cols != row.size()) {

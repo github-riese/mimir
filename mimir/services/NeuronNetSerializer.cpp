@@ -210,8 +210,8 @@ void NeuronNetSerializer::writeNetHeader(std::ostream &out, const NeuronNet &net
     NetHeader header {
         NET_MAGIC,
         static_cast<uint32_t>(net.numberOfLayers()),
-        static_cast<uint32_t>(net.inputSize()),
-        static_cast<uint32_t>(net.outputSize()),
+        static_cast<uint32_t>(net.sizeOfLayer(0)),
+        static_cast<uint32_t>(net.sizeOfLayer(-1u)),
         static_cast<uint32_t>(net.name().size())
     };
     out.write(header.magic, sizeof (header.magic));

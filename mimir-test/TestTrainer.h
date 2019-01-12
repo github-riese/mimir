@@ -14,6 +14,7 @@ signals:
 
 private slots:
     void testXOR();
+    void testChangeNet();
     void testTrain();
     void testImageDetect();
 };

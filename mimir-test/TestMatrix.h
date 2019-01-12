@@ -16,6 +16,7 @@ private slots:
     void testOtherMultiplications();
     void testDiff();
     void testCallbackConstructor();
+    void testInsertRow();
 };
 
 #endif // TESTMATRIX_H

@@ -21,9 +21,9 @@ public:
     void connect();
     std::vector<double> run(std::vector<double> inputs);
     std::vector<double> results();
-    size_t inputSize() const;
-    size_t outputSize() const;
+    size_t sizeOfLayer(size_t layer) const;
     size_t numberOfLayers() const;
+    bool addNodes(size_t layer, size_t count);
     inline std::vector<models::Layer> &layers() { return  _layers; }
     inline std::vector<models::Layer> const &layers() const { return  _layers; }
     void setBias(size_t layer, size_t neuron, double value);

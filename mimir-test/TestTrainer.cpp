@@ -84,6 +84,18 @@ void TestTrainer::testXOR()
     //QVERIFY(epochs < 1000);
 }
 
+void TestTrainer::testChangeNet()
+{
+    mimir::services::NeuronNet net(4, 1, "sigmoid");
+    net.connect();
+    net.addNodes(0, 1);
+    net.addNodes(1, 2);
+    QVERIFY(net.sizeOfLayer(0) == 5);
+    QVERIFY(net.sizeOfLayer(1) == 3);
+    auto result = net.run({1, 2, 3, 4, 5});
+    QVERIFY(result.size() == 3u);
+}
+
 void TestTrainer::testTrain()
 {
     return;

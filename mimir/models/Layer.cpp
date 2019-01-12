@@ -28,6 +28,9 @@ void Layer::addNeuron(double bias)
     _biases.push_back(bias);
     _inputs.push_back(0);
     _values.push_back(0);
+    if (_nextLayerSize) {
+        _weights.addRow(std::valarray<double>(0., _nextLayerSize));
+    }
 }
 
 std::vector<double> Layer::hypothesis()
@@ -52,23 +55,43 @@ std::vector<double> Layer::hypothesis() const
     return _values;
 }
 
-bool Layer::connect(Layer &next)
+bool Layer::connect(Layer const &next)
 {
-    if (_weights.rows() > 0) {
+    if (_isConnected) {
         return false;
     }
     auto nextLayerNeuronCount = next._inputs.size();
     auto nextSize = next.size();
-    _weights = Matrix{
-            _inputs.size(),
-            nextLayerNeuronCount,
-            [nextSize](auto, auto) ->auto {
-                return
-                        static_cast<double>(std::rand()%200)/10000. - .001 / (static_cast<double>(nextSize*nextSize));
-            }
-    };
+    if (nextSize > 0) {
+        _weights = Matrix{
+                _inputs.size(),
+                nextLayerNeuronCount,
+                [nextSize](auto, auto) ->auto {
+                    return
+                            static_cast<double>(std::rand()%200)/10000. - .001 / (static_cast<double>(nextSize*nextSize));
+                }
+        };
+    }
     _isConnected = true;
     _nextLayerSize = nextSize;
+    _dirty = true;
+    return true;
+}
+
+bool Layer::reconnect(const Layer &next)
+{
+    if (!isConnected()) {
+        return connect(next);
+    }
+
+    long extraColumns = static_cast<long>(next.size() - _nextLayerSize);
+    if (extraColumns < 0) {
+        return false;
+    }
+    while (extraColumns-- > 0) {
+        _weights.addColumn();
+    }
+    _nextLayerSize = next.size();
     _dirty = true;
     return true;
 }
@@ -222,6 +245,16 @@ helpers::Activation *Layer::activation() const
 void Layer::setActivation(helpers::Activation *act)
 {
     _activator = act;
+}
+
+bool Layer::isOutputLayer() const
+{
+    return _isOutputLayer;
+}
+
+void Layer::setIsOutputLayer(bool isOutputLayer)
+{
+    _isOutputLayer = isOutputLayer;
 }
 
 

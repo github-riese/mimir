@@ -20,6 +20,7 @@ public:
     Matrix transposed() const;
     std::vector<std::valarray<double> > data() const;
     std::vector<double> column(size_t column) const;
+    void addColumn(size_t before = -1u, std::vector<double> const &values = {});
     void addRow(std::valarray<double> const &);
     Matrix & operator*=(const Matrix &rhs);
     Matrix operator *(const Matrix &rhs) const;

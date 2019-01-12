@@ -30,6 +30,7 @@ NeuronNet::NeuronNet(size_t inputs, size_t outputs, std::string const &outputAct
     input.setIsInput(true);
     _layers.push_back(input);
     Layer output(getActivationsManager().get(outputActivation));
+    output.setIsOutputLayer(true);
     for (auto n = 0u; n < outputs; ++n) {
         output.addNeuron(static_cast<double>(rand()%100)/10000.);
     }
@@ -54,6 +55,10 @@ void NeuronNet::appendLayer(size_t numNeurons, const std::string &activation)
     for (auto n = 0u; n < numNeurons; ++n) {
         l.addNeuron(static_cast<double>(rand()%200)/10000. -.001);
     }
+    l.setIsOutputLayer(true);
+    if (!_layers.empty()) {
+        _layers.back().setIsOutputLayer(false);
+    }
     _layers.push_back(l);
 }
 
@@ -69,6 +74,7 @@ void NeuronNet::connect()
         (*previous).connect(*(next));
         ++previous; ++next;
     }
+    (*previous).connect(Layer());
 }
 
 std::vector<double> NeuronNet::run(std::vector<double> inputs)
@@ -91,19 +97,35 @@ std::vector<double> NeuronNet::results()
     return _layers.back().hypothesis();
 }
 
-size_t NeuronNet::inputSize() const
+size_t NeuronNet::sizeOfLayer(size_t layer) const
 {
-    return _layers.front().size();
-}
-
-size_t NeuronNet::outputSize() const
-{
-    return _layers.back().size();
+    if (layer != -1u && layer >= _layers.size()) {
+        return -1u;
+    }
+    if (layer == -1u) {
+        return _layers.back().size();
+    }
+    return _layers.at(layer).size();
 }
 
 size_t NeuronNet::numberOfLayers() const
 {
     return _layers.size();
+}
+
+bool NeuronNet::addNodes(size_t layer, size_t count)
+{
+    if (layer >= _layers.size()) {
+        return false;
+    }
+    auto &toModify = _layers[layer];
+    while (count-- > 0) {
+        toModify.addNeuron(0);
+    }
+    if (toModify.isConnected() && !toModify.isInputLayer()) {
+        return _layers[layer - 1].reconnect(toModify);
+    }
+    return true;
 }
 
 void NeuronNet::setBias(size_t layer, size_t neuron, double value)

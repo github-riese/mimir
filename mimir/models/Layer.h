@@ -14,11 +14,13 @@ namespace models {
 class Layer
 {
 public:
+    explicit Layer() = default;
     Layer(helpers::Activation*);
     void addNeuron(double);
     std::vector<double> hypothesis();
     std::vector<double> hypothesis() const;
-    bool connect(Layer &next);
+    bool connect(const Layer &next);
+    bool reconnect(Layer const &next);
     double weight(size_t idxMyNeuron, size_t idxNextLayerNeuron) const;
     const Matrix &weights() const;
     void setInput(std::vector<double> const &);
@@ -40,6 +42,9 @@ public:
     void setIsInput(bool isInput);
     helpers::Activation *activation() const;
     void setActivation(helpers::Activation *act);
+    bool isOutputLayer() const;
+    void setIsOutputLayer(bool isOutputLayer);
+
 protected:
 private:
     bool _isConnected = false;
@@ -51,6 +56,7 @@ private:
     helpers::Activation *_activator = nullptr;
     bool _dirty = false;
     bool _isInputLayer = false;
+    bool _isOutputLayer = false;
 };
 
 } // namespace models

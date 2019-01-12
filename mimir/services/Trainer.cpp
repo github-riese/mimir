@@ -31,7 +31,7 @@ Trainer::Trainer(NeuronNet &net) :
 
 void Trainer::addBatch(std::vector<double> input, std::vector<double> expectation)
 {
-    if (expectation.size() != _net.outputSize()) {
+    if (expectation.size() != _net.sizeOfLayer(-1u)) {
         throw new std::logic_error("Expectation set size must be equal to the size of the output layer.");
     }
     _batch.push_back({input, expectation});
@@ -90,7 +90,7 @@ void Trainer::createGradients()
         if (!layer.isInputLayer()) {
             _biasGradient.push_back(std::vector<double>(layer.size()));
         }
-        if (layer.isConnected()) {
+        if (!layer.isOutputLayer()) {
             _weightGradient.push_back(Matrix(layer.size(), layer.nextSize()));
         }
     }
@@ -127,7 +127,7 @@ void Trainer::calculateGradients(const std::vector<double> &result, const std::v
     auto delta = - costDerivative * (*rlayer).sigmoidPrime();
     ++rlayer;
     for (; rlayer != _net.layers().rend(); ++rlayer) {
-        if ((*rlayer).isConnected()) {
+        if (!(*rlayer).isOutputLayer()) {
             *deltaWeight += (Matrix(delta) * helpers::toArray((*rlayer).hypothesis())).transpose() * gradientWeight;
             ++deltaWeight;
         }
@@ -149,7 +149,7 @@ void Trainer::applyGradient(double eta)
             l.setBiases(l.biases() - eta * *deltaB);
             ++deltaB;
         }
-        if (l.isConnected()) {
+        if (!l.isOutputLayer()) {
             l.setWeights(l.weights() - eta * (*deltaW + weightDecay * l.weights()));
             ++deltaW;
         }

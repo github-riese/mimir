@@ -3,7 +3,7 @@ QT -= gui
 
 CONFIG += c++1z library
 
-CONFIG(release, release|release) {
+CONFIG(release, debug|release) {
 mac: QMAKE_CXXFLAGS += -O3 -msse4.1
 }
 
