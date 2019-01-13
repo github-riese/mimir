@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cassert>
 #include <iterator>
-#include <cstdlib>
+#include <random>
 
 #include "helpers/math.h"
 #include "helpers/helpers.h"
@@ -23,18 +23,9 @@ NeuronNet::NeuronNet()
 
 NeuronNet::NeuronNet(size_t inputs, size_t outputs, std::string const &outputActivation)
 {
-    Layer input(nullptr);
-    for (auto n = 0u; n < inputs; ++n) {
-        input.addNode(0);
-    }
-    input.setIsInput(true);
-    _layers.push_back(input);
-    Layer output(getActivationsManager().get(outputActivation));
-    output.setIsOutputLayer(true);
-    for (auto n = 0u; n < outputs; ++n) {
-        output.addNode(static_cast<double>(rand()%100)/10000.);
-    }
-    _layers.push_back(output);
+    appendLayer(inputs);
+    _layers.front().setIsInput(true);
+    appendLayer(outputs, outputActivation);
 }
 
 void NeuronNet::addHiddenLayer(size_t numNeurons, std::string const &activation)
@@ -51,9 +42,12 @@ void NeuronNet::addHiddenLayer(size_t numNeurons, std::string const &activation)
 
 void NeuronNet::appendLayer(size_t numNeurons, const std::string &activation)
 {
+    std::random_device randDev;
+    std::mt19937 twister(randDev());
+    std::normal_distribution<double> random(-.001, .001);
     Layer l(activation.empty() && _layers.size() > 0 ? _layers.back().activation() : getActivationsManager().get(activation));
     for (auto n = 0u; n < numNeurons; ++n) {
-        l.addNode(static_cast<double>(rand()%200)/10000. -.001);
+        l.addNode(random(randDev));
     }
     l.setIsOutputLayer(true);
     if (!_layers.empty()) {
