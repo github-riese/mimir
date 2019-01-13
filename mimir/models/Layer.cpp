@@ -103,7 +103,7 @@ bool Layer::reconnect(const Layer &next, std::vector<double> const &weights)
     }
     double singleValue = weights.size() == 1 ? weights.front() : 0;
     while (extraColumns-- > 0) {
-        _weights.addColumn(-1u, (weights.size() == _inputs.size()) ? weights : std::vector<double>(next.size(), singleValue));
+        _weights.addColumn(-1u, (weights.size() == _inputs.size()) ? weights : std::vector<double>(_inputs.size(), singleValue));
     }
     _nextLayerSize = next.size();
     _dirty = true;

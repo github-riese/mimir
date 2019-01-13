@@ -91,16 +91,18 @@ void TestTrainer::testChangeNet()
     net.connect();
     net.addNode(0, {}, {1, 2});
     net.addNode(1, -5, {0, 0, 0, 0, 0});
-    net.addNode(1, -5, {0, 0, 0, 0, 0});
+    net.addNode(1, -5);
+    net.addNode(1, -5, {.001});
     QVERIFY(net.sizeOfLayer(0) == 5);
-    QVERIFY(net.sizeOfLayer(1) == 4);
+    QVERIFY(net.sizeOfLayer(1) == 5);
+    QVERIFY(net.layers().front().weights().column(4) == std::vector<double>(5, .001));
     auto result = net.run({1, 2, 3, 4, 5});
-    QVERIFY(result.size() == 4u);
+    QVERIFY(result.size() == 5u);
     // net had been initialized with near null random values on connect.
     // that should result in values of roundabout .5
     // the nodes added after connecting had been set to a small bias
     // that should pull the result in the direction of zero
-    std::vector<double> expectation = {.5, .5, 0, 0};
+    std::vector<double> expectation = {.5, .5, 0, 0, 0};
     auto res = result.begin();
     auto exp = expectation.begin();
     while (res != result.end()) {
