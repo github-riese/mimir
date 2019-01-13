@@ -23,7 +23,7 @@ public:
     std::vector<double> results();
     size_t sizeOfLayer(size_t layer) const;
     size_t numberOfLayers() const;
-    bool addNodes(size_t layer, size_t count);
+    bool addNode(size_t layer, double bias = 0., std::vector<double> weightsIn = {}, std::valarray<double> weightsOut = {});
     inline std::vector<models::Layer> &layers() { return  _layers; }
     inline std::vector<models::Layer> const &layers() const { return  _layers; }
     void setBias(size_t layer, size_t neuron, double value);

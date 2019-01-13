@@ -15,12 +15,19 @@ class Layer
 {
 public:
     explicit Layer() = default;
+    /**
+     * @brief creates a new layer with the given activation
+     */
     Layer(helpers::Activation*);
-    void addNeuron(double);
+    /**
+     * @brief adds a new node to this layer.
+     * @param bias value for the new node (which will be, of course, ignored if _isInputLayer = true)
+     */
+    void addNode(double bias = 0., std::valarray<double> const &weights = {});
     std::vector<double> hypothesis();
     std::vector<double> hypothesis() const;
     bool connect(const Layer &next);
-    bool reconnect(Layer const &next);
+    bool reconnect(Layer const &next, const std::vector<double> &weights = {});
     double weight(size_t idxMyNeuron, size_t idxNextLayerNeuron) const;
     const Matrix &weights() const;
     void setInput(std::vector<double> const &);

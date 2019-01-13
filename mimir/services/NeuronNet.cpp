@@ -25,14 +25,14 @@ NeuronNet::NeuronNet(size_t inputs, size_t outputs, std::string const &outputAct
 {
     Layer input(nullptr);
     for (auto n = 0u; n < inputs; ++n) {
-        input.addNeuron(0);
+        input.addNode(0);
     }
     input.setIsInput(true);
     _layers.push_back(input);
     Layer output(getActivationsManager().get(outputActivation));
     output.setIsOutputLayer(true);
     for (auto n = 0u; n < outputs; ++n) {
-        output.addNeuron(static_cast<double>(rand()%100)/10000.);
+        output.addNode(static_cast<double>(rand()%100)/10000.);
     }
     _layers.push_back(output);
 }
@@ -44,7 +44,7 @@ void NeuronNet::addHiddenLayer(size_t numNeurons, std::string const &activation)
     }
     Layer l(activation.empty() ? _layers.back().activation() : getActivationsManager().get(activation));
     for (auto n = 0u; n < numNeurons; ++n) {
-        l.addNeuron(static_cast<double>(rand()%200)/10000. - .001);
+        l.addNode(static_cast<double>(rand()%200)/10000. - .001);
     }
     _layers.insert(_layers.end() -1, l);
 }
@@ -53,7 +53,7 @@ void NeuronNet::appendLayer(size_t numNeurons, const std::string &activation)
 {
     Layer l(activation.empty() && _layers.size() > 0 ? _layers.back().activation() : getActivationsManager().get(activation));
     for (auto n = 0u; n < numNeurons; ++n) {
-        l.addNeuron(static_cast<double>(rand()%200)/10000. -.001);
+        l.addNode(static_cast<double>(rand()%200)/10000. -.001);
     }
     l.setIsOutputLayer(true);
     if (!_layers.empty()) {
@@ -113,17 +113,15 @@ size_t NeuronNet::numberOfLayers() const
     return _layers.size();
 }
 
-bool NeuronNet::addNodes(size_t layer, size_t count)
+bool NeuronNet::addNode(size_t layer, double bias, std::vector<double> weightsIn, std::valarray<double> weightsOut)
 {
     if (layer >= _layers.size()) {
         return false;
     }
-    auto &toModify = _layers[layer];
-    while (count-- > 0) {
-        toModify.addNeuron(0);
-    }
-    if (toModify.isConnected() && !toModify.isInputLayer()) {
-        return _layers[layer - 1].reconnect(toModify);
+    auto &modifiedLayer = _layers[layer];
+    modifiedLayer.addNode(bias, weightsOut);
+    if (modifiedLayer.isConnected() && !modifiedLayer.isInputLayer()) {
+        return _layers[layer - 1].reconnect(modifiedLayer, weightsIn);
     }
     return true;
 }

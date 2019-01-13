@@ -88,11 +88,14 @@ void TestTrainer::testChangeNet()
 {
     mimir::services::NeuronNet net(4, 1, "sigmoid");
     net.connect();
-    net.addNodes(0, 1);
-    net.addNodes(1, 2);
+    qDebug() << net.run({1, 2, 3, 4});
+    net.addNode(0);
+    net.addNode(1, -5, {0, 0, 0, 0, 0});
+    net.addNode(1, -5, {0, 0, 0, 0, 0});
     QVERIFY(net.sizeOfLayer(0) == 5);
     QVERIFY(net.sizeOfLayer(1) == 3);
     auto result = net.run({1, 2, 3, 4, 5});
+    qDebug() << result;
     QVERIFY(result.size() == 3u);
 }
 

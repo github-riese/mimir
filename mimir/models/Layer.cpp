@@ -22,14 +22,23 @@ Layer::Layer(helpers::Activation *activate) :
 {
 }
 
-void Layer::addNeuron(double bias)
+void Layer::addNode(double bias, const std::valarray<double> &weights)
 {
+    if (weights.size() > 0 && (weights.size() != _nextLayerSize || weights.size() != 1)) {
+        throw std::logic_error("Wrong number of weights given on adding node.");
+    }
     _dirty = true;
     _biases.push_back(bias);
     _inputs.push_back(0);
     _values.push_back(0);
     if (_nextLayerSize) {
-        _weights.addRow(std::valarray<double>(0., _nextLayerSize));
+        if (weights.size() == 0) {
+            _weights.addRow(std::valarray<double>(0., _nextLayerSize));
+        } else if (weights.size() == 1) {
+            _weights.addRow(std::valarray<double>(weights[0], _nextLayerSize));
+        } else {
+            _weights.addRow(weights);
+        }
     }
 }
 
@@ -78,7 +87,7 @@ bool Layer::connect(Layer const &next)
     return true;
 }
 
-bool Layer::reconnect(const Layer &next)
+bool Layer::reconnect(const Layer &next, std::vector<double> const &weights)
 {
     if (!isConnected()) {
         return connect(next);
@@ -88,8 +97,9 @@ bool Layer::reconnect(const Layer &next)
     if (extraColumns < 0) {
         return false;
     }
+    double singleValue = weights.size() == 1 ? weights.front() : 0;
     while (extraColumns-- > 0) {
-        _weights.addColumn();
+        _weights.addColumn(-1u, (weights.size() == _inputs.size()) ? weights : std::vector<double>(next.size(), singleValue));
     }
     _nextLayerSize = next.size();
     _dirty = true;
