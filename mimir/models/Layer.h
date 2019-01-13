@@ -58,7 +58,7 @@ private:
     size_t _nextLayerSize = 0u;
     std::vector<double> _inputs;
     std::vector<double> _biases;
-    std::vector<double> _values;
+    std::vector<double> _hypothesis;
     Matrix _weights;
     helpers::Activation *_activator = nullptr;
     bool _dirty = false;

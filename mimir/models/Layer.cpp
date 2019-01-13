@@ -6,7 +6,7 @@
 #include <numeric>
 #include <sstream>
 #include <valarray>
-#include <cstdlib>
+#include <random>
 
 #include "helpers/activations.h"
 #include "helpers/helpers.h"
@@ -30,7 +30,7 @@ void Layer::addNode(double bias, const std::valarray<double> &weights)
     _dirty = true;
     _biases.push_back(bias);
     _inputs.push_back(0);
-    _values.push_back(0);
+    _hypothesis.push_back(0);
     if (_nextLayerSize) {
         if (weights.size() == 0) {
             _weights.addRow(std::valarray<double>(0., _nextLayerSize));
@@ -47,21 +47,21 @@ std::vector<double> Layer::hypothesis()
     if (_dirty) {
         if (!_isInputLayer) {
             auto z = _inputs + _biases;
-            _values.assign(z.size(), 0);
+            _hypothesis.assign(z.size(), 0);
             struct activate {
                 helpers::Activation *f;
                 double operator()(double z) { return  f->activate(z); }
             };
-            std::transform(z.begin(), z.end(), _values.begin(), activate{_activator});
+            std::transform(z.begin(), z.end(), _hypothesis.begin(), activate{_activator});
         }
         _dirty = false;
     }
-    return _values;
+    return _hypothesis;
 }
 
 std::vector<double> Layer::hypothesis() const
 {
-    return _values;
+    return _hypothesis;
 }
 
 bool Layer::connect(Layer const &next)
@@ -69,15 +69,19 @@ bool Layer::connect(Layer const &next)
     if (_isConnected) {
         return false;
     }
+    std::random_device randomDevice;
+    std::mt19937 randomnessGenerator(randomDevice());
+    std::uniform_real_distribution<> normalDistribution(-.001, .001);
     auto nextLayerNeuronCount = next._inputs.size();
     auto nextSize = next.size();
     if (nextSize > 0) {
+        double nextSizeSquared = static_cast<double>(nextSize*nextSize);
         _weights = Matrix{
                 _inputs.size(),
                 nextLayerNeuronCount,
-                [nextSize](auto, auto) ->auto {
+                [nextSizeSquared, &normalDistribution, &randomnessGenerator](auto, auto) ->auto {
                     return
-                            static_cast<double>(std::rand()%200)/10000. - .001 / (static_cast<double>(nextSize*nextSize));
+                            normalDistribution(randomnessGenerator) / nextSizeSquared;
                 }
         };
     }
@@ -130,7 +134,7 @@ void Layer::setInput(const std::vector<double> &values)
         throw std::logic_error(s.str());
     }
     if (_isInputLayer) {
-        _values = values;
+        _hypothesis = values;
         _dirty = false;
     } else {
         _dirty = true;
