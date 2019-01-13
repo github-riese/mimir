@@ -109,9 +109,10 @@ size_t NeuronNet::numberOfLayers() const
 
 bool NeuronNet::addNode(size_t layer, double bias, std::vector<double> weightsIn, std::valarray<double> weightsOut)
 {
-    if (layer >= _layers.size()) {
+    if (layer >= _layers.size() && layer != -1u) {
         return false;
     }
+    layer = layer == -1u ? _layers.size() - 1 : layer;
     auto &modifiedLayer = _layers[layer];
     modifiedLayer.addNode(bias, weightsOut);
     if (modifiedLayer.isConnected() && !modifiedLayer.isInputLayer()) {

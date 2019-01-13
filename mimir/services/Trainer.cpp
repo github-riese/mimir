@@ -31,8 +31,13 @@ Trainer::Trainer(NeuronNet &net) :
 
 void Trainer::addBatch(std::vector<double> input, std::vector<double> expectation)
 {
-    if (expectation.size() != _net.sizeOfLayer(-1u)) {
+    long padding = static_cast<long>(_net.sizeOfLayer(-1u) - expectation.size());
+    if (padding < 0)  {
+        // more data than outputs. this has been handled before.
         throw new std::logic_error("Expectation set size must be equal to the size of the output layer.");
+    }
+    if (padding > 0) {
+        expectation.resize(expectation.size() + static_cast<size_t>(padding));
     }
     _batch.push_back({input, expectation});
 }
