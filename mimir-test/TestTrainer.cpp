@@ -87,16 +87,28 @@ void TestTrainer::testXOR()
 void TestTrainer::testChangeNet()
 {
     mimir::services::NeuronNet net(4, 1, "sigmoid");
+    net.addNode(1);
     net.connect();
-    qDebug() << net.run({1, 2, 3, 4});
-    net.addNode(0);
+    net.addNode(0, {}, {1, 2});
     net.addNode(1, -5, {0, 0, 0, 0, 0});
     net.addNode(1, -5, {0, 0, 0, 0, 0});
     QVERIFY(net.sizeOfLayer(0) == 5);
-    QVERIFY(net.sizeOfLayer(1) == 3);
+    QVERIFY(net.sizeOfLayer(1) == 4);
     auto result = net.run({1, 2, 3, 4, 5});
-    qDebug() << result;
-    QVERIFY(result.size() == 3u);
+    QVERIFY(result.size() == 4u);
+    // net had been initialized with near null random values on connect.
+    // that should result in values of roundabout .5
+    // the nodes added after connecting had been set to a small bias
+    // that should pull the result in the direction of zero
+    std::vector<double> expectation = {.5, .5, 0, 0};
+    auto res = result.begin();
+    auto exp = expectation.begin();
+    while (res != result.end()) {
+        // as we deal random values we allow for a great fuzzyness here.
+        // just check the general direction.
+        QVERIFY(std::abs(*res - *exp) < .01);
+        ++res; ++exp;
+    }
 }
 
 void TestTrainer::testTrain()
