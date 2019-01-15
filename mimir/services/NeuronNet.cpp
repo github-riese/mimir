@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cassert>
 #include <iterator>
+#include <sstream>
 #include <random>
 
 #include "helpers/math.h"
@@ -119,6 +120,32 @@ bool NeuronNet::addNode(size_t layer, double bias, std::vector<double> weightsIn
         return _layers[layer - 1].reconnect(modifiedLayer, weightsIn);
     }
     return true;
+}
+
+const models::Layer &NeuronNet::layer(size_t n) const
+{
+    if (n >= _layers.size() && n != -1u) {
+        std::stringstream m;
+        m << "Can't give layer " << n << " as this net has only " << _layers.size() << "layers.";
+        throw std::out_of_range(m.str());
+    }
+    if (n == -1u) {
+        return _layers.back();
+    }
+    return _layers.at(n);
+}
+
+models::Layer &NeuronNet::layer(size_t n)
+{
+    if (n >= _layers.size() && n != -1u) {
+        std::stringstream m;
+        m << "Can't give layer " << n << " as this net has only " << _layers.size() << "layers.";
+        throw std::out_of_range(m.str());
+    }
+    if (n == -1u) {
+        return _layers.back();
+    }
+    return _layers.at(n);
 }
 
 void NeuronNet::setBias(size_t layer, size_t neuron, double value)

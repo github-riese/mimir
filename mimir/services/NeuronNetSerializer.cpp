@@ -184,13 +184,13 @@ bool NeuronNetSerializer::rebuildLayers(std::istream &in, const NeuronNetSeriali
     for (auto layer : layerDesc) {
         net.appendLayer(layer.header.nodes, layer.activationName);
     }
-    net.layers()[0].setIsInput(true);
+    net.layer(0).setIsInput(true);
     net.connect();
     size_t layerNumber = 0;
     for (auto layer : layerDesc) {
         if (layerNumber > 0)
             net.setBiases(layerNumber, layer.biases);
-        if (layerNumber < layerDesc.size() - 1)
+        if (!net.layer(layerNumber).isOutputLayer())
             net.setWeigths(layerNumber, layer.weights);
          ++layerNumber;
     }
@@ -250,7 +250,7 @@ void NeuronNetSerializer::writeLayer(std::ostream &out, const models::Layer &lay
         std::transform(biases.begin(), biases.end(), transportable.begin(), pack);
         std::for_each(transportable.begin(), transportable.end(), [this, &out](uint64_t bias) { writeUInt64(out, bias); });
     }
-    if (layer.isConnected()) {
+    if (!layer.isOutputLayer()) {
         auto weights = layer.weights();
         auto matrixData = weights.data();
         for (auto row : matrixData) {

@@ -26,6 +26,8 @@ public:
     bool addNode(size_t layer, double bias = 0., std::vector<double> weightsIn = {}, std::valarray<double> weightsOut = {});
     inline std::vector<models::Layer> &layers() { return  _layers; }
     inline std::vector<models::Layer> const &layers() const { return  _layers; }
+    models::Layer const &layer(size_t n) const;
+    models::Layer &layer(size_t n);
     void setBias(size_t layer, size_t neuron, double value);
     void setBiases(size_t layer, std::vector<double> const &);
     void setWeight(size_t layer, size_t neuron, size_t nextLayerNeuron, double value);
