@@ -8,7 +8,6 @@
 #include <valarray>
 #include <random>
 
-#include "helpers/activations.h"
 #include "helpers/helpers.h"
 #include "helpers/math.h"
 
@@ -17,7 +16,7 @@ using namespace mimir::helpers::math;
 namespace mimir {
 namespace models {
 
-Layer::Layer(helpers::Activation *activate) :
+Layer::Layer(activation::ActivationInterface *activate) :
     _activator(activate)
 {
 }
@@ -46,13 +45,8 @@ std::vector<double> Layer::hypothesis()
 {
     if (_dirty) {
         if (!_isInputLayer) {
-            auto z = _inputs + _biases;
-            _hypothesis.assign(z.size(), 0);
-            struct activate {
-                helpers::Activation *f;
-                double operator()(double z) { return  f->activate(z); }
-            };
-            std::transform(z.begin(), z.end(), _hypothesis.begin(), activate{_activator});
+            _hypothesis = _inputs + _biases;
+            _activator->activate(_hypothesis);
         }
         _dirty = false;
     }
@@ -208,11 +202,7 @@ std::vector<double> Layer::zValues() const
 std::vector<double> Layer::sigmoidPrime() const
 {
     std::vector<double> result = zValues();
-    struct derivative {
-        helpers::Activation *f;
-        double operator()(double v) { return f->derivative(v); }
-    };
-    std::transform(result.begin(), result.end(), result.begin(), derivative{_activator});
+    _activator->derivative(result);
     return result;
 }
 
@@ -251,12 +241,12 @@ void Layer::setIsInput(bool isInput)
     _isInputLayer = isInput;
 }
 
-helpers::Activation *Layer::activation() const
+activation::ActivationInterface *Layer::activation() const
 {
     return _activator;
 }
 
-void Layer::setActivation(helpers::Activation *act)
+void Layer::setActivation(models::activation::ActivationInterface *act)
 {
     _activator = act;
 }

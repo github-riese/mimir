@@ -9,6 +9,7 @@
 #include "services/NeuronNetSerializer.h"
 #include "services/NameResolveSerializer.h"
 #include "services/ActivationsManager.h"
+#include "models/activation/RectifiedLinear.h"
 #include "helpers/helpers.h"
 
 REGISTER_TEST(TestSerialize)
@@ -21,7 +22,7 @@ TestSerialize::TestSerialize(QObject *parent) : QObject(parent)
 void TestSerialize::testActivationManager()
 {
     mimir::services::ActivationsManager manager;
-    mimir::helpers::RectifiedLinear rectifiedLinear;
+    mimir::models::activation::RectifiedLinear rectifiedLinear;
     size_t activationIndexRectLinear = manager.indexOf(&rectifiedLinear);
     QVERIFY(activationIndexRectLinear == 1);
     mimir::models::Layer layer(nullptr);

@@ -38,10 +38,12 @@ SOURCES += \
     models/Matrix.cpp \
     services/NeuronNet.cpp \
     services/Trainer.cpp \
-    helpers/activations.cpp \
     services/NeuronNetSerializer.cpp \
     services/ActivationsManager.cpp \
-    services/NameResolveSerializer.cpp
+    services/NameResolveSerializer.cpp \
+    models/activation/Sigmoid.cpp \
+    models/activation/RectifiedLinear.cpp \
+    models/activation/Tanh.cpp
 
 HEADERS += \
     helpers/AccumulateHelper.h \
@@ -65,7 +67,10 @@ HEADERS += \
     models/Matrix.h \
     services/NeuronNet.h \
     services/Trainer.h \
-    helpers/activations.h \
     services/NeuronNetSerializer.h \
     services/ActivationsManager.h \
-    services/NameResolveSerializer.h
+    services/NameResolveSerializer.h \
+    models/activation/ActivationInterface.h \
+    models/activation/Sigmoid.h \
+    models/activation/RectifiedLinear.h \
+    models/activation/Tanh.h

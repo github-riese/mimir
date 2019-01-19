@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "Matrix.h"
-#include "../helpers/activations.h"
+#include "models/activation/ActivationInterface.h"
 
 namespace mimir {
 namespace models {
@@ -18,7 +18,7 @@ public:
     /**
      * @brief creates a new layer with the given activation
      */
-    Layer(helpers::Activation*);
+    Layer(models::activation::ActivationInterface*);
     /**
      * @brief adds a new node to this layer.
      * @param bias value for the new node (which will be, of course, ignored if _isInputLayer = true)
@@ -47,8 +47,8 @@ public:
     size_t size() const noexcept;
     size_t nextSize() const noexcept;
     void setIsInput(bool isInput);
-    helpers::Activation *activation() const;
-    void setActivation(helpers::Activation *act);
+    models::activation::ActivationInterface *activation() const;
+    void setActivation(models::activation::ActivationInterface *act);
     bool isOutputLayer() const;
     void setIsOutputLayer(bool isOutputLayer);
 
@@ -60,7 +60,7 @@ private:
     std::vector<double> _biases;
     std::vector<double> _hypothesis;
     Matrix _weights;
-    helpers::Activation *_activator = nullptr;
+    models::activation::ActivationInterface *_activator = nullptr;
     bool _dirty = false;
     bool _isInputLayer = false;
     bool _isOutputLayer = false;

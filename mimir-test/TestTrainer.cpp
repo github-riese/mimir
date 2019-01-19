@@ -153,8 +153,8 @@ void TestTrainer::testImageDetect()
     detector.connect();
     mimir::services::Trainer trainer(detector);
     trainer.createGradients();
-    auto batches = makeInput(data, 5000);
-    auto expectations = makeExpectations(labels, 5000);
+    auto batches = makeInput(data, 100);
+    auto expectations = makeExpectations(labels, 100);
     auto batch = batches.begin();
     auto expect = expectations.begin();
     qDebug() << "Begin training...";

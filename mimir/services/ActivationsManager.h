@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-#include "helpers/activations.h"
+#include "models/activation/ActivationInterface.h"
 
 namespace mimir {
 namespace services {
@@ -31,12 +31,12 @@ public:
         _knownActivations.push_back(std::make_shared<Activation>());
         return _knownActivations.size() - 1;
     }
-    size_t indexOf(helpers::Activation *) const;
+    size_t indexOf(models::activation::ActivationInterface *) const;
     size_t indexOf(std::string const&) const;
-    helpers::Activation *get(size_t) const;
-    helpers::Activation *get(std::string const &) const;
+    models::activation::ActivationInterface *get(size_t) const;
+    models::activation::ActivationInterface *get(std::string const &) const;
 private:
-    std::vector<std::shared_ptr<helpers::Activation>> _knownActivations;
+    std::vector<std::shared_ptr<models::activation::ActivationInterface>> _knownActivations;
 };
 
 ActivationsManager &getActivationsManager();

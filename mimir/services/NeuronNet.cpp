@@ -8,7 +8,6 @@
 
 #include "helpers/math.h"
 #include "helpers/helpers.h"
-#include "helpers/activations.h"
 #include "ActivationsManager.h"
 
 using mimir::models::Layer;

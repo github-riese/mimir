@@ -146,7 +146,7 @@ void Trainer::calculateGradients(const std::vector<double> &result, const std::v
 
 void Trainer::applyGradient(double eta)
 {
-    double weightDecay = .01;//5;
+    double weightDecay = .004;//5;
     auto deltaB = _biasGradient.begin();
     auto deltaW = _weightGradient.begin();
     for (auto &l : _net.layers()) {
