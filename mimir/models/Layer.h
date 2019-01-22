@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "Matrix.h"
-#include "models/activation/ActivationInterface.h"
+#include <mimir/models/activation/ActivationInterface.h>
 
 namespace mimir {
 namespace models {
@@ -40,7 +40,7 @@ public:
     void setWeight(size_t neuron, size_t nextLayerNeuron, double value);
     void changeWeights(const Matrix &);
     std::vector<double> zValues() const;
-    std::vector<double> sigmoidPrime() const;
+    std::vector<double> activationDerivative() const;
     std::vector<double> run();
     bool isConnected() const;
     bool isInputLayer() const;

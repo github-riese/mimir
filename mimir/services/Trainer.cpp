@@ -129,7 +129,7 @@ void Trainer::calculateGradients(const std::vector<double> &result, const std::v
     auto deltaBias = _biasGradient.rbegin();
     auto deltaWeight = _weightGradient.rbegin();
     auto rlayer = _net.layers().rbegin();
-    auto delta = - costDerivative * (*rlayer).sigmoidPrime();
+    auto delta = - costDerivative * (*rlayer).activationDerivative();
     ++rlayer;
     for (; rlayer != _net.layers().rend(); ++rlayer) {
         if (!(*rlayer).isOutputLayer()) {
@@ -138,7 +138,7 @@ void Trainer::calculateGradients(const std::vector<double> &result, const std::v
         }
         if (!(*rlayer).isInputLayer()) {
             *deltaBias += delta * gradientWeight;
-            delta = ((*rlayer).weights() * delta).column(0) * (*rlayer).sigmoidPrime();
+            delta = ((*rlayer).weights() * delta).column(0) * (*rlayer).activationDerivative();
             ++deltaBias;
         }
     }

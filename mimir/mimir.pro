@@ -20,6 +20,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     helpers/helpers.cpp \
+    helpers/math.cpp \
     helpers/AccumulateHelper.cpp \
     models/CPT.cpp \
     models/Evaluation.cpp \
@@ -29,21 +30,21 @@ SOURCES += \
     models/Probability.cpp \
     models/ProbabilityDistribution.cpp \
     models/ValueIndex.cpp \
+    models/Layer.cpp \
+    models/Matrix.cpp \
+    models/activation/Sigmoid.cpp \
+    models/activation/RectifiedLinear.cpp \
+    models/activation/Tanh.cpp \
+    models/activation/Softmax.cpp \
+    services/ActivationsManager.cpp \
     services/DataStore.cpp \
     services/DependencyDetector.cpp \
     services/Evaluator.cpp \
     services/NameResolver.cpp \
-    models/Layer.cpp \
-    helpers/math.cpp \
-    models/Matrix.cpp \
-    services/NeuronNet.cpp \
-    services/Trainer.cpp \
-    services/NeuronNetSerializer.cpp \
-    services/ActivationsManager.cpp \
     services/NameResolveSerializer.cpp \
-    models/activation/Sigmoid.cpp \
-    models/activation/RectifiedLinear.cpp \
-    models/activation/Tanh.cpp
+    services/NeuronNet.cpp \
+    services/NeuronNetSerializer.cpp \
+    services/Trainer.cpp
 
 HEADERS += \
     helpers/AccumulateHelper.h \
@@ -73,4 +74,7 @@ HEADERS += \
     models/activation/ActivationInterface.h \
     models/activation/Sigmoid.h \
     models/activation/RectifiedLinear.h \
-    models/activation/Tanh.h
+    models/activation/Tanh.h \
+    models/activation/Softmax.h
+
+unix|win32: LIBS += -lcuda_378.10.10.10.25_mercury

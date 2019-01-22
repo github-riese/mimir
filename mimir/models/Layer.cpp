@@ -1,5 +1,4 @@
 #include "Layer.h"
-#include "Layer.h"
 
 #include <algorithm>
 #include <exception>
@@ -107,10 +106,10 @@ bool Layer::reconnect(const Layer &next, std::vector<double> const &weights)
 double Layer::weight(size_t idxMyNeuron, size_t idxNextLayerNeuron) const
 {
     if (!_isConnected) {
-        throw std::logic_error("not connected");
+        throw std::logic_error("Not connected");
     }
     if (idxMyNeuron >= size() || idxNextLayerNeuron >= _nextLayerSize) {
-        throw std::out_of_range("no such edge");
+        throw std::out_of_range("No such edge.");
     }
     return _weights.value(idxNextLayerNeuron, idxMyNeuron);
 }
@@ -124,7 +123,7 @@ void Layer::setInput(const std::vector<double> &values)
 {
     if (values.size() != size()) {
         std::stringstream s;
-        s << "wrong number of inputs for setValues. expected " << size() << " but got " << values.size() << ".";
+        s << "Wrong number of inputs for setValues. Expected " << size() << " but got " << values.size() << ".";
         throw std::logic_error(s.str());
     }
     if (_isInputLayer) {
@@ -199,13 +198,6 @@ std::vector<double> Layer::zValues() const
     return _inputs + _biases;
 }
 
-std::vector<double> Layer::sigmoidPrime() const
-{
-    std::vector<double> result = zValues();
-    _activator->derivative(result);
-    return result;
-}
-
 std::vector<double> Layer::run()
 {
     if (!_isConnected) {
@@ -259,6 +251,13 @@ bool Layer::isOutputLayer() const
 void Layer::setIsOutputLayer(bool isOutputLayer)
 {
     _isOutputLayer = isOutputLayer;
+}
+
+std::vector<double> Layer::activationDerivative() const
+{
+    std::vector<double> result = zValues();
+    _activator->derivative(result);
+    return result;
 }
 
 
