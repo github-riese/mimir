@@ -175,9 +175,7 @@ std::tuple<unsigned, double, double> Trainer::runMinibatch(const std::vector<Tra
             auto result = _net.run(item.input);
             results.push_back(result);
             expectations.push_back(item.expectation);
-            if (!detectedCorrectly(result, item.expectation, maxError) || mse(result, item.expectation) >= maxError) {
-                calculateGradients(results.back(), expectations.back());
-            }
+            calculateGradients(results.back(), expectations.back());
         }
         error += mse(results, expectations);
         auto currentDetectRate = detectRate(results, expectations);
@@ -186,7 +184,10 @@ std::tuple<unsigned, double, double> Trainer::runMinibatch(const std::vector<Tra
         if (error <= maxError && currentDetectRate >= minRate) {
             break;
         }
-        applyGradient(eta);
+        auto e = error/static_cast<double>(epoch);
+        if (e < 1e-1)  e*=10;
+        else e = 1.;
+        applyGradient(eta * e);
     }
     return {epoch, rate/static_cast<double>(epoch), error/static_cast<double>(epoch)};
 }

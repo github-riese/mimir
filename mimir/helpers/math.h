@@ -78,6 +78,21 @@ std::vector<T>& operator -=(std::vector<T> &left, std::vector<T> const &right)
     return  left;
 }
 
+template <class T>
+std::vector<T> operator -(std::vector<T> const&left, T right)
+{
+    std::vector<T> result(left.size());
+    std::transform(left.begin(), left.end(), result.begin(), [right](auto l) noexcept -> T { return l - right; });
+    return result;
+}
+
+template <class T>
+std::vector<T> &operator -=(std::vector<T> &left, T right)
+{
+    std::transform(left.begin(), left.end(), left.begin(), [right](auto l) noexcept -> T { return l - right; });
+    return left;
+}
+
 template<typename T>
 std::vector<T> operator +(std::vector<T> const &left, std::vector<T> const &right)
 {
@@ -91,6 +106,21 @@ std::vector<T>& operator +=(std::vector<T> &left, std::vector<T> const &right)
 {
     std::transform(left.begin(), left.end(), right.begin(), left.begin(), [](auto l, auto r) -> auto {return l+r;});
     return  left;
+}
+
+template <class T>
+std::vector<T> operator +(std::vector<T> const&left, T right)
+{
+    std::vector<T> result(left.size());
+    std::transform(left.begin(), left.end(), result.begin(), [right](auto l) noexcept -> T { return l + right; });
+    return result;
+}
+
+template <class T>
+std::vector<T> &operator +=(std::vector<T> &left, T right)
+{
+    std::transform(left.begin(), left.end(), left.begin(), [right](auto l) noexcept -> T { return l + right; });
+    return left;
 }
 
 template<typename T>

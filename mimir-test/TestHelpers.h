@@ -18,6 +18,7 @@ private slots:
     void testDiffVectors();
     void testMatrix();
     void testDot();
+    void testVector();
 };
 
 #endif // TESTHELPERS_H

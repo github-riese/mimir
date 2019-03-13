@@ -11,6 +11,7 @@
 
 #include <services/Trainer.h>
 #include <services/NeuronNetSerializer.h>
+#include <models/activation/Softmax.h>
 
 REGISTER_TEST(TestTrainer)
 
@@ -113,6 +114,14 @@ void TestTrainer::testChangeNet()
     }
 }
 
+void TestTrainer::testSoftMax()
+{
+    mimir::models::activation::Softmax softMax;
+    std::vector<double> data{1000, 2000, 3000};
+    softMax.activate(data);
+    QVERIFY((data == std::vector<double>{0, 0, 1}));
+}
+
 void TestTrainer::testTrain()
 {
     return;
@@ -161,7 +170,7 @@ void TestTrainer::testImageDetect()
     while (batch != batches.end() && expect != expectations.end()) {
         trainer.addBatch(*batch++, *expect++);
     }
-    double eta = 1;
+    double eta = .01;
     int minibatch = 0;
     auto batchResult = [&minibatch, &batches, &expectations, &detector, &batchSize](double currentError, double detectRate, unsigned epochsNeeded) {
         qDebug() << "minibatch" << minibatch++ << "error" << currentError << "detected" << detectRate*100. << "%" << "epochs: "<< epochsNeeded;
@@ -170,7 +179,7 @@ void TestTrainer::testImageDetect()
             qDebug() << result << *(expectations.begin() + static_cast<unsigned>(minibatch)*batchSize-1);
         }
     };
-    trainer.run(batchSize, 50, 1e-5, .9, eta, batchResult);
+    trainer.run(batchSize, 2500, 1e-5, .9, eta, batchResult);
     int right = 0, wrong = 0;
     for (auto n = 0u; n < 50; n += 5) {
         auto seen = detector.run(batches.at(n));

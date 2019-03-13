@@ -56,6 +56,20 @@ void TestHelpers::testDot()
     QVERIFY(result == 30.);
 }
 
+void TestHelpers::testVector()
+{
+    std::vector<double> left {1, 2, 3, 4, 5};
+    auto maxElem = *std::max_element(left.begin(), left.end());
+    QVERIFY(maxElem == 5.);
+    left -= maxElem;
+    QVERIFY((left == std::vector<double>{-4., -3., -2., -1., 0.}));
+    auto added = left + 5.;
+    QVERIFY((added == std::vector<double>{1, 2, 3, 4, 5}));
+
+    auto subbed = added - 5.;
+    QVERIFY(subbed == left);
+}
+
 
 
 

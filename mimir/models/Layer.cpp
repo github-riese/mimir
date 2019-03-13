@@ -64,7 +64,7 @@ bool Layer::connect(Layer const &next)
     }
     std::random_device randomDevice;
     std::mt19937 randomnessGenerator(randomDevice());
-    std::uniform_real_distribution<> normalDistribution(-.001, .001);
+    std::uniform_real_distribution<> normalDistribution(.0, .01);
     auto nextLayerNeuronCount = next._inputs.size();
     auto nextSize = next.size();
     if (nextSize > 0) {

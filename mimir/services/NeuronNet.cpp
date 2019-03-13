@@ -33,9 +33,16 @@ void NeuronNet::addHiddenLayer(size_t numNeurons, std::string const &activation)
     if (_layers[0].isConnected()) {
         throw std::logic_error("can't add layers after net is connected.");
     }
-    Layer l(activation.empty() ? _layers.back().activation() : getActivationsManager().get(activation));
+    auto actFn = getActivationsManager().get(activation);
+    if (actFn == nullptr) {
+        actFn = _layers.back().activation();
+    }
+    Layer l(actFn);
+    std::random_device randomDevice;
+    std::mt19937 randomnessGenerator(randomDevice());
+    std::uniform_real_distribution<> normalDistribution(.0, .01);
     for (auto n = 0u; n < numNeurons; ++n) {
-        l.addNode(static_cast<double>(rand()%200)/10000. - .001);
+        l.addNode(normalDistribution(randomnessGenerator));
     }
     _layers.insert(_layers.end() -1, l);
 }

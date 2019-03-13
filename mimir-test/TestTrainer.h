@@ -15,6 +15,7 @@ signals:
 private slots:
     void testXOR();
     void testChangeNet();
+    void testSoftMax();
     void testTrain();
     void testImageDetect();
 };

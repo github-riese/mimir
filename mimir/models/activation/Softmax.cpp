@@ -1,6 +1,7 @@
 #include "Softmax.h"
 #include <numeric>
 #include <cmath>
+#include "../../helpers/math.h"
 
 namespace mimir {
 namespace models {
@@ -13,6 +14,8 @@ std::string Softmax::name() const
 
 void Softmax::activate(std::vector<double> &v) const noexcept
 {
+    auto maxV = *std::max_element(v.begin(), v.end());
+    v -= maxV;
     auto sum = std::accumulate(v.begin(), v.end(), 0, [](double init, double v) noexcept -> double {
         return init + std::exp(v);
     });
