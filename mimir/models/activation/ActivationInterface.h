@@ -15,6 +15,7 @@ public:
     virtual std::string name() const = 0;
     virtual void activate(std::vector<double> &) const noexcept = 0;
     virtual void derivative(std::vector<double> &) const noexcept = 0;
+    virtual std::vector<double> loss(std::vector<double> const &hypothesis, std::vector<double> const &expectation) const noexcept = 0;
 protected:
     template<typename Op>
     inline void apply(std::vector<double> &vec, Op operation) const noexcept {

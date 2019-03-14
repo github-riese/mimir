@@ -260,6 +260,11 @@ std::vector<double> Layer::activationDerivative() const
     return result;
 }
 
+std::vector<double> Layer::loss(const std::vector<double> &expectation) const
+{
+    return _activator->loss(hypothesis(), expectation);
+}
+
 
 
 } // namespace models

@@ -41,6 +41,7 @@ public:
     void changeWeights(const Matrix &);
     std::vector<double> zValues() const;
     std::vector<double> activationDerivative() const;
+    std::vector<double> loss(std::vector<double> const &expectation) const;
     std::vector<double> run();
     bool isConnected() const;
     bool isInputLayer() const;

@@ -2,6 +2,8 @@
 
 #include <cmath>
 
+#include "../../helpers/math.h"
+
 namespace mimir {
 namespace models {
 namespace activation {
@@ -24,6 +26,11 @@ void Tanh::derivative(std::vector<double> &v) const noexcept
     std::transform(v.begin(), v.end(), v.begin(), [](double v) -> double {
         return 1/(v*v);
     });
+}
+
+std::vector<double> Tanh::loss(const std::vector<double> &hypothesis, const std::vector<double> &expectation) const noexcept
+{
+    return expectation - hypothesis;
 }
 
 
