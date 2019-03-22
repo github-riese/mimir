@@ -77,4 +77,4 @@ HEADERS += \
     models/activation/Tanh.h \
     models/activation/Softmax.h
 
-# unix|win32: LIBS += -lcuda_378.10.10.10.25_mercury
+unix|win32: LIBS += -lcuda_378.10.10.10.25_mercury

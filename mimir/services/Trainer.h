@@ -28,7 +28,7 @@ private:
     std::tuple<unsigned, double, double> runMinibatch(std::vector<BatchItem> const &, unsigned maxEpochs, double maxError, double minRate, double eta);
     void resetGradients();
     bool detectedCorrectly(std::vector<double> const &,std::vector<double> const &, double maxError = 0.) const;
-    void calculateGradients(std::vector<double> const &expectation);
+    void calculateGradients(std::vector<double> const &result, std::vector<double> const &expectation);
     void applyGradient(double eta);
     double mse(std::vector<std::vector<double>> const &results, const std::vector<std::vector<double> > &miniBatch) const;
     double mse(std::vector<double> const &result, const std::vector<double> &expectation) const;

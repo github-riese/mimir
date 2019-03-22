@@ -16,7 +16,6 @@ public:
     std::string name() const override;
     void activate(std::vector<double> &) const noexcept override ;
     void derivative(std::vector<double> &) const noexcept override ;
-    std::vector<double> loss(const std::vector<double> &, const std::vector<double> &) const noexcept override;
 };
 
 } // namespace activation

@@ -1,5 +1,4 @@
 #include "RectifiedLinear.h"
-#include "../../helpers/math.h"
 
 namespace mimir {
 namespace models {
@@ -18,11 +17,6 @@ void RectifiedLinear::activate(std::vector<double> &v) const noexcept
 void RectifiedLinear::derivative(std::vector<double> &v) const noexcept
 {
     std::transform(v.begin(), v.end(), v.begin(), [] (double v) -> double { return v < 0. ? 0. : 1.; });
-}
-
-std::vector<double> RectifiedLinear::loss(const std::vector<double> &hypothesis, const std::vector<double> &expectation) const noexcept
-{
-    return expectation - hypothesis;
 }
 
 } // namespace activation

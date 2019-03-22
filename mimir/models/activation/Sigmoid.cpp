@@ -1,7 +1,6 @@
 #include "Sigmoid.h"
 
 #include <cmath>
-#include "../../helpers/math.h"
 
 namespace mimir {
 namespace models {
@@ -26,12 +25,6 @@ void Sigmoid::derivative(std::vector<double> &v) const noexcept
         return sigmoid * (1-sigmoid);
     });
 }
-
-std::vector<double> Sigmoid::loss(const std::vector<double> &hypothesis, const std::vector<double> &expectation) const noexcept
-{
-    return expectation - hypothesis;
-}
-
 
 } // namespace activation
 } // namespace models

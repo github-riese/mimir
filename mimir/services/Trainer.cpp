@@ -122,13 +122,13 @@ bool Trainer::detectedCorrectly(const std::vector<double> &left, const std::vect
     return std::abs(left.front() - right.front()) <= maxError;
 }
 
-void Trainer::calculateGradients(const std::vector<double> &expectation)
+void Trainer::calculateGradients(const std::vector<double> &result, const std::vector<double> &expectation)
 {
     double gradientWeight = 1.;
-    auto rlayer = _net.layers().rbegin();
-    auto costDerivative = rlayer->loss(expectation);
+    auto costDerivative = expectation - result;
     auto deltaBias = _biasGradient.rbegin();
     auto deltaWeight = _weightGradient.rbegin();
+    auto rlayer = _net.layers().rbegin();
     auto delta = - costDerivative * (*rlayer).activationDerivative();
     ++rlayer;
     for (; rlayer != _net.layers().rend(); ++rlayer) {
@@ -175,7 +175,7 @@ std::tuple<unsigned, double, double> Trainer::runMinibatch(const std::vector<Tra
             auto result = _net.run(item.input);
             results.push_back(result);
             expectations.push_back(item.expectation);
-            calculateGradients(expectations.back());
+            calculateGradients(results.back(), expectations.back());
         }
         error += mse(results, expectations);
         auto currentDetectRate = detectRate(results, expectations);
