@@ -1,13 +1,13 @@
 #ifndef RECTIFIEDLINEAR_H
 #define RECTIFIEDLINEAR_H
 
-#include <mimir/models/activation/ActivationInterface.h>
+#include <mimir/models/activation/AbstractMSELossActivator.h>
 
 namespace mimir {
 namespace models {
 namespace activation {
 
-class RectifiedLinear : public ActivationInterface
+class RectifiedLinear : public AbstractMSELossActivator
 {
 public:
 

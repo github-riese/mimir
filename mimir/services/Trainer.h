@@ -19,13 +19,13 @@ class Trainer
 public:
     using MinibatchResultCallback = std::function<void(double currentError, double detectRate, unsigned epochsNeeded)>;
     Trainer(NeuronNet &net);
-    void addBatch(std::vector<double> input, std::vector<double> expectation);
+    void addTrainingData(std::vector<double> input, std::vector<double> expectation);
     unsigned run(size_t batchSize, unsigned maxEpochs, double maxError, double minRate, double eta, MinibatchResultCallback resultCallback = nullptr);
     double currentError() const;
     void createGradients();
     void resetBatches();
 private:
-    std::tuple<unsigned, double, double> runMinibatch(std::vector<BatchItem> const &, unsigned maxEpochs, double maxError, double minRate, double eta);
+    std::vector<std::vector<double>> runMinibatch(std::vector<BatchItem> const &) const;
     void resetGradients();
     bool detectedCorrectly(std::vector<double> const &,std::vector<double> const &, double maxError = 0.) const;
     void calculateGradients(std::vector<double> const &result, std::vector<double> const &expectation);
@@ -33,6 +33,7 @@ private:
     double mse(std::vector<std::vector<double>> const &results, const std::vector<std::vector<double> > &miniBatch) const;
     double mse(std::vector<double> const &result, const std::vector<double> &expectation) const;
     double detectRate(std::vector<std::vector<double>> const &results, std::vector<std::vector<double>> const &expectations);
+    std::vector<BatchItem> fetchMiniBatch(std::vector<BatchItem>::iterator &fromHere, size_t maxNumberOfItems) const;
 private:
     NeuronNet &_net;
     MinibatchResultCallback _callback = nullptr;

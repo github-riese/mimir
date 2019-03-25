@@ -1,13 +1,13 @@
 #ifndef TANH_H
 #define TANH_H
 
-#include <mimir/models/activation/ActivationInterface.h>
+#include <mimir/models/activation/AbstractMSELossActivator.h>
 
 namespace mimir {
 namespace models {
 namespace activation {
 
-class Tanh : public ActivationInterface
+class Tanh : public AbstractMSELossActivator
 {
 public:
 

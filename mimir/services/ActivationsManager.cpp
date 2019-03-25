@@ -5,6 +5,7 @@
 #include "models/activation/Sigmoid.h"
 #include "models/activation/RectifiedLinear.h"
 #include "models/activation/Tanh.h"
+#include "models/activation/Softmax.h"
 
 using namespace mimir::models::activation;
 
@@ -18,6 +19,7 @@ ActivationsManager::ActivationsManager()
     registerActivation<Sigmoid>();
     registerActivation<RectifiedLinear>();
     registerActivation<Tanh>();
+    registerActivation<Softmax>();
 }
 
 size_t ActivationsManager::indexOf(models::activation::ActivationInterface *a) const

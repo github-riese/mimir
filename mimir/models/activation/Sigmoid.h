@@ -1,13 +1,13 @@
 #ifndef SIGMOID_H
 #define SIGMOID_H
 
-#include <mimir/models/activation/ActivationInterface.h>
+#include <mimir/models/activation/AbstractMSELossActivator.h>
 
 namespace mimir {
 namespace models {
 namespace activation {
 
-class Sigmoid : public ActivationInterface
+class Sigmoid : public AbstractMSELossActivator
 {
 public:
     std::string name() const override;

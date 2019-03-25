@@ -44,7 +44,8 @@ SOURCES += \
     services/NameResolveSerializer.cpp \
     services/NeuronNet.cpp \
     services/NeuronNetSerializer.cpp \
-    services/Trainer.cpp
+    services/Trainer.cpp \
+    models/activation/AbstractMSELossActivator.cpp
 
 HEADERS += \
     helpers/AccumulateHelper.h \
@@ -75,6 +76,7 @@ HEADERS += \
     models/activation/Sigmoid.h \
     models/activation/RectifiedLinear.h \
     models/activation/Tanh.h \
-    models/activation/Softmax.h
+    models/activation/Softmax.h \
+    models/activation/AbstractMSELossActivator.h
 
-unix|win32: LIBS += -lcuda_378.10.10.10.25_mercury
+unix|win32: LIBS += -lcuda -L/usr/local/cuda/lib
