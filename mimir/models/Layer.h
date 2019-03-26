@@ -40,7 +40,6 @@ public:
     void setWeight(size_t neuron, size_t nextLayerNeuron, double value);
     void changeWeights(const Matrix &);
     std::vector<double> zValues() const;
-    std::vector<double> activationDerivative() const;
     std::vector<double> run();
     bool isConnected() const;
     bool isInputLayer() const;
@@ -51,7 +50,6 @@ public:
     void setActivation(models::activation::ActivationInterface *act);
     bool isOutputLayer() const;
     void setIsOutputLayer(bool isOutputLayer);
-    double loss(std::vector<std::vector<double>> results, std::vector<std::vector<double>> expectations) const;
 
 protected:
 private:

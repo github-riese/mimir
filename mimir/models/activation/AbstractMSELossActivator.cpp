@@ -12,7 +12,7 @@ double AbstractMSELossActivator::loss(const std::vector<std::vector<double> > &r
     auto expectation = expectations.begin();
     for (;result != results.end(); ++result, ++expectation) {
         auto diff = *result - *expectation;
-        diff = diff*diff;
+        diff *= diff;
         loss += std::accumulate(diff.begin(), diff.end(), 0.)/static_cast<double>(diff.size());
     }
     return loss/static_cast<double>(results.size());

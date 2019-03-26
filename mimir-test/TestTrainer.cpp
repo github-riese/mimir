@@ -124,12 +124,11 @@ void TestTrainer::testSoftMax()
 
 void TestTrainer::testTrain()
 {
-    return;
-    mimir::services::NeuronNet net(2, 2, "sigmoid");
+    mimir::services::NeuronNet net(2, 2, "softmax");
     net.addHiddenLayer(2);
     net.connect();
     mimir::services::Trainer testee(net);
-    testee.addBatch({.05, .1}, {.01, 2});
+    testee.addTrainingData({.05, .1}, {.01, 1.});
     auto epochs = testee.run(1, 1500, .000000001, .8, 1);
     qDebug() << net.results();
     QVERIFY(epochs < 1500);
@@ -162,13 +161,13 @@ void TestTrainer::testImageDetect()
     detector.connect();
     mimir::services::Trainer trainer(detector);
     trainer.createGradients();
-    auto batches = makeInput(data, 300);
-    auto expectations = makeExpectations(labels, 300);
+    auto batches = makeInput(data, 3);
+    auto expectations = makeExpectations(labels, 3);
     auto batch = batches.begin();
     auto expect = expectations.begin();
     qDebug() << "Begin training...";
     while (batch != batches.end() && expect != expectations.end()) {
-        trainer.addBatch(*batch++, *expect++);
+        trainer.addTrainingData(*batch++, *expect++);
     }
     double eta = .01;
     int minibatch = 0;

@@ -60,17 +60,17 @@ unsigned Trainer::run(size_t batchSize, unsigned maxEpochs, double maxError, dou
     _callback = resultCallback;
     std::cout.setf(std::ios::fixed, std::ios::floatfield);
     std::cout.precision(10);
-    // TODO: have run minibatch just return the loss of the batch
-    // then calculate the gradient to minimize the average loss
-    // apply the gradient and then take the next batch
-    for (auto epoch = 0u; epoch < maxEpochs; ++epoch) {
-        auto batchItem = _batch.begin();
-        std::vector<BatchItem> minibatch = fetchMiniBatch(batchItem, std::min(_batch.size() - static_cast<size_t>(std::distance(_batch.begin(), batchItem)), batchSize));//(std::min(batchSize, _batch.size()));
-        std::vector<std::vector<double>> hypotheses = runMinibatch(minibatch);
-        std::vector<std::vector<double>> expectations(minibatch.size());
-        std::transform(minibatch.begin(), minibatch.end(), expectations.begin(), [](BatchItem const &item) -> std::vector<double>{ return item.expectation;});
+
+    auto batchItem = _batch.begin();
+    std::vector<BatchItem> minibatch(std::min(batchSize, _batch.size()));
+    while (batchItem != _batch.end()) {
+        auto miniBatchPtr = minibatch.begin();
+        for (auto n = 0u; n < batchSize && (batchItem != _batch.end()); ++n, ++batchItem) {
+            *miniBatchPtr++ = *batchItem;
+        }
+        auto [epochs, detectRate, currentError] = runMinibatch(minibatch, maxEpochs, maxError, minRate, eta);
         if (resultCallback) {
-            resultCallback(0., 0., 0);
+            resultCallback(currentError, detectRate, epochs);
         }
     }
 
@@ -125,20 +125,24 @@ bool Trainer::detectedCorrectly(const std::vector<double> &left, const std::vect
 void Trainer::calculateGradients(const std::vector<double> &result, const std::vector<double> &expectation)
 {
     double gradientWeight = 1.;
-    auto costDerivative = expectation - result;
+    auto costDerivative = result - expectation;
     auto deltaBias = _biasGradient.rbegin();
     auto deltaWeight = _weightGradient.rbegin();
     auto rlayer = _net.layers().rbegin();
-    auto delta = - costDerivative * (*rlayer).activationDerivative();
+    auto activation = rlayer->activation();
+    // TODO: surely I'll need a func in layer that finds the delta
+    // that's the cost derivative * activation derivative in sigmoid and relu aparently but somewhat more complex in softmax
+    auto delta = activation->delta(rlayer->zValues(), costDerivative);
     ++rlayer;
     for (; rlayer != _net.layers().rend(); ++rlayer) {
+        activation = rlayer->activation();
         if (!(*rlayer).isOutputLayer()) {
             *deltaWeight += (Matrix(delta) * helpers::toArray((*rlayer).hypothesis())).transpose() * gradientWeight;
             ++deltaWeight;
         }
-        if (!(*rlayer).isInputLayer()) {
+        if (activation != nullptr) {
             *deltaBias += delta * gradientWeight;
-            delta = ((*rlayer).weights() * delta).column(0) * (*rlayer).activationDerivative();
+            delta = activation->biasGradient(rlayer->biases(), -((*rlayer).weights() * delta).column(0));
             ++deltaBias;
         }
     }
@@ -161,14 +165,35 @@ void Trainer::applyGradient(double eta)
     }
 }
 
-std::vector<std::vector<double> > Trainer::runMinibatch(const std::vector<Trainer::BatchItem> &miniBatch) const
+std::tuple<unsigned, double, double> Trainer::runMinibatch(const std::vector<Trainer::BatchItem> &miniBatch, unsigned maxEpochs, double maxError, double minRate, double eta)
 {
-    std::vector<std::vector<double>> results;
-    for (auto item : miniBatch) {
-        auto result = _net.run(item.input);
-        results.push_back(result);
+    auto epoch = 0u;
+    double error = 0.;
+    double rate = 0.;
+    while (epoch < maxEpochs) {
+        ++epoch;
+        resetGradients();
+        std::vector<std::vector<double>> results;
+        std::vector<std::vector<double>> expectations;
+        for (auto item : miniBatch) {
+            auto result = _net.run(item.input);
+            results.push_back(result);
+            expectations.push_back(item.expectation);
+            calculateGradients(results.back(), expectations.back());
+        }
+        error += _net.loss(results, expectations);
+        auto currentDetectRate = detectRate(results, expectations);
+        rate += currentDetectRate;
+
+        if (error <= maxError && currentDetectRate >= minRate) {
+            break;
+        }
+        auto e = error/static_cast<double>(epoch);
+        if (e < 1e-1)  e*=10;
+        else e = 1.;
+        applyGradient(eta * e);
     }
-    return results;
+    return {epoch, rate/static_cast<double>(epoch), error/static_cast<double>(epoch)};
 }
 
 double Trainer::mse(const std::vector<std::vector<double> > &results, const std::vector<std::vector<double>> &expectations) const
@@ -205,13 +230,6 @@ double Trainer::detectRate(const std::vector<std::vector<double> > &results, con
         }
     }
     return correct/(correct+incorrect);
-}
-
-std::vector<Trainer::BatchItem> Trainer::fetchMiniBatch(std::vector<BatchItem>::iterator &fromHere, size_t numberOfItems) const
-{
-    std::vector<BatchItem> result(numberOfItems);
-    std::copy(fromHere, fromHere + static_cast<long>(numberOfItems), result.begin());
-    return result;
 }
 
 } // namespace services

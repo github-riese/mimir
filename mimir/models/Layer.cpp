@@ -253,19 +253,5 @@ void Layer::setIsOutputLayer(bool isOutputLayer)
     _isOutputLayer = isOutputLayer;
 }
 
-double Layer::loss(std::vector<std::vector<double> > results, std::vector<std::vector<double> > expectations) const
-{
-    return _activator->loss(results, expectations);
-}
-
-std::vector<double> Layer::activationDerivative() const
-{
-    std::vector<double> result = zValues();
-    _activator->derivative(result);
-    return result;
-}
-
-
-
 } // namespace models
 } // namespace mimir

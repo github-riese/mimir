@@ -184,5 +184,16 @@ void NeuronNet::setName(const std::string &name)
     _name = name;
 }
 
+double NeuronNet::loss(const std::vector<std::vector<double> > &hypotheses, const std::vector<std::vector<double> > &expectations) const
+{
+    if (_layers.size() > 0) {
+        auto outputActivator = _layers.back().activation();
+        if (outputActivator != nullptr) {
+            return outputActivator->loss(hypotheses, expectations);
+        }
+    }
+    return std::nan("1");
+}
+
 }
 }

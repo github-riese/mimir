@@ -146,6 +146,13 @@ std::vector<T> operator*(std::vector<T> const &left, std::vector<T> const &right
 }
 
 template<typename T>
+std::vector<T>& operator*=(std::vector<T> &left, std::vector<T> const &right)
+{
+    std::transform(left.begin(), left.end(), right.begin(), left.begin(), [](T const &l, T const &r) -> T { return  l * r;});
+    return left;
+}
+
+template<typename T>
 std::vector<T> operator*(std::vector<T> const &left, std::valarray<T> const &right)
 {
     std::vector<T> result(right.size());

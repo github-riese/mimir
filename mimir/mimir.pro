@@ -34,7 +34,6 @@ SOURCES += \
     models/Matrix.cpp \
     models/activation/Sigmoid.cpp \
     models/activation/RectifiedLinear.cpp \
-    models/activation/Tanh.cpp \
     models/activation/Softmax.cpp \
     services/ActivationsManager.cpp \
     services/DataStore.cpp \
@@ -75,7 +74,6 @@ HEADERS += \
     models/activation/ActivationInterface.h \
     models/activation/Sigmoid.h \
     models/activation/RectifiedLinear.h \
-    models/activation/Tanh.h \
     models/activation/Softmax.h \
     models/activation/AbstractMSELossActivator.h
 
