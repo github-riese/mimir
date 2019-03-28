@@ -19,25 +19,15 @@ void Softmax::activate(std::vector<double> &v) const noexcept
 {
     auto maxV = *std::max_element(v.begin(), v.end());
     v -= maxV;
-    auto sum = std::accumulate(v.begin(), v.end(), 0, [](double init, double v) noexcept -> double {
+    auto sum = std::accumulate(v.begin(), v.end(), 0., [](double init, double v) noexcept -> double {
         return init + std::exp(v);
     });
     apply(v, [&sum](double v) noexcept (true) -> double { return std::exp(v) / sum; });
 }
 
-std::vector<double> Softmax::delta(const std::vector<double> &zValues, const std::vector<double> &costDerivative) const noexcept
+std::vector<double> Softmax::biasGradient(const std::vector<double> &, const std::vector<double> &costDerivative) const noexcept
 {
-
-}
-
-Matrix Softmax::weightGradient(const Matrix &weights, const std::vector<double> &costDerivative) const noexcept
-{
-
-}
-
-std::vector<double> Softmax::biasGradient(const std::vector<double> &biases, const std::vector<double> &costDerivative)  const noexcept
-{
-
+    return costDerivative;
 }
 
 double Softmax::loss(const std::vector<std::vector<double> > &hypotheses, const std::vector<std::vector<double> > &expectations) const noexcept

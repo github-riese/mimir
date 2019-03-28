@@ -14,10 +14,10 @@ public:
     // ActivationInterface interface
 public:
     std::string name() const override;
-    void activate(std::vector<double> &) const noexcept override ;
-    std::vector<double> delta(const std::vector<double> &zValues, const std::vector<double> &costDerivative) const noexcept override;
-    std::vector<double> biasGradient(std::vector<double> const &biases, std::vector<double> const &costDerivative) const noexcept override ;
-    Matrix weightGradient(const Matrix &weights, const std::vector<double> &costDerivative) const noexcept override;
+    void activate(std::vector<double> &) const noexcept override;
+    std::vector<double> biasGradient(std::vector<double> const &hypothesis, std::vector<double> const &costDerivative) const noexcept override;
+private:
+    void derivative(std::vector<double> &) const noexcept;
 };
 
 } // namespace activation

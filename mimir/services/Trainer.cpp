@@ -8,7 +8,6 @@
 #include "helpers/helpers.h"
 #include "helpers/math.h"
 
-
 namespace mimir {
 namespace services {
 
@@ -73,6 +72,7 @@ unsigned Trainer::run(size_t batchSize, unsigned maxEpochs, double maxError, dou
             resultCallback(currentError, detectRate, epochs);
         }
     }
+    _currentError = currentError();
 
     return maxEpochs;
 }
@@ -129,20 +129,18 @@ void Trainer::calculateGradients(const std::vector<double> &result, const std::v
     auto deltaBias = _biasGradient.rbegin();
     auto deltaWeight = _weightGradient.rbegin();
     auto rlayer = _net.layers().rbegin();
-    auto activation = rlayer->activation();
-    // TODO: surely I'll need a func in layer that finds the delta
-    // that's the cost derivative * activation derivative in sigmoid and relu aparently but somewhat more complex in softmax
-    auto delta = activation->delta(rlayer->zValues(), costDerivative);
+    auto activator = rlayer->activation();
     ++rlayer;
+    auto nablaB = activator->biasGradient(rlayer->hypothesis(), costDerivative);
     for (; rlayer != _net.layers().rend(); ++rlayer) {
-        activation = rlayer->activation();
+        activator = rlayer->activation();
         if (!(*rlayer).isOutputLayer()) {
-            *deltaWeight += (Matrix(delta) * helpers::toArray((*rlayer).hypothesis())).transpose() * gradientWeight;
+            *deltaWeight += (Matrix(nablaB) * helpers::toArray((*rlayer).hypothesis())).transpose() * gradientWeight;
             ++deltaWeight;
         }
-        if (activation != nullptr) {
-            *deltaBias += delta * gradientWeight;
-            delta = activation->biasGradient(rlayer->biases(), -((*rlayer).weights() * delta).column(0));
+        if (activator != nullptr) {
+            *deltaBias += nablaB * gradientWeight;
+            nablaB = activator->biasGradient(rlayer->biases(), -((*rlayer).weights() * nablaB).column(0));
             ++deltaBias;
         }
     }
@@ -181,11 +179,11 @@ std::tuple<unsigned, double, double> Trainer::runMinibatch(const std::vector<Tra
             expectations.push_back(item.expectation);
             calculateGradients(results.back(), expectations.back());
         }
-        error += _net.loss(results, expectations);
+        auto currentError = _net.loss(results, expectations);
+        error += currentError;
         auto currentDetectRate = detectRate(results, expectations);
         rate += currentDetectRate;
-
-        if (error <= maxError && currentDetectRate >= minRate) {
+        if (currentError <= maxError && currentDetectRate >= minRate) {
             break;
         }
         auto e = error/static_cast<double>(epoch);
