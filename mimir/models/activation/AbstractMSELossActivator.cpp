@@ -1,21 +1,17 @@
 #include "AbstractMSELossActivator.h"
+
+#include <mimir/models/Layer.h>
 #include <mimir/helpers/math.h>
 
 namespace mimir {
 namespace models {
 namespace activation {
 
-double AbstractMSELossActivator::loss(const std::vector<std::vector<double> > &results, const std::vector<std::vector<double> > &expectations) const noexcept
+double AbstractMSELossActivator::loss(const mimir::models::TrainerValueHelper &item) const noexcept
 {
-    double loss = .0;
-    auto result = results.begin();
-    auto expectation = expectations.begin();
-    for (;result != results.end(); ++result, ++expectation) {
-        auto diff = *result - *expectation;
-        diff *= diff;
-        loss += std::accumulate(diff.begin(), diff.end(), 0.)/static_cast<double>(diff.size());
-    }
-    return loss/static_cast<double>(results.size());
+    auto diff = item.hypothesis() - item.expectation();
+    diff *= diff;
+    return  std::accumulate(diff.begin(), diff.end(), 0.)/static_cast<double>(diff.size());
 }
 
 } // namespace activation

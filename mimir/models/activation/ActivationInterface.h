@@ -3,7 +3,9 @@
 
 #include <string>
 #include <vector>
-#include <mimir/models/Matrix.h>
+
+#include "models/BatchItem.h"
+#include "models/TrainerValueHelper.h"
 
 namespace mimir {
 namespace models {
@@ -15,8 +17,8 @@ public:
     virtual ~ActivationInterface() = default;
     virtual std::string name() const = 0;
     virtual void activate(std::vector<double> &) const noexcept = 0;
-    virtual std::vector<double> biasGradient(std::vector<double> const &hypothesis, std::vector<double> const &costDerivative) const noexcept = 0;
-    virtual double loss(std::vector<std::vector<double>> const &results, std::vector<std::vector<double>> const &expectations) const noexcept = 0;
+    virtual std::vector<double> derivative(std::vector<double> const &) const noexcept = 0;
+    virtual double loss(mimir::models::TrainerValueHelper const &values) const noexcept = 0;
 protected:
     template<typename Op>
     inline void apply(std::vector<double> &vec, Op operation) const noexcept {

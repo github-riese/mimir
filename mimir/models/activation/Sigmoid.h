@@ -12,9 +12,8 @@ class Sigmoid : public AbstractMSELossActivator
 public:
     std::string name() const override;
     void activate(std::vector<double> &) const noexcept override;
-    std::vector<double> biasGradient(std::vector<double> const &hypothesis, std::vector<double> const &costDerivative) const noexcept override;
-private:
-    void derivative(std::vector<double> &) const noexcept;
+    std::vector<double> derivative(std::vector<double> const &) const noexcept override;
+protected:
 };
 
 } // namespace activation

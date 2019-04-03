@@ -61,7 +61,7 @@ std::vector<std::valarray<T>> transposeMatrix(std::vector<std::valarray<T>> cons
 
 }
 }
-}
+} // end namespace mimir
 
 template <class T>
 std::vector<T> operator -(std::vector<T> const&left, std::vector<T> const &right)
@@ -149,6 +149,13 @@ template<typename T>
 std::vector<T>& operator*=(std::vector<T> &left, std::vector<T> const &right)
 {
     std::transform(left.begin(), left.end(), right.begin(), left.begin(), [](T const &l, T const &r) -> T { return  l * r;});
+    return left;
+}
+
+template<typename T>
+std::vector<T> &operator*=(std::vector<T> &left, T const &right)
+{
+    std::transform(left.begin(), left.end(), left.begin(), [&right](T const &v) noexcept -> T { return v * right; });
     return left;
 }
 

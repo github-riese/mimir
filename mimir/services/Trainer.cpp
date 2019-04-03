@@ -38,7 +38,7 @@ void Trainer::addTrainingData(std::vector<double> input, std::vector<double> exp
     if (padding > 0) {
         expectation.resize(expectation.size() + static_cast<size_t>(padding));
     }
-    _batch.push_back({input, expectation});
+    _batch.push_back({input, expectation, {}});
 }
 
 template<typename T>
@@ -61,7 +61,7 @@ unsigned Trainer::run(size_t batchSize, unsigned maxEpochs, double maxError, dou
     std::cout.precision(10);
 
     auto batchItem = _batch.begin();
-    std::vector<BatchItem> minibatch(std::min(batchSize, _batch.size()));
+    std::vector<models::BatchItem> minibatch(std::min(batchSize, _batch.size()));
     while (batchItem != _batch.end()) {
         auto miniBatchPtr = minibatch.begin();
         for (auto n = 0u; n < batchSize && (batchItem != _batch.end()); ++n, ++batchItem) {
@@ -122,25 +122,26 @@ bool Trainer::detectedCorrectly(const std::vector<double> &left, const std::vect
     return std::abs(left.front() - right.front()) <= maxError;
 }
 
-void Trainer::calculateGradients(const std::vector<double> &result, const std::vector<double> &expectation)
+void Trainer::calculateGradients(std::vector<double> const &expectation)
 {
     double gradientWeight = 1.;
-    auto costDerivative = result - expectation;
     auto deltaBias = _biasGradient.rbegin();
     auto deltaWeight = _weightGradient.rbegin();
     auto rlayer = _net.layers().rbegin();
     auto activator = rlayer->activation();
+    auto derivative = activator->derivative(rlayer->zValues());
+    auto delta = -(expectation - rlayer->hypothesis()) * derivative;
+
     ++rlayer;
-    auto nablaB = activator->biasGradient(rlayer->hypothesis(), costDerivative);
     for (; rlayer != _net.layers().rend(); ++rlayer) {
         activator = rlayer->activation();
         if (!(*rlayer).isOutputLayer()) {
-            *deltaWeight += (Matrix(nablaB) * helpers::toArray((*rlayer).hypothesis())).transpose() * gradientWeight;
+            *deltaWeight += (Matrix(delta) * helpers::toArray((*rlayer).hypothesis())).transpose() * gradientWeight;
             ++deltaWeight;
         }
         if (activator != nullptr) {
-            *deltaBias += nablaB * gradientWeight;
-            nablaB = activator->biasGradient(rlayer->biases(), -((*rlayer).weights() * nablaB).column(0));
+            *deltaBias += delta * gradientWeight;
+            delta = -((*rlayer).weights() * delta).column(0) * activator->derivative(rlayer->zValues());
             ++deltaBias;
         }
     }
@@ -163,7 +164,16 @@ void Trainer::applyGradient(double eta)
     }
 }
 
-std::tuple<unsigned, double, double> Trainer::runMinibatch(const std::vector<Trainer::BatchItem> &miniBatch, unsigned maxEpochs, double maxError, double minRate, double eta)
+std::vector<double> operator/(std::vector<std::vector<double>> const &vv, double div)
+{
+    std::vector<double> result(vv.front().size());
+    for (auto v : vv) {
+        result += v;
+    }
+    return result*(1./div);
+}
+
+std::tuple<unsigned, double, double> Trainer::runMinibatch(std::vector<models::BatchItem> &miniBatch, unsigned maxEpochs, double maxError, double minRate, double eta)
 {
     auto epoch = 0u;
     double error = 0.;
@@ -173,13 +183,15 @@ std::tuple<unsigned, double, double> Trainer::runMinibatch(const std::vector<Tra
         resetGradients();
         std::vector<std::vector<double>> results;
         std::vector<std::vector<double>> expectations;
-        for (auto item : miniBatch) {
-            auto result = _net.run(item.input);
+        for (models::BatchItem &item : miniBatch) {
+            auto result = _net.run(item.input());
+            item.setHypothesis(result);
+            calculateGradients(item.expectation());
+            expectations.push_back(item.expectation());
             results.push_back(result);
-            expectations.push_back(item.expectation);
-            calculateGradients(results.back(), expectations.back());
         }
-        auto currentError = _net.loss(results, expectations);
+        std::vector<double>expect = expectations/static_cast<double>(miniBatch.size());
+        auto currentError = _net.loss(expect);
         error += currentError;
         auto currentDetectRate = detectRate(results, expectations);
         rate += currentDetectRate;
@@ -192,26 +204,6 @@ std::tuple<unsigned, double, double> Trainer::runMinibatch(const std::vector<Tra
         applyGradient(eta * e);
     }
     return {epoch, rate/static_cast<double>(epoch), error/static_cast<double>(epoch)};
-}
-
-double Trainer::mse(const std::vector<std::vector<double> > &results, const std::vector<std::vector<double>> &expectations) const
-{
-    auto r = results.begin();
-    auto e = expectations.begin();
-    double errorSum = 0;
-    while (r != results.end()) {
-        auto error = mse(*r, *e);
-        errorSum += error;
-        ++r; ++e;
-    }
-    return errorSum / static_cast<double>(results.size());
-}
-
-double Trainer::mse(const std::vector<double> &result, const std::vector<double> &expectation) const
-{
-    auto diff = result - expectation;
-    diff = diff*diff;
-    return  std::accumulate(diff.begin(), diff.end(), 0.)/static_cast<double>(diff.size());
 }
 
 double Trainer::detectRate(const std::vector<std::vector<double> > &results, const std::vector<std::vector<double> > &expectations)

@@ -1,6 +1,7 @@
 #ifndef NET_H
 #define NET_H
 
+#include "../models/BatchItem.h"
 #include "../models/Layer.h"
 #include "../models/Matrix.h"
 
@@ -34,7 +35,7 @@ public:
     void setWeigths(size_t layer, models::Matrix const &);
     std::string name() const;
     void setName(const std::string &name);
-    double loss(std::vector<std::vector<double>> const &hypotheses, std::vector<std::vector<double>> const &expectations) const;
+    double loss(const std::vector<double> &expectation) const;
 private:
     std::string _name;
     std::vector<models::Layer> _layers;

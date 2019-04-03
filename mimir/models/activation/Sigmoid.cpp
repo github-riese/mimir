@@ -2,7 +2,10 @@
 
 #include <cmath>
 
-#include "../../helpers/math.h"
+#include <models/Layer.h>
+#include <helpers/math.h>
+
+using namespace mimir::helpers::math;
 
 namespace mimir {
 namespace models {
@@ -20,18 +23,12 @@ void Sigmoid::activate(std::vector<double> &v) const noexcept
     });
 }
 
-std::vector<double> Sigmoid::biasGradient(const std::vector<double> &hypothesis, const std::vector<double> &costDerivative) const noexcept
+std::vector<double> Sigmoid::derivative(const std::vector<double> &zValues) const noexcept
 {
-    auto hypothesisDerivative = hypothesis;
-    derivative(hypothesisDerivative);
-    return hypothesisDerivative *= costDerivative;
-}
-
-void Sigmoid::derivative(std::vector<double> &input) const noexcept
-{
-    std::transform(input.begin(), input.end(), input.begin(), [](double sigmoid){
-        return sigmoid * (1-sigmoid);
-    });
+    auto result = zValues;
+    activate(result);
+    apply(result, [](double sigmoid) { return sigmoid * (1 - sigmoid);});
+    return result;
 }
 
 } // namespace activation

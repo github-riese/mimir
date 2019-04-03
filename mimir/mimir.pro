@@ -44,7 +44,9 @@ SOURCES += \
     services/NeuronNet.cpp \
     services/NeuronNetSerializer.cpp \
     services/Trainer.cpp \
-    models/activation/AbstractMSELossActivator.cpp
+    models/activation/AbstractMSELossActivator.cpp \
+    models/BatchItem.cpp \
+    models/TrainerValueHelper.cpp
 
 HEADERS += \
     helpers/AccumulateHelper.h \
@@ -75,6 +77,8 @@ HEADERS += \
     models/activation/Sigmoid.h \
     models/activation/RectifiedLinear.h \
     models/activation/Softmax.h \
-    models/activation/AbstractMSELossActivator.h
+    models/activation/AbstractMSELossActivator.h \
+    models/BatchItem.h \
+    models/TrainerValueHelper.h
 
 unix|win32: LIBS += -lcuda -L/usr/local/cuda/lib
