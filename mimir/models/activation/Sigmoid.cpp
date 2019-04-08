@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-#include <models/Layer.h>
+#include <models/AbstractLayer.h>
 #include <helpers/math.h>
 
 using namespace mimir::helpers::math;
@@ -23,12 +23,16 @@ void Sigmoid::activate(std::vector<double> &v) const noexcept
     });
 }
 
-std::vector<double> Sigmoid::derivative(const std::vector<double> &zValues) const noexcept
+std::vector<double> Sigmoid::activationPrime(const std::vector<double> &activation) const noexcept
 {
-    auto result = zValues;
-    activate(result);
+    auto result = activation;
     apply(result, [](double sigmoid) { return sigmoid * (1 - sigmoid);});
     return result;
+}
+
+std::vector<double> Sigmoid::activationPrime(const std::vector<double> &hypothesis, const std::vector<double> &) const noexcept
+{
+    return activationPrime(hypothesis);
 }
 
 } // namespace activation

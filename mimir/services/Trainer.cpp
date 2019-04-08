@@ -128,20 +128,17 @@ void Trainer::calculateGradients(std::vector<double> const &expectation)
     auto deltaBias = _biasGradient.rbegin();
     auto deltaWeight = _weightGradient.rbegin();
     auto rlayer = _net.layers().rbegin();
-    auto activator = rlayer->activation();
-    auto derivative = activator->derivative(rlayer->zValues());
-    auto delta = -(expectation - rlayer->hypothesis()) * derivative;
+    auto nablaBias = rlayer->gradientOnLoss(expectation, &(*(rlayer+1)));
 
     ++rlayer;
     for (; rlayer != _net.layers().rend(); ++rlayer) {
-        activator = rlayer->activation();
         if (!(*rlayer).isOutputLayer()) {
-            *deltaWeight += (Matrix(delta) * helpers::toArray((*rlayer).hypothesis())).transpose() * gradientWeight;
+            *deltaWeight += (Matrix(nablaBias) * helpers::toArray((*rlayer).hypothesis())).transpose() * gradientWeight;
             ++deltaWeight;
         }
-        if (activator != nullptr) {
-            *deltaBias += delta * gradientWeight;
-            delta = -((*rlayer).weights() * delta).column(0) * activator->derivative(rlayer->zValues());
+        if (!rlayer->isInputLayer()) {
+            *deltaBias += nablaBias * gradientWeight;
+            nablaBias = -((*rlayer).weights() * nablaBias).column(0) * rlayer->gradient(&(*(rlayer+1)));
             ++deltaBias;
         }
     }
@@ -191,7 +188,7 @@ std::tuple<unsigned, double, double> Trainer::runMinibatch(std::vector<models::B
             results.push_back(result);
         }
         std::vector<double>expect = expectations/static_cast<double>(miniBatch.size());
-        auto currentError = _net.loss(expect);
+        auto currentError = _net.error(expect);
         error += currentError;
         auto currentDetectRate = detectRate(results, expectations);
         rate += currentDetectRate;

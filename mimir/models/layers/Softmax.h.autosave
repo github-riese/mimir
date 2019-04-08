@@ -1,0 +1,28 @@
+#ifndef SOFTMAX_H
+#define SOFTMAX_H
+
+#include <mimir/models/layers/AbstractLayer.h>
+
+namespace mimir {
+namespace models {
+namespace layers {
+
+class Softmax : public AbstractLayer
+{
+public:
+    Softmax();
+    
+public:
+    std::string name() const noexcept override ;
+    std::vector<double> gradientOnLoss(const std::vector<double> &expectation, const AbstractLayer *previousLayer) noexcept override;
+    std::vector<double> gradient(const AbstractLayer *previous) noexcept override;
+    
+protected:
+    void activate() noexcept override;
+};
+
+} // namespace layers
+} // namespace models
+} // namespace mimir
+
+#endif // SOFTMAX_H

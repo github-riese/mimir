@@ -1,4 +1,4 @@
-#include "Layer.h"
+#include "AbstractLayer.h"
 
 #include <algorithm>
 #include <exception>
@@ -15,12 +15,7 @@ using namespace mimir::helpers::math;
 namespace mimir {
 namespace models {
 
-Layer::Layer(activation::ActivationInterface *activate) :
-    _activator(activate)
-{
-}
-
-void Layer::addNode(double bias, const std::valarray<double> &weights)
+void AbstractLayer::addNode(double bias, const std::valarray<double> &weights)
 {
     if (weights.size() > 0 && (weights.size() != _nextLayerSize || weights.size() != 1)) {
         throw std::logic_error("Wrong number of weights given on adding node.");
@@ -40,31 +35,31 @@ void Layer::addNode(double bias, const std::valarray<double> &weights)
     }
 }
 
-std::vector<double> Layer::hypothesis()
+std::vector<double> AbstractLayer::hypothesis()
 {
     if (_dirty) {
         if (!_isInputLayer) {
             _hypothesis = _inputs + _biases;
-            _activator->activate(_hypothesis);
+            activate();
         }
         _dirty = false;
     }
     return _hypothesis;
 }
 
-std::vector<double> Layer::hypothesis() const
+std::vector<double> AbstractLayer::hypothesis() const
 {
     return _hypothesis;
 }
 
-bool Layer::connect(Layer const &next)
+bool AbstractLayer::connect(AbstractLayer const &next)
 {
     if (_isConnected) {
         return false;
     }
     std::random_device randomDevice;
     std::mt19937 randomnessGenerator(randomDevice());
-    std::uniform_real_distribution<> normalDistribution(.0, .01);
+    std::uniform_real_distribution<> normalDistribution(.0, .1);
     auto nextLayerNeuronCount = next._inputs.size();
     auto nextSize = next.size();
     if (nextSize > 0) {
@@ -84,7 +79,7 @@ bool Layer::connect(Layer const &next)
     return true;
 }
 
-bool Layer::reconnect(const Layer &next, std::vector<double> const &weights)
+bool AbstractLayer::reconnect(const AbstractLayer &next, std::vector<double> const &weights)
 {
     if (!isConnected()) {
         return connect(next);
@@ -103,7 +98,7 @@ bool Layer::reconnect(const Layer &next, std::vector<double> const &weights)
     return true;
 }
 
-double Layer::weight(size_t idxMyNeuron, size_t idxNextLayerNeuron) const
+double AbstractLayer::weight(size_t idxMyNeuron, size_t idxNextLayerNeuron) const
 {
     if (!_isConnected) {
         throw std::logic_error("Not connected");
@@ -114,12 +109,12 @@ double Layer::weight(size_t idxMyNeuron, size_t idxNextLayerNeuron) const
     return _weights.value(idxNextLayerNeuron, idxMyNeuron);
 }
 
-const Matrix &Layer::weights() const
+const Matrix &AbstractLayer::weights() const
 {
     return _weights;
 }
 
-void Layer::setInput(const std::vector<double> &values)
+void AbstractLayer::setInput(const std::vector<double> &values)
 {
     if (values.size() != size()) {
         std::stringstream s;
@@ -135,17 +130,17 @@ void Layer::setInput(const std::vector<double> &values)
     }
 }
 
-std::vector<double> Layer::input() const
+std::vector<double> AbstractLayer::input() const
 {
     return _inputs;
 }
 
-std::vector<double> Layer::biases() const
+std::vector<double> AbstractLayer::biases() const
 {
     return _biases;
 }
 
-void Layer::setBiases(const std::vector<double> &biasValues)
+void AbstractLayer::setBiases(const std::vector<double> &biasValues)
 {
     if (biasValues.size() != _biases.size()) {
         throw std::logic_error("wrong number of biases for layer");
@@ -154,12 +149,12 @@ void Layer::setBiases(const std::vector<double> &biasValues)
     _biases = biasValues;
 }
 
-void Layer::setBias(size_t neuron, double value)
+void AbstractLayer::setBias(size_t neuron, double value)
 {
     _biases[neuron] = value;
 }
 
-void Layer::changeBiases(const std::vector<double> &deltas)
+void AbstractLayer::changeBiases(const std::vector<double> &deltas)
 {
     if (deltas.size() != _biases.size()) {
         throw std::logic_error("wrong number of biases for layer");
@@ -168,7 +163,7 @@ void Layer::changeBiases(const std::vector<double> &deltas)
     _biases -= deltas;
 }
 
-void Layer::setWeights(const Matrix &weights)
+void AbstractLayer::setWeights(const Matrix &weights)
 {
     if (!_isConnected) {
         throw std::logic_error("no weights applyable on unconnected layer.");
@@ -183,22 +178,22 @@ void Layer::setWeights(const Matrix &weights)
     _dirty = true;
 }
 
-void Layer::setWeight(size_t neuron, size_t nextLayerNeuron, double value)
+void AbstractLayer::setWeight(size_t neuron, size_t nextLayerNeuron, double value)
 {
     _weights.setValue(neuron, nextLayerNeuron, value);
 }
 
-void Layer::changeWeights(const Matrix &delta)
+void AbstractLayer::changeWeights(const Matrix &delta)
 {
     _weights -= delta.column(0);
 }
 
-std::vector<double> Layer::zValues() const
+std::vector<double> AbstractLayer::zValues() const
 {
     return _inputs + _biases;
 }
 
-std::vector<double> Layer::run()
+std::vector<double> AbstractLayer::run()
 {
     if (!_isConnected) {
         throw std::logic_error("can't run a layer without subsequent layer.");
@@ -208,47 +203,33 @@ std::vector<double> Layer::run()
     return vals;
 }
 
-bool Layer::isConnected() const
+bool AbstractLayer::isConnected() const
 {
     return _isConnected;
 }
 
-bool Layer::isInputLayer() const
+bool AbstractLayer::isInputLayer() const
 {
     return _isInputLayer;
 }
 
-size_t Layer::size() const noexcept
+size_t AbstractLayer::size() const noexcept
 {
     return _inputs.size();
 }
 
-size_t Layer::nextSize() const noexcept
+size_t AbstractLayer::nextSize() const noexcept
 {
     return _nextLayerSize;
 }
 
-void Layer::setIsInput(bool isInput)
-{
-    _isInputLayer = isInput;
-}
 
-activation::ActivationInterface *Layer::activation() const
-{
-    return _activator;
-}
-
-void Layer::setActivation(models::activation::ActivationInterface *act)
-{
-    _activator = act;
-}
-
-bool Layer::isOutputLayer() const
+bool AbstractLayer::isOutputLayer() const
 {
     return _isOutputLayer;
 }
 
-void Layer::setIsOutputLayer(bool isOutputLayer)
+void AbstractLayer::setIsOutputLayer(bool isOutputLayer)
 {
     _isOutputLayer = isOutputLayer;
 }

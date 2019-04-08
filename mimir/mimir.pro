@@ -30,7 +30,6 @@ SOURCES += \
     models/Probability.cpp \
     models/ProbabilityDistribution.cpp \
     models/ValueIndex.cpp \
-    models/Layer.cpp \
     models/Matrix.cpp \
     models/activation/Sigmoid.cpp \
     models/activation/RectifiedLinear.cpp \
@@ -46,7 +45,11 @@ SOURCES += \
     services/Trainer.cpp \
     models/activation/AbstractMSELossActivator.cpp \
     models/BatchItem.cpp \
-    models/TrainerValueHelper.cpp
+    models/TrainerValueHelper.cpp \
+    models/layers/AbstractLayer.cpp \
+    models/layers/SigmoidLayer.cpp \
+    models/layers/RectifiedLinearUnitLayer.cpp \
+    models/layers/Softmax.cpp
 
 HEADERS += \
     helpers/AccumulateHelper.h \
@@ -65,7 +68,6 @@ HEADERS += \
     services/Evaluator.h \
     services/NameResolver.h \
     traits/Timing.h \
-    models/Layer.h \
     helpers/math.h \
     models/Matrix.h \
     services/NeuronNet.h \
@@ -79,6 +81,10 @@ HEADERS += \
     models/activation/Softmax.h \
     models/activation/AbstractMSELossActivator.h \
     models/BatchItem.h \
-    models/TrainerValueHelper.h
+    models/TrainerValueHelper.h \
+    models/layers/AbstractLayer.h \
+    models/layers/SigmoidLayer.h \
+    models/layers/RectifiedLinearUnitLayer.h \
+    models/layers/Softmax.h
 
 unix|win32: LIBS += -lcuda -L/usr/local/cuda/lib
