@@ -50,7 +50,7 @@ private:
     bool rebuildLayers(std::istream &, NetHeader const&, NeuronNet &);
     void writeFileHeader(std::ostream &);
     void writeNetHeader(std::ostream &, NeuronNet const&);
-    void writeLayer(std::ostream &, models::AbstractLayer const &);
+    void writeLayer(std::ostream &, models::Layer const &);
     void writeUInt64(std::ostream &, uint64_t);
     void writeUInt32(std::ostream &, uint32_t);
     void writeUShort(std::ostream &, uint16_t);

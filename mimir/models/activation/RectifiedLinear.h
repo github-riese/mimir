@@ -15,8 +15,7 @@ public:
 public:
     std::string name() const override;
     void activate(std::vector<double> &) const noexcept override;
-    std::vector<double> activationPrime(std::vector<double> const &hypothesis) const noexcept override;
-    std::vector<double> activationPrime(std::vector<double> const &hypothesis, std::vector<double> const &) const noexcept override;
+    std::vector<double> derivative(std::vector<double> const &) const noexcept override;
 };
 
 } // namespace activation

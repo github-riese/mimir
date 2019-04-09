@@ -7,7 +7,7 @@ namespace mimir {
 namespace models {
 namespace activation {
 
-double AbstractMSELossActivator::error(const mimir::models::TrainerValueHelper &item) const noexcept
+double AbstractMSELossActivator::loss(const mimir::models::TrainerValueHelper &item) const noexcept
 {
     auto diff = item.hypothesis() - item.expectation();
     diff *= diff;

@@ -4,22 +4,21 @@
 #include <memory>
 #include <valarray>
 #include <vector>
-#include <string>
 
-#include <mimir/models/Matrix.h>
+#include "Matrix.h"
 #include <mimir/models/activation/ActivationInterface.h>
 
 namespace mimir {
 namespace models {
 
-class AbstractLayer
+class Layer
 {
 public:
-    explicit AbstractLayer() = default;
-    virtual ~AbstractLayer() = default;
+    explicit Layer() = default;
     /**
      * @brief creates a new layer with the given activation
      */
+    Layer(models::activation::ActivationInterface*);
     /**
      * @brief adds a new node to this layer.
      * @param bias value for the new node (which will be, of course, ignored if _isInputLayer = true)
@@ -27,8 +26,8 @@ public:
     void addNode(double bias = 0., std::valarray<double> const &weights = {});
     std::vector<double> hypothesis();
     std::vector<double> hypothesis() const;
-    bool connect(const AbstractLayer &next);
-    bool reconnect(AbstractLayer const &next, const std::vector<double> &weights = {});
+    bool connect(const Layer &next);
+    bool reconnect(Layer const &next, const std::vector<double> &weights = {});
     double weight(size_t idxMyNeuron, size_t idxNextLayerNeuron) const;
     const Matrix &weights() const;
     void setInput(std::vector<double> const &);
@@ -47,23 +46,20 @@ public:
     size_t size() const noexcept;
     size_t nextSize() const noexcept;
     void setIsInput(bool isInput);
+    models::activation::ActivationInterface *activation() const;
+    void setActivation(models::activation::ActivationInterface *act);
     bool isOutputLayer() const;
     void setIsOutputLayer(bool isOutputLayer);
 
-    virtual std::string name() const noexcept = 0;
-    virtual std::vector<double> gradientOnLoss(std::vector<double> const &expectation, AbstractLayer const *previousLayer) noexcept = 0;
-    virtual std::vector<double> gradient(AbstractLayer const *previous) noexcept = 0;
 protected:
-    virtual void activate() noexcept = 0;
-
-protected:
+private:
+    bool _isConnected = false;
+    size_t _nextLayerSize = 0u;
     std::vector<double> _inputs;
     std::vector<double> _biases;
     std::vector<double> _hypothesis;
     Matrix _weights;
-private:
-    size_t _nextLayerSize = 0u;
-    bool _isConnected = false;
+    models::activation::ActivationInterface *_activator = nullptr;
     bool _dirty = false;
     bool _isInputLayer = false;
     bool _isOutputLayer = false;

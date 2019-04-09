@@ -25,7 +25,7 @@ void TestSerialize::testActivationManager()
     mimir::models::activation::RectifiedLinear rectifiedLinear;
     size_t activationIndexRectLinear = manager.indexOf(&rectifiedLinear);
     QVERIFY(activationIndexRectLinear == 1);
-    mimir::models::AbstractLayer layer(nullptr);
+    mimir::models::Layer layer(nullptr);
     QVERIFY(manager.indexOf(layer.activation()) == -1ul);
     layer.setActivation(&rectifiedLinear);
     QVERIFY(manager.indexOf(layer.activation()) == 1);

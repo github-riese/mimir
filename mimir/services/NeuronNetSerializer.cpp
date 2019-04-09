@@ -225,7 +225,7 @@ void NeuronNetSerializer::writeNetHeader(std::ostream &out, const NeuronNet &net
     out.write(padding, paddingLength);
 }
 
-void NeuronNetSerializer::writeLayer(std::ostream &out, const models::AbstractLayer &layer)
+void NeuronNetSerializer::writeLayer(std::ostream &out, const models::Layer &layer)
 {
     auto activation = layer.activation();
     std::string activationName = activation != nullptr ? activation->name() : "";

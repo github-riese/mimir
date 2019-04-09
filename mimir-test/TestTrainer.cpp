@@ -12,7 +12,6 @@
 #include <services/Trainer.h>
 #include <services/NeuronNetSerializer.h>
 #include <models/activation/Softmax.h>
-#include <helpers/math.h>
 
 REGISTER_TEST(TestTrainer)
 
@@ -161,8 +160,7 @@ void TestTrainer::testImageDetect()
     data.read(x, 16);
     unsigned int batchSize = 5;
     mimir::services::NeuronNet detector(28*28, 10, "softmax");
-    detector.addHiddenLayer(128, "rectifiedLinear");
-    detector.addHiddenLayer(64, "rectifiedLinear");
+    detector.addHiddenLayer(9, "rectifiedLinear");
     detector.connect();
     mimir::services::Trainer trainer(detector);
     trainer.createGradients();
@@ -174,7 +172,7 @@ void TestTrainer::testImageDetect()
     while (batch != batches.end() && expect != expectations.end()) {
         trainer.addTrainingData(*batch++, *expect++);
     }
-    double learningRate = 1.;
+    double learningRate = .2;
     int minibatch = 0;
     auto batchResult = [&minibatch, &batches, &expectations, &detector, &batchSize](double currentError, double detectRate, unsigned epochsNeeded) {
         qDebug() << "minibatch" << minibatch++ << "error" << currentError << "detected" << detectRate*100. << "%" << "epochs: "<< epochsNeeded;
@@ -183,14 +181,14 @@ void TestTrainer::testImageDetect()
             qDebug() << result << *(expectations.begin() + static_cast<unsigned>(minibatch)*batchSize-1);
         }
     };
-    trainer.run(batchSize, 500, 1e-5, .9, learningRate, batchResult);
+    trainer.run(batchSize, 1000, 1e-5, .9, learningRate, batchResult);
     int right = 0, wrong = 0;
     for (auto n = 0u; n < batches.size(); n += 5) {
         auto seen = detector.run(batches.at(n));
         auto expected = expectations.at(n);
         auto ds = std::distance(seen.begin(), std::max_element(seen.begin(), seen.end()));
         auto de = std::distance(expected.begin(), std::max_element(expected.begin(), expected.end()));
-        qDebug() << "seen:" << ds << " P" << seen[static_cast<unsigned>(ds)] * 100. << "%"
+        qDebug() << "seen:" << ds
                  << "expected:" << de;
         if (ds == de) ++right;
         else ++wrong;

@@ -10,7 +10,7 @@
 #include "helpers/helpers.h"
 #include "ActivationsManager.h"
 
-using mimir::models::AbstractLayer;
+using mimir::models::Layer;
 using mimir::models::Matrix;
 using namespace mimir::helpers::math;
 
@@ -37,7 +37,7 @@ void NeuronNet::addHiddenLayer(size_t numNeurons, std::string const &activation)
     if (actFn == nullptr) {
         actFn = _layers.back().activation();
     }
-    AbstractLayer l(actFn);
+    Layer l(actFn);
     std::random_device randomDevice;
     std::mt19937 randomnessGenerator(randomDevice());
     std::uniform_real_distribution<> normalDistribution(.0, .01);
@@ -52,7 +52,7 @@ void NeuronNet::appendLayer(size_t numNeurons, const std::string &activation)
     std::random_device randDev;
     std::mt19937 twister(randDev());
     std::normal_distribution<double> random(-.001, .001);
-    AbstractLayer l(activation.empty() && _layers.size() > 0 ? _layers.back().activation() : getActivationsManager().get(activation));
+    Layer l(activation.empty() && _layers.size() > 0 ? _layers.back().activation() : getActivationsManager().get(activation));
     for (auto n = 0u; n < numNeurons; ++n) {
         l.addNode(random(randDev));
     }
@@ -75,12 +75,12 @@ void NeuronNet::connect()
         (*previous).connect(*(next));
         ++previous; ++next;
     }
-    (*previous).connect(AbstractLayer());
+    (*previous).connect(Layer());
 }
 
 std::vector<double> NeuronNet::run(std::vector<double> inputs)
 {
-    AbstractLayer &input = _layers.front();
+    Layer &input = _layers.front();
     input.setInput(inputs);
     auto layer = _layers.begin();
     size_t n = _layers.size() -1;
@@ -128,7 +128,7 @@ bool NeuronNet::addNode(size_t layer, double bias, std::vector<double> weightsIn
     return true;
 }
 
-const models::AbstractLayer &NeuronNet::layer(size_t n) const
+const models::Layer &NeuronNet::layer(size_t n) const
 {
     if (n >= _layers.size() && n != -1u) {
         std::stringstream m;
@@ -141,7 +141,7 @@ const models::AbstractLayer &NeuronNet::layer(size_t n) const
     return _layers.at(n);
 }
 
-models::AbstractLayer &NeuronNet::layer(size_t n)
+models::Layer &NeuronNet::layer(size_t n)
 {
     if (n >= _layers.size() && n != -1u) {
         std::stringstream m;
@@ -184,12 +184,12 @@ void NeuronNet::setName(const std::string &name)
     _name = name;
 }
 
-double NeuronNet::error(std::vector<double> const &expectation) const
+double NeuronNet::loss(std::vector<double> const &expectation) const
 {
     if (_layers.size() > 0) {
         auto outputActivator = _layers.back().activation();
         if (outputActivator != nullptr) {
-            return outputActivator->error({_layers.back().hypothesis(), expectation});
+            return outputActivator->loss({_layers.back().hypothesis(), expectation});
         }
     }
     return std::nan("1");

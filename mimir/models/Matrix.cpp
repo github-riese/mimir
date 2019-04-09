@@ -418,5 +418,20 @@ Matrix& Matrix::transpose()
     return *this;
 }
 
+Matrix operator*(std::vector<double> const &vect, Matrix const &matrix)
+{
+    return Matrix{vect} *= matrix;
+}
+
+Matrix operator*(std::valarray<double> const &arr, Matrix const &matrix)
+{
+    return Matrix{arr} *= matrix;
+}
+
+Matrix operator*(double d, const Matrix &matrix)
+{
+    return matrix * d;
+}
+
 } // namespace models
 } // namespace mimir
