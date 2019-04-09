@@ -35,7 +35,7 @@ public:
     void setWeigths(size_t layer, models::Matrix const &);
     std::string name() const;
     void setName(const std::string &name);
-    double loss(const std::vector<double> &expectation) const;
+    double error(const std::vector<double> &expectation) const;
 private:
     std::string _name;
     std::vector<models::Layer> _layers;

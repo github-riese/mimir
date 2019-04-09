@@ -2,7 +2,6 @@
 
 #include <cmath>
 
-#include <models/Layer.h>
 #include <helpers/math.h>
 
 using namespace mimir::helpers::math;
@@ -23,10 +22,9 @@ void Sigmoid::activate(std::vector<double> &v) const noexcept
     });
 }
 
-std::vector<double> Sigmoid::derivative(const std::vector<double> &zValues) const noexcept
+std::vector<double> Sigmoid::derivative(const std::vector<double> &hypothesis) const noexcept
 {
-    auto result = zValues;
-    activate(result);
+    auto result = hypothesis;
     apply(result, [](double sigmoid) { return sigmoid * (1 - sigmoid);});
     return result;
 }

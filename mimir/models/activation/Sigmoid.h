@@ -12,7 +12,7 @@ class Sigmoid : public AbstractMSELossActivator
 public:
     std::string name() const override;
     void activate(std::vector<double> &) const noexcept override;
-    std::vector<double> derivative(std::vector<double> const &) const noexcept override;
+    std::vector<double> derivative(std::vector<double> const &hypothesis) const noexcept override;
 protected:
 };
 

@@ -10,7 +10,8 @@ namespace activation {
 class AbstractMSELossActivator : public ActivationInterface
 {
 public:
-    double loss(mimir::models::TrainerValueHelper const &) const noexcept override;
+    double error(mimir::models::TrainerValueHelper const &) const noexcept override;
+    std::vector<double> lossDerivative(std::vector<double> const &hypothesis, std::vector<double> const &expectations) const noexcept override;
 };
 
 } // namespace activation

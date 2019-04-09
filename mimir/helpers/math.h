@@ -183,6 +183,13 @@ std::vector<T> operator-(std::vector<T> const &in)
     return result;
 }
 
+template <typename T>
+std::vector<T> operator-(const T& scalar, std::vector<T> const &right)
+{
+    std::vector<T> left(right.size(), scalar);
+    return left -= right;
+}
+
 /**
  * The dot product line vector times row vector
  */

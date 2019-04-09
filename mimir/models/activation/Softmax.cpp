@@ -6,7 +6,7 @@
 
 #include <helpers/helpers.h>
 #include <helpers/math.h>
-#include <models/Layer.h>
+#include <mimir/models/Matrix.h>
 
 namespace mimir {
 namespace models {
@@ -27,47 +27,13 @@ void Softmax::activate(std::vector<double> &v) const noexcept
     apply(v, [&sum](double v) noexcept (true) -> double { return std::exp(v) / sum; });
 }
 
-std::vector<double> Softmax::derivative(std::vector<double> const &zValue) const noexcept
+std::vector<double> Softmax::derivative(std::vector<double> const &hypothesis) const noexcept
 {
-    std::vector<double> result(zValue.size());
-    std::vector<double> ePowX(zValue.size());
-
-    std::transform(zValue.begin(), zValue.end(), ePowX.begin(), [](double x) -> double { return std::exp(x); });
-    std::vector<double> subEs(ePowX.size());
-    for(auto i = 0u; i < ePowX.size(); ++i) {
-        auto j = 0u;
-        for (auto pow : ePowX) {
-            if (i != j++) {
-                subEs[i] += pow;
-            }
-        }
-    }
-
-    double divisor = std::accumulate(zValue.begin(), zValue.end(), 0., [](double init, double v) -> double {
-        return init + std::exp(v);
-    });
-    divisor *= divisor;
-    auto power = ePowX.begin();
-    auto sum = subEs.begin();
-    auto derivative = result.begin();
-    for(; power != ePowX.end(); ++power, ++sum, ++derivative) {
-        *derivative = *power * *sum/divisor;
-    }
-
-    return result;
-/*
-    auto const &hypothesis = layerData.hypothesis();
-    auto h = hypothesis.begin();
-    auto x = layerData.input().begin();
-    auto y = layerData.expectation().begin();
-    auto r = result.begin();
-    for (; h != hypothesis.end(); ++h, ++x, ++r, ++y) {
-        *r = *x * (*y - *h);
-    }
-    return -result;*/
+    auto smax = hypothesis;
+    return smax * (1. - smax);
 }
 
-double Softmax::loss(const TrainerValueHelper &values) const noexcept
+double Softmax::error(const TrainerValueHelper &values) const noexcept
 {
     double crossEntropy = .0;
     auto combined = boost::combine(values.hypothesis(), values.expectation());
@@ -76,7 +42,19 @@ double Softmax::loss(const TrainerValueHelper &values) const noexcept
         boost::tie(hypothesis, expectation) = tuple;
         return init + (expectation * std::log(hypothesis));
     }) / -static_cast<double>(combined.size());
-    return crossEntropy;
+    return crossEntropy/values.size();
+}
+
+std::vector<double> Softmax::lossDerivative(const std::vector<double> &hypothesis, const std::vector<double> &expectations) const noexcept
+{
+    size_t numNodes = hypothesis.size();
+    mimir::models::Matrix jacobian(numNodes, numNodes);
+    for (auto i = 0u; i < numNodes; ++i) {
+        for (auto j = 0u; j < numNodes; ++j) {
+            jacobian.setValue(i, j, hypothesis[i] * ((i==j ? 1. : 0. ) - hypothesis[j]));
+        }
+    }
+    return -    (jacobian * expectations).column(0);
 }
 
 } // namespace activation

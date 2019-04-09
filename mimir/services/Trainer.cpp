@@ -129,8 +129,7 @@ void Trainer::calculateGradients(std::vector<double> const &expectation)
     auto deltaWeight = _weightGradient.rbegin();
     auto rlayer = _net.layers().rbegin();
     auto activator = rlayer->activation();
-    auto derivative = activator->derivative(rlayer->zValues());
-    auto delta = -(expectation - rlayer->hypothesis()) * derivative;
+    auto delta = activator->lossDerivative(rlayer->hypothesis(), expectation);
 
     ++rlayer;
     for (; rlayer != _net.layers().rend(); ++rlayer) {
@@ -141,7 +140,7 @@ void Trainer::calculateGradients(std::vector<double> const &expectation)
         }
         if (activator != nullptr) {
             *deltaBias += delta * gradientWeight;
-            delta = -((*rlayer).weights() * delta).column(0) * activator->derivative(rlayer->zValues());
+            delta = -((*rlayer).weights() * delta).column(0) * activator->derivative(rlayer->hypothesis());
             ++deltaBias;
         }
     }
@@ -158,7 +157,7 @@ void Trainer::applyGradient(double eta)
             ++deltaB;
         }
         if (!l.isOutputLayer()) {
-            l.setWeights(l.weights() - eta * (*deltaW + weightDecay * l.weights()));
+            l.setWeights(l.weights() - (*deltaW + l.weights() * weightDecay) * eta);
             ++deltaW;
         }
     }
@@ -183,16 +182,17 @@ std::tuple<unsigned, double, double> Trainer::runMinibatch(std::vector<models::B
         resetGradients();
         std::vector<std::vector<double>> results;
         std::vector<std::vector<double>> expectations;
+        double currentError = 0;
         for (models::BatchItem &item : miniBatch) {
             auto result = _net.run(item.input());
             item.setHypothesis(result);
             calculateGradients(item.expectation());
             expectations.push_back(item.expectation());
             results.push_back(result);
+            currentError += _net.error(item.expectation());
         }
+        error += currentError / static_cast<double>(miniBatch.size());
         std::vector<double>expect = expectations/static_cast<double>(miniBatch.size());
-        auto currentError = _net.loss(expect);
-        error += currentError;
         auto currentDetectRate = detectRate(results, expectations);
         rate += currentDetectRate;
         if (currentError <= maxError && currentDetectRate >= minRate) {

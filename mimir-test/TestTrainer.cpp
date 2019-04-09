@@ -160,7 +160,8 @@ void TestTrainer::testImageDetect()
     data.read(x, 16);
     unsigned int batchSize = 5;
     mimir::services::NeuronNet detector(28*28, 10, "softmax");
-    detector.addHiddenLayer(9, "rectifiedLinear");
+    detector.addHiddenLayer(32, "rectifiedLinear");
+//    detector.addHiddenLayer(32, "sigmoid");
     detector.connect();
     mimir::services::Trainer trainer(detector);
     trainer.createGradients();
@@ -172,7 +173,7 @@ void TestTrainer::testImageDetect()
     while (batch != batches.end() && expect != expectations.end()) {
         trainer.addTrainingData(*batch++, *expect++);
     }
-    double learningRate = .2;
+    double learningRate = .09;
     int minibatch = 0;
     auto batchResult = [&minibatch, &batches, &expectations, &detector, &batchSize](double currentError, double detectRate, unsigned epochsNeeded) {
         qDebug() << "minibatch" << minibatch++ << "error" << currentError << "detected" << detectRate*100. << "%" << "epochs: "<< epochsNeeded;
@@ -189,7 +190,8 @@ void TestTrainer::testImageDetect()
         auto ds = std::distance(seen.begin(), std::max_element(seen.begin(), seen.end()));
         auto de = std::distance(expected.begin(), std::max_element(expected.begin(), expected.end()));
         qDebug() << "seen:" << ds
-                 << "expected:" << de;
+                 << "expected:" << de
+                 << "P = " << seen[static_cast<size_t>(ds)] << "%";
         if (ds == de) ++right;
         else ++wrong;
     }

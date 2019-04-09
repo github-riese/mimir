@@ -70,7 +70,7 @@ void TestHelpers::testVector()
     QVERIFY(subbed == left);
     std::vector<double> right{5, 4, 3, 2, 1};
     auto mult = left * right;
-    QVERIFY((mult == std::vector<double>{5, 8, 9, 8, 5}));
+    QVERIFY((mult == std::vector<double>{-20, -12, -6, -2, 0}));
 }
 
 
