@@ -59,6 +59,12 @@ std::vector<std::valarray<T>> transposeMatrix(std::vector<std::valarray<T>> cons
     return result;
 }
 
+template<typename T>
+T sum(std::valarray<T> const &a) noexcept
+{
+    return std::accumulate(std::begin(a), std::end(a), T(0.));
+}
+
 }
 }
 } // end namespace mimir

@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <numeric>
 
+#include "helpers/helpers.h"
+
 namespace mimir {
 namespace models {
 
@@ -84,6 +86,20 @@ std::vector<double> Matrix::column(size_t column) const
         result.push_back(*pointer);
         std::advance(pointer, static_cast<long>(_cols));
     }
+    return result;
+}
+
+std::valarray<double> Matrix::row(size_t row) const
+{
+    if (row >= _rows) {
+        throw std::out_of_range("No such row.");
+    }
+    if (_rows == 1 && row == 0) {
+        return mimir::helpers::toArray(_data);
+    }
+    std::valarray<double> result(_cols);
+    long start = static_cast<long>(row * _cols);
+    std::copy(_data.begin() + start, _data.begin() + start + static_cast<long>(_cols), std::begin(result));
     return result;
 }
 

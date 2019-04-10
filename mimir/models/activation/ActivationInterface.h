@@ -4,8 +4,8 @@
 #include <string>
 #include <vector>
 
-#include "models/BatchItem.h"
-#include "models/TrainerValueHelper.h"
+#include <mimir/models/BatchItem.h>
+#include <mimir/models/TrainerValueHelper.h>
 
 namespace mimir {
 namespace models {

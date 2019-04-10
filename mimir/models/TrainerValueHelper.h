@@ -16,7 +16,6 @@ public:
     const std::vector<double> &expectation() const;
     void setExpectation(const std::vector<double> &expectation);
 
-    inline double size() const noexcept { return static_cast<double>(_hypothesis.size()); }
 private:
     std::vector<double> _hypothesis;
     std::vector<double> _expectation;

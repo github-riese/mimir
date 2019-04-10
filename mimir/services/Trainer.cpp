@@ -124,7 +124,7 @@ bool Trainer::detectedCorrectly(const std::vector<double> &left, const std::vect
 
 void Trainer::calculateGradients(std::vector<double> const &expectation)
 {
-    double gradientWeight = 1.;
+    double gradientWeight = 1;
     auto deltaBias = _biasGradient.rbegin();
     auto deltaWeight = _weightGradient.rbegin();
     auto rlayer = _net.layers().rbegin();
@@ -138,10 +138,10 @@ void Trainer::calculateGradients(std::vector<double> const &expectation)
             *deltaWeight += (Matrix(delta) * helpers::toArray((*rlayer).hypothesis())).transpose() * gradientWeight;
             ++deltaWeight;
         }
-        if (activator != nullptr) {
-            *deltaBias += delta * gradientWeight;
+        *deltaBias += delta * gradientWeight;
+        ++deltaBias;
+        if (!rlayer->isInputLayer()) {
             delta = -((*rlayer).weights() * delta).column(0) * activator->derivative(rlayer->hypothesis());
-            ++deltaBias;
         }
     }
 }
@@ -191,8 +191,9 @@ std::tuple<unsigned, double, double> Trainer::runMinibatch(std::vector<models::B
             results.push_back(result);
             currentError += _net.error(item.expectation());
         }
-        error += currentError / static_cast<double>(miniBatch.size());
-        std::vector<double>expect = expectations/static_cast<double>(miniBatch.size());
+        currentError /= static_cast<double>(miniBatch.size());
+        error += currentError;
+
         auto currentDetectRate = detectRate(results, expectations);
         rate += currentDetectRate;
         if (currentError <= maxError && currentDetectRate >= minRate) {
@@ -201,7 +202,7 @@ std::tuple<unsigned, double, double> Trainer::runMinibatch(std::vector<models::B
         auto e = error/static_cast<double>(epoch);
         if (e < 1e-1)  e*=10;
         else e = 1.;
-        applyGradient(eta * e);
+        applyGradient(eta * e * 1./static_cast<double>(miniBatch.size()));
     }
     return {epoch, rate/static_cast<double>(epoch), error/static_cast<double>(epoch)};
 }

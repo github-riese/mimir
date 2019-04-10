@@ -35,26 +35,19 @@ std::vector<double> Softmax::derivative(std::vector<double> const &hypothesis) c
 
 double Softmax::error(const TrainerValueHelper &values) const noexcept
 {
-    double crossEntropy = .0;
     auto combined = boost::combine(values.hypothesis(), values.expectation());
-    crossEntropy += std::accumulate(combined.begin(), combined.end(), 0., [](double init, auto tuple) -> double {
+    double crossEntropy = std::accumulate(combined.begin(), combined.end(), 0., [](double init, auto tuple) -> double {
         double hypothesis, expectation;
         boost::tie(hypothesis, expectation) = tuple;
         return init + (expectation * std::log(hypothesis));
-    }) / -static_cast<double>(combined.size());
-    return crossEntropy/values.size();
+    });
+    return -crossEntropy;
 }
 
 std::vector<double> Softmax::lossDerivative(const std::vector<double> &hypothesis, const std::vector<double> &expectations) const noexcept
 {
-    size_t numNodes = hypothesis.size();
-    mimir::models::Matrix jacobian(numNodes, numNodes);
-    for (auto i = 0u; i < numNodes; ++i) {
-        for (auto j = 0u; j < numNodes; ++j) {
-            jacobian.setValue(i, j, hypothesis[i] * ((i==j ? 1. : 0. ) - hypothesis[j]));
-        }
-    }
-    return -    (jacobian * expectations).column(0);
+    std::vector<double> dLoss = expectations - hypothesis;
+    return -dLoss;
 }
 
 } // namespace activation
