@@ -38,7 +38,7 @@ void Trainer::addTrainingData(std::vector<double> input, std::vector<double> exp
     if (padding > 0) {
         expectation.resize(expectation.size() + static_cast<size_t>(padding));
     }
-    _batch.push_back({input, expectation, {}});
+    _batch.push_back({input, expectation});
 }
 
 template<typename T>
@@ -185,7 +185,6 @@ std::tuple<unsigned, double, double> Trainer::runMinibatch(std::vector<models::B
         double currentError = 0;
         for (models::BatchItem &item : miniBatch) {
             auto result = _net.run(item.input());
-            item.setHypothesis(result);
             calculateGradients(item.expectation());
             expectations.push_back(item.expectation());
             results.push_back(result);
@@ -202,7 +201,7 @@ std::tuple<unsigned, double, double> Trainer::runMinibatch(std::vector<models::B
         auto e = error/static_cast<double>(epoch);
         if (e < 1e-1)  e*=10;
         else e = 1.;
-        applyGradient(eta * e * 1./static_cast<double>(miniBatch.size()));
+        applyGradient(eta/static_cast<double>(miniBatch.size()) * e);
     }
     return {epoch, rate/static_cast<double>(epoch), error/static_cast<double>(epoch)};
 }

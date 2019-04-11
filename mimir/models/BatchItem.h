@@ -10,7 +10,7 @@ class BatchItem
 {
 public:
     BatchItem() = default;
-    BatchItem(std::vector<double> const &input, std::vector<double> const &expectation, std::vector<double> const &hypothesis);
+    BatchItem(std::vector<double> const &input, std::vector<double> const &expectation);
 
     std::vector<double> const &input() const;
     void setInput(const std::vector<double> &input);
@@ -18,13 +18,9 @@ public:
     std::vector<double> const &expectation() const;
     void setExpectation(const std::vector<double> &expectation);
 
-    std::vector<double> const &hypothesis() const;
-    void setHypothesis(const std::vector<double> &hypothesis);
-
 private:
     std::vector<double> _input;
     std::vector<double> _expectation;
-    std::vector<double> _hypothesis;
 };
 
 } // namespace models

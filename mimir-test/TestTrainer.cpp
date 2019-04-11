@@ -58,7 +58,7 @@ void TestTrainer::testXOR()
     net.addHiddenLayer(2, "rectifiedLinear");
     net.connect();
 
-    net.setWeigths(0, mimir::models::Matrix({
+   net.setWeigths(0, mimir::models::Matrix({
                                                 {1, 1},
                                                 {1, 1}
                                             }));
@@ -71,13 +71,13 @@ void TestTrainer::testXOR()
     net.setBias(1, 1, -1);
 
     net.setBias(2, 0, 0);
-
-    /*mimir::services::Trainer trainer(net);
-    trainer.addBatch({0, 0}, {0});
-    trainer.addBatch({0, 1}, {1});
-    trainer.addBatch({1, 0}, {1});
-    trainer.addBatch({1, 1}, {0});
-    auto epochs = trainer.run(1000, .00000001, 1);*/
+/*
+    mimir::services::Trainer trainer(net);
+    trainer.addTrainingData({0, 0}, {0});
+    trainer.addTrainingData({0, 1}, {1});
+    trainer.addTrainingData({1, 0}, {1});
+    trainer.addTrainingData({1, 1}, {0});
+        trainer.run(4, 1000, .00000001, 1, .1);*/
     qDebug() << "0 xor 0" << net.run({0, 0});
     qDebug() << "0 xor 1" << net.run({0, 1});
     qDebug() << "1 xor 0" << net.run({1, 0});
