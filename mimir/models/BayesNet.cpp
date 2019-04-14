@@ -146,15 +146,15 @@ int BayesNet::depthOf(NetworkFragment &f, int depthBefore) const
     return currentDepth;
 }
 
-std::experimental::optional<NetworkFragment> BayesNet::fragmentByChildFieldName(ValueIndex name) const
+std::optional<NetworkFragment> BayesNet::fragmentByChildFieldName(ValueIndex name) const
 {
     auto foundChildByName = find_if(_fragments.begin(), _fragments.end(), [name](NetworkFragment f) {
             return f.input().columnName == name;
     });
     if (foundChildByName == _fragments.end()) {
-        return std::experimental::optional<NetworkFragment>();
+        return {};
     }
-    return std::experimental::optional<NetworkFragment>(*foundChildByName);
+    return {*foundChildByName};
 }
 
 void BayesNet::sort() const

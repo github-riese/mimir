@@ -2,7 +2,7 @@
 #define NETWORK_H
 
 #include <iostream>
-#include <experimental/optional>
+#include <optional>
 #include <vector>
 
 #include "BayesNetFragment.h"
@@ -25,7 +25,7 @@ private:
     bool isCyclic(const NetworkFragment &, const NetworkFragment &);
     bool isLeaf(const NetworkFragment &) const;
     int depthOf(NetworkFragment &f, int depthBefore) const;
-    std::experimental::optional<NetworkFragment> fragmentByChildFieldName(ValueIndex) const;
+    std::optional<NetworkFragment> fragmentByChildFieldName(ValueIndex) const;
     void sort() const;
 private:
     mutable bool _sorted = false;
