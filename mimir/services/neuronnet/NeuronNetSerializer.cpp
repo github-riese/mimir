@@ -8,6 +8,7 @@
 
 namespace mimir {
 namespace services {
+namespace neuronnet {
 
 const static unsigned short littleEndian = 0xf00f;
 const static unsigned short bigEndian = 0x0ff0;
@@ -39,7 +40,7 @@ NeuronNetSerializer::NeuronNetSerializer()
     }
 }
 
-int NeuronNetSerializer::serialize(const mimir::services::NeuronNet &net, std::ostream &out)
+int NeuronNetSerializer::serialize(const mimir::services::neuronnet::NeuronNet &net, std::ostream &out)
 {
     writeFileHeader(out);
     writeNetHeader(out, net);
@@ -352,5 +353,6 @@ bool NeuronNetSerializer::isBigEndian() const
     return test.asUChar[0] == 0xf0;
 }
 
+} // namesapce neuronnet
 } // namespace services
 } // namespace mimir

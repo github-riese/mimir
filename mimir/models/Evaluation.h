@@ -16,14 +16,14 @@ class Evaluation
     struct ProbabilityEx {
         Probability p;
         Probability likelihood;
-        Probability classP;
+        Probability classProbability;
         bool operator ==(const ProbabilityEx &) const;
     };
 public:
     explicit Evaluation(std::vector<std::vector<ValueIndex>> sources);
 
     void addProbability(ValueIndex classification, const ProbabilityWithPriors &probability);
-    void addProbability(ValueIndex classification, const Probability &probability, const Probability &likelyhood, const Probability &classProbability);
+    void addProbability(ValueIndex classification, const Probability &probability, const Probability &likelyhood, const Probability &classProbabilityrobability);
 
     void evaluate();
 
@@ -42,7 +42,7 @@ public:
     {
         if (_mostProbable == ValueIndex::NoIndex) return ProbabilityWithPriors();
         auto p = _probabilities.at(_mostProbable);
-        return { p.p, p.likelihood, p.classP, _evidence };
+        return { p.p, p.likelihood, p.classProbability, _evidence };
     }
 
     inline Probability probabilityByClassification(mimir::models::ValueIndex i) const
@@ -56,7 +56,7 @@ public:
     {
         auto p = _probabilities.find(i);
         if (p == _probabilities.end()) return ProbabilityWithPriors();
-        return { (*p).second.p, (*p).second.likelihood, (*p).second.classP, _evidence };
+        return { (*p).second.p, (*p).second.likelihood, (*p).second.classProbability, _evidence };
     }
 
     inline long double mean() const { return _mean; }

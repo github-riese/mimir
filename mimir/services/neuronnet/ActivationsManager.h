@@ -8,6 +8,7 @@
 
 namespace mimir {
 namespace services {
+namespace neuronnet {
 
 class ActivationsManager
 {
@@ -40,6 +41,7 @@ private:
 };
 
 ActivationsManager &getActivationsManager();
+} // namespace neuronnet
 } // namespace services
 } // namespace mimir
 

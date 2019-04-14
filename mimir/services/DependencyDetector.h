@@ -7,8 +7,8 @@
 #include "../models/CPT.h"
 #include "../models/ValueIndex.h"
 #include "../models/KeyValuePair.h"
-#include "../models/Network.h"
-#include "../models/NetworkFragment.h"
+#include "../models/BayesNet.h"
+#include "../models/BayesNetFragment.h"
 
 namespace mimir {
 namespace services {
@@ -19,10 +19,10 @@ public:
     DependencyDetector(models::CPT &cpt);
     std::vector<models::Node> computePriors(const std::vector<models::ColumnNameValuePair> &input) const;
     std::vector <models::Node> computePriors(const std::vector<models::ColumnIndexValuePair> &input) const;
-    models::Network findSuitableGraph(const std::vector<models::ColumnNameValuePair> &input, NameResolver &nr);
+    models::BayesNet findSuitableGraph(const std::vector<models::ColumnNameValuePair> &input, NameResolver &nr);
 private:
-    std::vector<models::Fragment> findLikelyGraphs(const std::vector<models::ColumnNameValuePair> &input) const;
-    models::Network findBestGraphs(std::vector<models::NetworkFragment> const &candidates, NameResolver &nr);
+    std::vector<models::BayesNetFragment> findLikelyGraphs(const std::vector<models::ColumnNameValuePair> &input) const;
+    models::BayesNet findBestGraphs(std::vector<models::NetworkFragment> const &candidates, NameResolver &nr);
     models::Probability likelihood(models::ColumnIndexValuePair const &k, std::vector<models::ColumnIndexValuePair> const &input) const;
     models::Probability conditionalProbability(models::ColumnIndexValuePair const&, std::vector<models::ColumnIndexValuePair>const &);
     void eliminateZeroEvidence(std::vector<models::ColumnIndexValuePair> &) const;

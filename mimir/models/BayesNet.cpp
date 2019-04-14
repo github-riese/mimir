@@ -1,4 +1,4 @@
-#include "Network.h"
+#include "BayesNet.h"
 
 #include <algorithm>
 
@@ -9,12 +9,12 @@ using std::vector;
 namespace mimir {
 namespace models {
 
-Network::Network()
+BayesNet::BayesNet()
 {
 
 }
 
-void Network::addFragment(const NetworkFragment &fragment)
+void BayesNet::addFragment(const NetworkFragment &fragment)
 {
     auto parents = fragment.parents();
     std::sort(parents.begin(), parents.end());
@@ -29,7 +29,7 @@ void Network::addFragment(const NetworkFragment &fragment)
     _sorted = false;
 }
 
-bool Network::isKnownChild(ValueIndex column) const
+bool BayesNet::isKnownChild(ValueIndex column) const
 {
     auto fragment = _fragments.begin();
     while (fragment != _fragments.end()) {
@@ -41,7 +41,7 @@ bool Network::isKnownChild(ValueIndex column) const
     return false;
 }
 
-bool Network::canAdd(const NetworkFragment &fragment) const
+bool BayesNet::canAdd(const NetworkFragment &fragment) const
 {
     if (fragment.countParents() == 0) {
         return true;
@@ -56,13 +56,13 @@ bool Network::canAdd(const NetworkFragment &fragment) const
     return true;
 }
 
-vector<NetworkFragment> Network::fragments() const
+vector<NetworkFragment> BayesNet::fragments() const
 {
     sort();
     return _fragments;
 }
 
-int Network::greatestDepth() const
+int BayesNet::greatestDepth() const
 {
     int maxDepth = 0;
     for (auto f : _fragments) {
@@ -72,7 +72,7 @@ int Network::greatestDepth() const
     return maxDepth;
 }
 
-std::vector<NamedProbability> Network::sinks(vector<ValueIndex> const &availableFieldNames) const
+std::vector<NamedProbability> BayesNet::sinks(vector<ValueIndex> const &availableFieldNames) const
 {
     vector<NamedProbability> result;
     vector<std::pair<ValueIndex, int>> seenFields;
@@ -100,7 +100,7 @@ std::vector<NamedProbability> Network::sinks(vector<ValueIndex> const &available
     return result;
 }
 
-std::ostream &Network::dump(std::ostream &stream, services::NameResolver &nr)
+std::ostream &BayesNet::dump(std::ostream &stream, services::NameResolver &nr)
 {
     for (auto f : _fragments)
         f.dump(stream, nr);
@@ -108,7 +108,7 @@ std::ostream &Network::dump(std::ostream &stream, services::NameResolver &nr)
 }
 
 
-bool Network::isCyclic(const NetworkFragment &thisFragment, const NetworkFragment &base)
+bool BayesNet::isCyclic(const NetworkFragment &thisFragment, const NetworkFragment &base)
 {
     for (auto parent : thisFragment.parents()) {
         if (parent.columnName == base.input().columnName) {
@@ -118,7 +118,7 @@ bool Network::isCyclic(const NetworkFragment &thisFragment, const NetworkFragmen
     return false;
 }
 
-bool Network::isLeaf(const NetworkFragment &f) const
+bool BayesNet::isLeaf(const NetworkFragment &f) const
 {
     if (f.countParents() == 0)
         return true;
@@ -130,7 +130,7 @@ bool Network::isLeaf(const NetworkFragment &f) const
     return true;
 }
 
-int Network::depthOf(NetworkFragment &f, int depthBefore) const
+int BayesNet::depthOf(NetworkFragment &f, int depthBefore) const
 {
     if (f.parents().size() == 0) {
         return depthBefore;
@@ -146,7 +146,7 @@ int Network::depthOf(NetworkFragment &f, int depthBefore) const
     return currentDepth;
 }
 
-std::experimental::optional<NetworkFragment> Network::fragmentByChildFieldName(ValueIndex name) const
+std::experimental::optional<NetworkFragment> BayesNet::fragmentByChildFieldName(ValueIndex name) const
 {
     auto foundChildByName = find_if(_fragments.begin(), _fragments.end(), [name](NetworkFragment f) {
             return f.input().columnName == name;
@@ -157,11 +157,11 @@ std::experimental::optional<NetworkFragment> Network::fragmentByChildFieldName(V
     return std::experimental::optional<NetworkFragment>(*foundChildByName);
 }
 
-void Network::sort() const
+void BayesNet::sort() const
 {
     if (_sorted)
         return;
-        std::sort(const_cast<Network*>(this)->_fragments.begin(), const_cast<Network*>(this)->_fragments.end(),
+        std::sort(const_cast<BayesNet*>(this)->_fragments.begin(), const_cast<BayesNet*>(this)->_fragments.end(),
              [](NetworkFragment const &left, NetworkFragment const &right) {
             if (left.input().columnName < right.input().columnName) {
                 return true;

@@ -5,15 +5,15 @@
 #include <experimental/optional>
 #include <vector>
 
-#include "NetworkFragment.h"
+#include "BayesNetFragment.h"
 
 namespace mimir {
 namespace models {
 
-class Network
+class BayesNet
 {
 public:
-    Network();
+    BayesNet();
     void addFragment(NetworkFragment const &fragment);
     bool isKnownChild(ValueIndex) const;
     bool canAdd(NetworkFragment const &fragment) const;

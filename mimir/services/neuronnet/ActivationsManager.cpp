@@ -10,6 +10,7 @@ using namespace mimir::models::activation;
 
 namespace mimir {
 namespace services {
+namespace neuronnet {
 
 static ActivationsManager g_activationsManager;
 
@@ -73,5 +74,6 @@ ActivationsManager &getActivationsManager()
     return g_activationsManager;
 }
 
+} // namespace neuronnet
 } // namespace services
 } // namespace mimir

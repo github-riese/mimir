@@ -25,8 +25,6 @@ SOURCES += \
     models/CPT.cpp \
     models/Evaluation.cpp \
     models/KeyValuePair.cpp \
-    models/Network.cpp \
-    models/NetworkFragment.cpp \
     models/Probability.cpp \
     models/ProbabilityDistribution.cpp \
     models/ValueIndex.cpp \
@@ -35,18 +33,20 @@ SOURCES += \
     models/activation/Sigmoid.cpp \
     models/activation/RectifiedLinear.cpp \
     models/activation/Softmax.cpp \
-    services/ActivationsManager.cpp \
+    services/neuronnet/ActivationsManager.cpp \
     services/DataStore.cpp \
     services/DependencyDetector.cpp \
     services/Evaluator.cpp \
     services/NameResolver.cpp \
     services/NameResolveSerializer.cpp \
-    services/NeuronNet.cpp \
-    services/NeuronNetSerializer.cpp \
-    services/Trainer.cpp \
+    services/neuronnet/NeuronNet.cpp \
+    services/neuronnet/NeuronNetSerializer.cpp \
+    services/neuronnet/Trainer.cpp \
     models/activation/AbstractMSELossActivator.cpp \
-    models/BatchItem.cpp \
-    models/TrainerValueHelper.cpp
+    models/neuronnet/BatchItem.cpp \
+    models/neuronnet/TrainerValueHelper.cpp \
+    models/BayesNet.cpp \
+    models/BayesNetFragment.cpp
 
 HEADERS += \
     helpers/AccumulateHelper.h \
@@ -54,8 +54,6 @@ HEADERS += \
     models/CPT.h \
     models/Evaluation.h \
     models/KeyValuePair.h \
-    models/Network.h \
-    models/NetworkFragment.h \
     models/Probability.h \
     models/ProbabilityDistribution.h \
     models/ProbabilityWithPriors.h \
@@ -68,17 +66,19 @@ HEADERS += \
     models/Layer.h \
     helpers/math.h \
     models/Matrix.h \
-    services/NeuronNet.h \
-    services/Trainer.h \
-    services/NeuronNetSerializer.h \
-    services/ActivationsManager.h \
+    services/neuronnet/NeuronNet.h \
+    services/neuronnet/Trainer.h \
+    services/neuronnet/NeuronNetSerializer.h \
+    services/neuronnet/ActivationsManager.h \
     services/NameResolveSerializer.h \
     models/activation/ActivationInterface.h \
     models/activation/Sigmoid.h \
     models/activation/RectifiedLinear.h \
     models/activation/Softmax.h \
     models/activation/AbstractMSELossActivator.h \
-    models/BatchItem.h \
-    models/TrainerValueHelper.h
+    models/neuronnet/BatchItem.h \
+    models/neuronnet/TrainerValueHelper.h \
+    models/BayesNet.h \
+    models/BayesNetFragment.h
 
 unix|win32: LIBS += -lcuda -L/usr/local/cuda/lib

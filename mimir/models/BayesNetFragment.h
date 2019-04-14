@@ -36,11 +36,11 @@ struct Node {
     }
 };
 
-struct Fragment
+struct BayesNetFragment
 {
     Node node;
     std::vector<Node> parents;
-    inline bool operator <(Fragment const &rhs) const {
+    inline bool operator <(BayesNetFragment const &rhs) const {
         if (node < rhs.node) {
             return true;
         }
@@ -64,11 +64,11 @@ struct Fragment
         return stream;
     }
 
-    inline bool operator == (Fragment const &rhs) const {
+    inline bool operator == (BayesNetFragment const &rhs) const {
         return node == rhs.node && parents == rhs.parents;
     }
 
-    inline bool operator != (Fragment const &rhs) const {
+    inline bool operator != (BayesNetFragment const &rhs) const {
         return node != rhs.node || parents != rhs.parents;
     }
 

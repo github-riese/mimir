@@ -17,6 +17,7 @@ using namespace mimir::helpers::math;
 
 namespace mimir {
 namespace services {
+namespace neuronnet {
 
 NeuronNet::NeuronNet()
 {
@@ -196,5 +197,6 @@ double NeuronNet::error(std::vector<double> const &expectation) const
     return std::numeric_limits<double>::quiet_NaN();
 }
 
+}
 }
 }

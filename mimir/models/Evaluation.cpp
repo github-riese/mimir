@@ -22,8 +22,6 @@ Evaluation::Evaluation(std::vector<std::vector<ValueIndex>> samplers) :
 {
 }
 
-
-
 void Evaluation::addProbability(ValueIndex classification, const ProbabilityWithPriors &probability)
 {
     addProbability(classification, probability.probability(), probability.likelihood(), probability.prior());
@@ -93,7 +91,7 @@ void Evaluation::evaluate()
 
 bool Evaluation::ProbabilityEx::operator ==(const Evaluation::ProbabilityEx &rhs) const
 {
-    return p == rhs.p && classP == rhs.classP;
+    return p == rhs.p && classProbability == rhs.classProbability;
 }
 
 } // namespace models

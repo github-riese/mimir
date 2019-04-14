@@ -7,6 +7,7 @@
 
 namespace mimir {
 namespace services {
+namespace neuronnet {
 
 #define NET_FILE_MAGIC "mimir::data"
 #define NET_MAGIC "mimir::neuronnet"
@@ -65,6 +66,7 @@ private:
     bool _changeEndianness = false;
 };
 
+} // namespace neuronnet
 } // namespace services
 } // namespace mimir
 

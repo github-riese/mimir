@@ -21,9 +21,9 @@ public:
     ProbabilityDistribution(std::map<ValueIndex, Probability>);
     ProbabilityDistribution(std::map<std::vector<ValueIndex>, Probability>);
     Probability vectorLength() const;
+    Probability argMin() const;
     Probability argMax() const;
     ValueIndex mostProbable() const;
-    Probability argMin() const;
     ValueIndex leastProbable() const;
     std::pair<ValueIndex, Probability> max() const;
     std::pair<ValueIndex, Probability> min() const;

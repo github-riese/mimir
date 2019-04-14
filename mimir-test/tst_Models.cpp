@@ -27,7 +27,7 @@ using mimir::services::DataStore;
 using mimir::services::Evaluator;
 using mimir::services::NameResolver;
 
-// REGISTER_TEST(Models)
+REGISTER_TEST(Models)
 
 Models::Models() :
     _dataStore(_nameResolver)

@@ -6,9 +6,9 @@
 #include <cmath>
 #include <sstream>
 
-#include "services/NeuronNetSerializer.h"
+#include "services/neuronnet/NeuronNetSerializer.h"
 #include "services/NameResolveSerializer.h"
-#include "services/ActivationsManager.h"
+#include "services/neuronnet/ActivationsManager.h"
 #include "models/activation/RectifiedLinear.h"
 #include "helpers/helpers.h"
 
@@ -21,7 +21,7 @@ TestSerialize::TestSerialize(QObject *parent) : QObject(parent)
 
 void TestSerialize::testActivationManager()
 {
-    mimir::services::ActivationsManager manager;
+    mimir::services::neuronnet::ActivationsManager manager;
     mimir::models::activation::RectifiedLinear rectifiedLinear;
     size_t activationIndexRectLinear = manager.indexOf(&rectifiedLinear);
     QVERIFY(activationIndexRectLinear == 1);
@@ -44,8 +44,8 @@ void TestSerialize::testPackUnpack()
 
 void TestSerialize::testSerialize()
 {
-    mimir::services::NeuronNetSerializer serializer;
-    mimir::services::NeuronNet net(2, 1, "rectifiedLinear");
+    mimir::services::neuronnet::NeuronNetSerializer serializer;
+    mimir::services::neuronnet::NeuronNet net(2, 1, "rectifiedLinear");
     net.addHiddenLayer(4);
     net.connect();
     net.layers().front().setWeights({{{1, 2, 3, 4},{5, 6, 7, 8}}});
@@ -58,9 +58,9 @@ void TestSerialize::testSerialize()
     net.setName("serializeTest");
     std::stringstream buffer;
     serializer.serialize(net, buffer);
-    mimir::services::NeuronNet rereadAndCopied;
+    mimir::services::neuronnet::NeuronNet rereadAndCopied;
     {
-        mimir::services::NeuronNet reread;
+        mimir::services::neuronnet::NeuronNet reread;
         buffer.seekg(0);
         serializer.deserialize(reread, buffer);
         QVERIFY(reread.name() == net.name());

@@ -8,11 +8,13 @@
 #include "helpers/helpers.h"
 #include "helpers/math.h"
 
+using mimir::models::Matrix;
+using namespace mimir::helpers::math;
+
 namespace mimir {
 namespace services {
+namespace neuronnet {
 
-using models::Matrix;
-using namespace helpers::math;
 
 template<typename T>
 std::vector<T> avg(std::vector<std::vector<T>> const &v) {
@@ -222,5 +224,6 @@ double Trainer::detectRate(const std::vector<std::vector<double> > &results, con
     return correct/(correct+incorrect);
 }
 
+} // namespace neuronnet
 } // namespace services
 } // namespace mimir

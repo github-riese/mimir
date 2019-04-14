@@ -3,14 +3,15 @@
 
 #include <vector>
 
-#include "../models/BatchItem.h"
-#include "../models/TrainerValueHelper.h"
-#include "../models/Matrix.h"
+#include <mimir/models/neuronnet/BatchItem.h>
+#include <mimir/models/neuronnet/TrainerValueHelper.h>
+#include <mimir/models/Matrix.h>
 #include "NeuronNet.h"
 
 
 namespace mimir {
 namespace services {
+namespace neuronnet {
 
 class Trainer
 {
@@ -38,6 +39,7 @@ private:
     double _currentError;
 };
 
+} // namespace neuronnet
 } // namespace services
 } // namespace mimir
 

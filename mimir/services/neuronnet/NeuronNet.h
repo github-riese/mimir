@@ -1,9 +1,9 @@
 #ifndef NET_H
 #define NET_H
 
-#include "../models/BatchItem.h"
-#include "../models/Layer.h"
-#include "../models/Matrix.h"
+#include <mimir/models/neuronnet/BatchItem.h>
+#include <mimir/models/Layer.h>
+#include <mimir/models/Matrix.h>
 
 #include <valarray>
 #include <vector>
@@ -11,6 +11,7 @@
 
 namespace mimir {
 namespace services {
+namespace neuronnet {
 
 class NeuronNet
 {
@@ -41,6 +42,7 @@ private:
     std::vector<models::Layer> _layers;
 };
 
+}
 }
 }
 

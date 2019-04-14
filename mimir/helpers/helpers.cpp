@@ -12,22 +12,22 @@ using mimir::models::Probability;
 namespace mimir {
 namespace helpers {
 
-long double mean(const std::deque<models::Probability> &probabilities)
+double mean(const std::deque<models::Probability> &probabilities)
 {
     return mean(probabilities.begin(), probabilities.end());
 }
 
-long double mean(const std::vector<models::Probability> &probabilities)
+double mean(const std::vector<models::Probability> &probabilities)
 {
     return mean(probabilities.begin(), probabilities.end());
 }
 
-long double deviation(const std::deque<models::Probability> &probabilities)
+double deviation(const std::deque<models::Probability> &probabilities)
 {
     return deviation(probabilities.begin(), probabilities.end());
 }
 
-long double deviation(const std::vector<models::Probability> &probabilities)
+double deviation(const std::vector<models::Probability> &probabilities)
 {
     return deviation(probabilities.begin(), probabilities.end());
 }

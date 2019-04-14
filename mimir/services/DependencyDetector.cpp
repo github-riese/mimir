@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <deque>
 
-#include "../models/Network.h"
+#include "../models/BayesNet.h"
 #include "../models/Probability.h"
 #include "../traits/Timing.h"
 
@@ -17,7 +17,7 @@ using mimir::models::CPT;
 using mimir::models::ColumnIndexValuePair;
 using mimir::models::ColumnNameValuePair;
 using mimir::models::NamedProbability;
-using mimir::models::Network;
+using mimir::models::BayesNet;
 using mimir::models::Node;
 using mimir::models::NetworkFragment;
 using mimir::models::Probability;
@@ -51,7 +51,7 @@ vector<Node> DependencyDetector::computePriors(const vector<ColumnIndexValuePair
     return priorNodes;
 }
 
-Network DependencyDetector::findSuitableGraph(const vector<ColumnNameValuePair> &input, NameResolver &nr)
+BayesNet DependencyDetector::findSuitableGraph(const vector<ColumnNameValuePair> &input, NameResolver &nr)
 {
     traits::VerboseTiming<std::chrono::microseconds> graphTiming(__PRETTY_FUNCTION__);
     auto likelyGraphs = findLikelyGraphs(input);
@@ -59,12 +59,12 @@ Network DependencyDetector::findSuitableGraph(const vector<ColumnNameValuePair> 
     for (auto likely : likelyGraphs) {
         likely.dump(std::cerr, nr);
     }
-    return Network();
+    return BayesNet();
 //    auto bestGraphs = findBestGraphs(likelyGraphs, nr);
 //    return bestGraphs;
 }
 
-vector<models::Fragment> DependencyDetector::findLikelyGraphs(const std::vector<models::ColumnNameValuePair> &input) const
+vector<models::BayesNetFragment> DependencyDetector::findLikelyGraphs(const std::vector<models::ColumnNameValuePair> &input) const
 {
     vector<ColumnIndexValuePair> possibleFields;
     for (auto candidate : input) {
@@ -83,7 +83,7 @@ vector<models::Fragment> DependencyDetector::findLikelyGraphs(const std::vector<
     // is that one less than the value before? ignore x3, go on with x4
     // no more values left? the current one is one net fragment.
     // restart with all values that are not in the net.
-    vector<models::Fragment> result;
+    vector<models::BayesNetFragment> result;
     ColumnIndexValuePair i1, i2;
     for (auto prior : priors) {
         for (size_t field = 0; field < possibleFields.size(); ++field) {
@@ -117,16 +117,16 @@ vector<models::Fragment> DependencyDetector::findLikelyGraphs(const std::vector<
                     break;
                 }
             }
-            models::Fragment f{{prior.namedValue, currentLikelihood}, potentialParentNodes};
-            if (result.size() == 0 || result.back() != f) {
-                result.push_back(f);
+            models::BayesNetFragment fragment{{prior.namedValue, currentLikelihood}, potentialParentNodes};
+            if (result.size() == 0 || result.back() != fragment) {
+                result.push_back(fragment);
             }
         }
     }
     return result;
 }
 
-Network DependencyDetector::findBestGraphs(const std::vector<NetworkFragment> &candidates, NameResolver& nr)
+BayesNet DependencyDetector::findBestGraphs(const std::vector<NetworkFragment> &candidates, NameResolver& nr)
 {
     vector<NetworkFragment> mostProbable = candidates;
     sort(mostProbable.begin(), mostProbable.end(), [](NetworkFragment const &left, NetworkFragment const &right){
@@ -137,10 +137,10 @@ Network DependencyDetector::findBestGraphs(const std::vector<NetworkFragment> &c
         return false;
     });
     ValueIndex baseFieldName = mostProbable.front().input().columnName;
-    vector<Network> networks;
+    vector<BayesNet> networks;
     for (auto fragment : mostProbable) {
         if (fragment.input().columnName == baseFieldName) {
-            Network n;
+            BayesNet n;
             n.addFragment(fragment);
             networks.push_back(n);
             continue;
@@ -155,7 +155,7 @@ Network DependencyDetector::findBestGraphs(const std::vector<NetworkFragment> &c
             }
         }
         if (!added) {
-            Network n;
+            BayesNet n;
             n.addFragment(fragment);
             networks.push_back(n);
         }

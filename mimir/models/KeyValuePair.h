@@ -62,11 +62,11 @@ struct ConditionalProbability
     Probability probability;
     ValueIndex name;
     std::vector<ValueIndex> parents;
-    constexpr inline bool operator <(ConditionalProbability const &rhs) const
+    constexpr inline bool operator <(ConditionalProbability const &rhs) const noexcept
     {
         return probability < rhs.probability;
     }
-    constexpr inline bool operator==(ConditionalProbability const &rhs) const
+    constexpr inline bool operator==(ConditionalProbability const &rhs) const noexcept
     {
         return probability == rhs.probability;
     }

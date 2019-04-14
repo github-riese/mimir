@@ -1,4 +1,4 @@
-#include "NetworkFragment.h"
+#include "BayesNetFragment.h"
 #include "KeyValuePair.h"
 
 #include <algorithm>
