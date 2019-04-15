@@ -32,6 +32,12 @@ inline double variance(InputIterator first, InputIterator last)
     return (v.sumOfSquares - (v.sums * v.sums) / distance) / (distance - 1);
 }
 
+template <typename Container>
+inline double variance(Container const &container)
+{
+    return variance(std::begin(container), std::end(container));
+}
+
 template <typename InputIterator>
 inline double deviation(InputIterator first, InputIterator last)
 {

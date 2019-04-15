@@ -76,7 +76,6 @@ ProbabilityDistribution CPT::classify(long classifierIndex, const std::vector<Co
         }
         sumOfMatches += row.probability;
         result[row.values.at(static_cast<size_t>(classifierIndex))] += row.probability;
-        dumpRow(row);
     }
     Probability scale = 1/sumOfMatches;
     for_each(result.begin(), result.end(), [scale](auto &value) {
@@ -163,12 +162,12 @@ ValueIndex CPT::fieldName(long idx) const
 vector<ColumnIndexValuePair> CPT::buildMatchRule(const std::vector<ColumnNameValuePair> &searchFields) const
 {
     vector<ColumnIndexValuePair> matchRules;
-    auto knownColumns = _fieldNames.begin();
-    auto searchFieldIterator = searchFields.begin();
-    while (searchFieldIterator != searchFields.end()) {
-        auto i = find_if(knownColumns, _fieldNames.end(), [&searchFieldIterator](ValueIndex valueIndex) { return valueIndex == (*searchFieldIterator).columnName; });
-        matchRules.push_back({distance(knownColumns, i), (*searchFieldIterator).value});
-        ++searchFieldIterator;
+    auto knownColumn = _fieldNames.begin();
+    auto searchField = searchFields.begin();
+    while (searchField != searchFields.end()) {
+        auto i = find_if(knownColumn, _fieldNames.end(), [&searchField](ValueIndex valueIndex) { return valueIndex == (*searchField).columnName; });
+        matchRules.push_back({ distance(knownColumn, i), (*searchField).value });
+        ++searchField;
     }
     return matchRules;
 }

@@ -28,4 +28,5 @@ inline bool operator <= (size_t s, ValueIndex i) { return ValueIndex(s) <= i; }
 } // namespace models
 } // namespace mimir
 inline mimir::models::ValueIndex operator "" _vi(unsigned long long i) { return mimir::models::ValueIndex(static_cast<size_t>(i)); }
+
 #endif // VALUEINDEX_H

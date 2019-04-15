@@ -54,7 +54,7 @@ ProbabilityDistribution::ProbabilityDistribution(std::map<std::vector<ValueIndex
 
 }
 
-Probability ProbabilityDistribution::vectorLength() const
+double ProbabilityDistribution::vectorLength() const
 {
     return _vectorLength;
 }
@@ -79,12 +79,12 @@ ValueIndex ProbabilityDistribution::leastProbable() const
     return _minVal;
 }
 
-pair<ValueIndex, Probability> ProbabilityDistribution::max() const
+NamedProbability ProbabilityDistribution::max() const
 {
     return { _maxVal, _maxProb };
 }
 
-pair<ValueIndex, Probability> ProbabilityDistribution::min() const
+NamedProbability ProbabilityDistribution::min() const
 {
     return { _minVal, _minProb };
 }
@@ -99,8 +99,8 @@ void ProbabilityDistribution::analyze()
     if (_probabilities.size() == 0) {
         return;
     }
-    _vectorLength = sqrtl(
-                _probabilities.size() * variance(_probabilities.begin(), _probabilities.end())
+    _vectorLength = sqrt(
+                _probabilities.size() * variance(_probabilities)
                         + 1/_probabilities.size()
             );
     auto element = max_element(_probabilities.begin(), _probabilities.end());

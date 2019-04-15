@@ -24,7 +24,7 @@ struct ColumnNameValuePair
     }
 };
 
-using ColumnNameValuePairCollection = std::vector<ColumnNameValuePair>;
+using ColumnNameValuePairVector = std::vector<ColumnNameValuePair>;
 
 struct ColumnIndexValuePair
 {
@@ -36,7 +36,7 @@ struct ColumnIndexValuePair
     }
 };
 
-using ColumnIndexValuePairCollection = std::vector<ColumnIndexValuePair>;
+using ColumnIndexValuePairVector = std::vector<ColumnIndexValuePair>;
 
 struct NamedProbability
 {

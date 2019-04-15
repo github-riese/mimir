@@ -20,13 +20,13 @@ public:
     ProbabilityDistribution(std::vector<Probability>, std::vector<ValueIndex> = std::vector<ValueIndex>());
     ProbabilityDistribution(std::map<ValueIndex, Probability>);
     ProbabilityDistribution(std::map<std::vector<ValueIndex>, Probability>);
-    Probability vectorLength() const;
+    double vectorLength() const;
     Probability argMin() const;
     Probability argMax() const;
     ValueIndex mostProbable() const;
     ValueIndex leastProbable() const;
-    std::pair<ValueIndex, Probability> max() const;
-    std::pair<ValueIndex, Probability> min() const;
+    NamedProbability max() const;
+    NamedProbability min() const;
     bool operator <(const ProbabilityDistribution &rhs) const;
     std::vector<Probability> probabilities() const;
     std::vector<ValueIndex> classifiers() const;
@@ -39,7 +39,7 @@ private:
 private:
     std::vector<ValueIndex> _classifiers;
     std::vector<Probability> _probabilities;
-    long double _vectorLength = .0l;
+    double _vectorLength = .0l;
     Probability _maxProb;
     Probability _minProb;
     ValueIndex _maxVal;

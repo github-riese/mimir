@@ -93,7 +93,6 @@ void Models::testDataStore()
     QVERIFY(_dataStore.rowCount() == 10);
 
     CPT cpt = _dataStore.createConditionalProbabilityTable({{type, colour, ccContact}});
-    cpt.dump(std::cout, _nameResolver);
     Probability probabilityOfRingGreenContact = cpt.probability(vector<ColumnNameValuePair>{{type, ring} , {colour, green}, {ccContact, noContact}});
     QVERIFY(probabilityOfRingGreenContact == .2_p);
 }
@@ -137,13 +136,14 @@ void Models::testHelpers()
         (.4_p),
         (.5_p),
     };
-    long double mean = mimir::helpers::mean(v1);
+    double mean = mimir::helpers::mean(v1);
     QCOMPARE(static_cast<double>(mean), ((.1 + .2 + .3 + .4 + .5)/5.));
 
-    std::deque<Probability> d1;
-    d1.insert(d1.end(), v1.begin(), v1.end());
-    auto deviation = mimir::helpers::deviation(d1);
-    QCOMPARE(static_cast<double>(deviation), std::sqrt(((.1 *.1 + .2 * .2 + .3 *.3 +  .4 * .4 + .5 * .5) - ((.1 + .2 + .3 + .4 + .5)*(.1 + .2 + .3 + .4 + .5))/5) / 4));
+    std::vector<Probability> v2;
+    v2.insert(v2.end(), v1.begin(), v1.end());
+    auto deviation = mimir::helpers::deviation(v2);
+    QCOMPARE(deviation, .158113883008419);
+    QCOMPARE(mimir::helpers::variance(v2), .025);
 }
 
 void Models::testCPT()
@@ -167,9 +167,10 @@ void Models::testCPT()
     QCOMPARE(uniqueClasses, (vector<ValueIndex>{ kept, cancelled, returned }));
 
     ProbabilityDistribution distribution = grandTable.classify(classification, {{type, ring}, {ccContact, noContact }});
-    distribution.dump(std::cerr, _nameResolver);
     ProbabilityDistribution dist2 = grandTable.classify(type, { {classification, kept}, {colour, green} });
-    dist2.dump(std::cerr, _nameResolver);
     QCOMPARE(distribution.mostProbable(), kept);
-    qDebug() << static_cast<double>(distribution.vectorLength());
+    QCOMPARE(distribution.argMax(), .5_p);
+    QCOMPARE(distribution.vectorLength(), .25);
+
+    QCOMPARE((dist2.max()), (mimir::models::NamedProbability{ring, 1._p}));
 }

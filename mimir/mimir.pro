@@ -79,6 +79,7 @@ HEADERS += \
     models/neuronnet/BatchItem.h \
     models/neuronnet/TrainerValueHelper.h \
     models/BayesNet.h \
-    models/BayesNetFragment.h
+    models/BayesNetFragment.h \
+    models/NamedProbability.h
 
 unix|win32: LIBS += -lcuda -L/usr/local/cuda/lib

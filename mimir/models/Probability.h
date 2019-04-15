@@ -18,22 +18,23 @@ public:
         _probability(probability)
     {}
 
-    inline Probability operator*(const Probability &rhs) { return _probability * rhs._probability; }
-    inline Probability operator/(const Probability &rhs) { if (rhs.isZero()) return Probability{0}; return _probability / rhs._probability; }
-    inline Probability operator+(const Probability &rhs) { return _probability + rhs._probability; }
-    inline Probability &operator *=(const Probability &rhs) { _probability *= rhs._probability; return  *this; }
-    inline Probability &operator /=(const Probability &rhs) { if(rhs.isZero()) _probability = 0.l; else  _probability /= rhs._probability; return  *this; }
-    inline Probability &operator +=(const Probability &rhs) { _probability += rhs._probability; return  *this; }
+    inline Probability operator*(const Probability &rhs) noexcept { return _probability * rhs._probability; }
+    inline Probability operator/(const Probability &rhs) noexcept { if (rhs.isZero()) return Probability{0}; return _probability / rhs._probability; }
+    inline Probability operator+(const Probability &rhs) noexcept { return _probability + rhs._probability; }
+    inline Probability &operator *=(const Probability &rhs) noexcept { _probability *= rhs._probability; return  *this; }
+    inline Probability &operator /=(const Probability &rhs) noexcept { if(rhs.isZero()) _probability = 0.l; else  _probability /= rhs._probability; return  *this; }
+    inline Probability &operator +=(const Probability &rhs) noexcept { _probability += rhs._probability; return  *this; }
 
-    inline constexpr operator double() const {return _probability; }
-    inline constexpr bool operator <(const Probability &rhs) const { return _probability < rhs._probability; }
-    inline bool operator ==(const Probability &rhs) const { return std::fabs(_probability - rhs._probability) * 1e13 < std::min(std::fabs(_probability), std::fabs(rhs._probability)); }
+    inline constexpr operator double() const noexcept { return _probability; }
+    inline constexpr bool operator <(const Probability &rhs) const noexcept { return _probability < rhs._probability; }
+    inline bool operator ==(const Probability &rhs) const noexcept { return std::fabs(_probability - rhs._probability) * 1e10 < std::min(std::fabs(_probability), std::fabs(rhs._probability)); }
+    inline bool equals(const Probability &rhs, double precision) const noexcept { return  std::fabs(_probability - rhs._probability) * precision < std::min(std::fabs(_probability), std::fabs(rhs._probability)); }
 
-    inline bool operator !() const { return !valid(); }
+    inline bool operator !() const noexcept { return !valid(); }
 
 
-    inline bool isZero() const { return std::fabs(_probability) * 1e10 < 1.; }
-    inline bool valid() const { return !std::isnan(_probability); }
+    inline bool isZero() const noexcept { return std::fabs(_probability) * 1e10 < 1.; }
+    inline bool valid() const noexcept { return !std::isnan(_probability); }
 
     inline constexpr double value() const { return _probability; }
 
