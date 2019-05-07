@@ -100,8 +100,10 @@ void ProbabilityDistribution::analyze()
         return;
     }
     _vectorLength = sqrt(
-                _probabilities.size() * variance(_probabilities)
-                        + 1/_probabilities.size()
+                accumulate(_probabilities.begin(), _probabilities.end(), Probability(0), [](double accu, Probability const &p) -> double {
+                    double v = p.value();
+                    return accu + v*v;
+                })
             );
     auto element = max_element(_probabilities.begin(), _probabilities.end());
     _maxProb = *element;

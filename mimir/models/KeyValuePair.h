@@ -34,24 +34,13 @@ struct ColumnIndexValuePair
     {
         return columnIndex < rhs.columnIndex;
     }
+
+    bool operator==(ColumnIndexValuePair const &rhs) const {
+        return rhs.columnIndex == columnIndex && rhs.value == rhs.value;
+    }
 };
 
 using ColumnIndexValuePairVector = std::vector<ColumnIndexValuePair>;
-
-struct NamedProbability
-{
-    ValueIndex name;
-    Probability probability;
-    constexpr inline bool operator <(NamedProbability const &rhs) const
-    {
-        return probability < rhs.probability;
-    }
-
-    constexpr inline bool operator ==(NamedProbability const &rhs) const
-    {
-        return probability == rhs.probability && name == rhs.name;
-    }
-};
 
 /**
  * @brief The ConditionalProbability struct

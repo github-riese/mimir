@@ -6,6 +6,7 @@
 #include <ostream>
 
 #include "KeyValuePair.h"
+#include "NamedProbability.h"
 #include "Probability.h"
 #include "ValueIndex.h"
 #include "../services/NameResolver.h"

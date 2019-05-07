@@ -36,10 +36,13 @@ struct Node {
     }
 };
 
+using NodeVector = std::vector<Node>;
+
 struct BayesNetFragment
 {
     Node node;
     std::vector<Node> parents;
+
     inline bool operator <(BayesNetFragment const &rhs) const {
         if (node < rhs.node) {
             return true;
@@ -74,42 +77,8 @@ struct BayesNetFragment
 
 };
 
-class NetworkFragment
-{
+using BayesNetFragmentVector = std::vector<BayesNetFragment>;
 
-public:
-    NetworkFragment(ColumnNameValuePair, std::vector<ColumnNameValuePair>, Probability);
-
-    ColumnNameValuePair input() const;
-
-    std::vector<ColumnNameValuePair> parents() const;
-
-    Probability probability() const;
-
-    inline bool operator <(NetworkFragment const &rhs) const
-    {
-        if (long tdiff = static_cast<long>(_input.columnName - rhs._input.columnName)) {
-            return tdiff < 0;
-        }
-        if (_probability < rhs._probability) {
-            return true;
-        }
-        return _parents.size() < rhs._parents.size();
-    }
-
-    inline size_t countParents() const
-    {
-        return _parents.size();
-    }
-
-    bool hasParent(ValueIndex) const;
-
-    std::ostream &dump(std::ostream &, services::NameResolver &);
-private:
-    ColumnNameValuePair _input;
-    std::vector<ColumnNameValuePair> _parents;
-    Probability _probability;
-};
 
 } // namespace models
 } // namespace mimir

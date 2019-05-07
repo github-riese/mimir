@@ -45,7 +45,6 @@ SOURCES += \
     models/activation/AbstractMSELossActivator.cpp \
     models/neuronnet/BatchItem.cpp \
     models/neuronnet/TrainerValueHelper.cpp \
-    models/BayesNet.cpp \
     models/BayesNetFragment.cpp
 
 HEADERS += \
@@ -54,6 +53,7 @@ HEADERS += \
     models/CPT.h \
     models/Evaluation.h \
     models/KeyValuePair.h \
+    models/NamedProbability.h \
     models/Probability.h \
     models/ProbabilityDistribution.h \
     models/ProbabilityWithPriors.h \
@@ -78,8 +78,6 @@ HEADERS += \
     models/activation/AbstractMSELossActivator.h \
     models/neuronnet/BatchItem.h \
     models/neuronnet/TrainerValueHelper.h \
-    models/BayesNet.h \
-    models/BayesNetFragment.h \
-    models/NamedProbability.h
+    models/BayesNetFragment.h
 
 unix|win32: LIBS += -lcuda -L/usr/local/cuda/lib

@@ -7,7 +7,6 @@
 #include "../models/CPT.h"
 #include "../models/ValueIndex.h"
 #include "../models/KeyValuePair.h"
-#include "../models/BayesNet.h"
 #include "../models/BayesNetFragment.h"
 
 namespace mimir {
@@ -17,17 +16,24 @@ class DependencyDetector
 {
 public:
     DependencyDetector(models::CPT &cpt);
-    std::vector<models::Node> computePriors(const std::vector<models::ColumnNameValuePair> &input) const;
-    std::vector <models::Node> computePriors(const std::vector<models::ColumnIndexValuePair> &input) const;
-    models::BayesNet findSuitableGraph(const std::vector<models::ColumnNameValuePair> &input, NameResolver &nr);
+    models::NodeVector computePriors(const mimir::models::ColumnNameValuePairVector &input) const;
+    mimir::models::NodeVector computePriors(const models::ColumnIndexValuePairVector &input) const;
+    /**
+     * @brief find a non cyclic directed graph in input
+     * Returns the graph resulting in the longest vector
+     * @param index to fieldName(!) whose value shall be predicted from input and CPT
+     * @param input configuration to dare a prediction for classification
+     * @param nr
+     * @return
+     */
+    models::BayesNetFragment findPredictionGraph(const models::ValueIndex nameToPredict, const models::ColumnNameValuePairVector &input, NameResolver &nr);
 private:
-    std::vector<models::BayesNetFragment> findLikelyGraphs(const std::vector<models::ColumnNameValuePair> &input) const;
-    models::BayesNet findBestGraphs(std::vector<models::NetworkFragment> const &candidates, NameResolver &nr);
-    models::Probability likelihood(models::ColumnIndexValuePair const &k, std::vector<models::ColumnIndexValuePair> const &input) const;
-    models::Probability conditionalProbability(models::ColumnIndexValuePair const&, std::vector<models::ColumnIndexValuePair>const &);
+    models::BayesNetFragmentVector findAnyGraph(const models::ValueIndex nameToPredict, models::ColumnNameValuePairVector const &input, NameResolver &nr);
+    models::Probability likelihood(models::ColumnIndexValuePair const &k, models::ColumnIndexValuePairVector const &input) const;
+    models::Probability conditionalProbability(models::ColumnIndexValuePair const&, models::ColumnIndexValuePairVector const &);
     void eliminateZeroEvidence(std::vector<models::ColumnIndexValuePair> &) const;
-    std::vector<models::ColumnNameValuePair> indexedPairVectorToNamedPairVector(std::vector<models::ColumnIndexValuePair> const &) const;
-    std::vector<models::ColumnIndexValuePair> namedPairVectorToIndexedPairVector(std::vector<models::ColumnNameValuePair> const &) const;
+    models::ColumnNameValuePairVector indexedPairVectorToNamedPairVector(models::ColumnIndexValuePairVector const &) const;
+    models::ColumnIndexValuePairVector namedPairVectorToIndexedPairVector(models::ColumnNameValuePairVector const &) const;
 private:
     models::CPT &_cpt;
 };

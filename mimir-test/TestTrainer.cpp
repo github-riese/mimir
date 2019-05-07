@@ -190,7 +190,7 @@ void TestTrainer::testImageDetect()
         for (auto x = 0u; x < seen.size(); ++x) {
             rank.push_back({x, seen[x]});
         }
-        sort(rank.begin(), rank.end(), [](auto left, auto right) { return left.second > right.second ? -1 : left.second < right.second ? 1 : 0;});
+        sort(rank.begin(), rank.end(), [](auto left, auto right) { return left.second < right.second; });
         auto ds = std::distance(seen.begin(), std::max_element(seen.begin(), seen.end()));
         auto de = std::distance(expected.begin(), std::max_element(expected.begin(), expected.end()));
         qDebug() << "seen:" << ds

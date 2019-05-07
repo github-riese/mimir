@@ -170,7 +170,7 @@ void Models::testCPT()
     ProbabilityDistribution dist2 = grandTable.classify(type, { {classification, kept}, {colour, green} });
     QCOMPARE(distribution.mostProbable(), kept);
     QCOMPARE(distribution.argMax(), .5_p);
-    QCOMPARE(distribution.vectorLength(), .25);
+    QCOMPARE(distribution.vectorLength(), std::sqrt(.5*.5 + .25*.25 + .25*.25));
 
     QCOMPARE((dist2.max()), (mimir::models::NamedProbability{ring, 1._p}));
 }

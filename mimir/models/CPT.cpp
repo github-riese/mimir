@@ -58,6 +58,15 @@ Probability CPT::probability(std::vector<ColumnIndexValuePair> matchRules) const
     return p;
 }
 
+/**
+ * @brief CPT::classify calculates P(A|B1,...Bn) using names (i.e.: indices to names)
+ * Calculate P(Classes=class|Input=i,...). Gathers all rows from CPT where
+ * Input1=i1, Input2=i2, ...Inputn=in
+ * and then calculates a probability distribution over all P(Class|Input)
+ * @param classifier
+ * @param columns
+ * @return
+ */
 ProbabilityDistribution CPT::classify(ValueIndex classifier, const std::vector<ColumnNameValuePair> &columns)
 {
     traits::VerboseTiming<std::chrono::microseconds> _timing("CPT::classify");
@@ -66,6 +75,15 @@ ProbabilityDistribution CPT::classify(ValueIndex classifier, const std::vector<C
     return classify(classifierIndex, matchRule);
 }
 
+/**
+ * @brief CPT::classify calculates P(A|B1,...Bn) using column indices in CPT
+ * Calculate P(Classes=class|Input=i,...). Gathers all rows from CPT where
+ * Input1=i1, Input2=i2, ...Inputn=in
+ * and then calculates a probability distribution over all P(Class|Input)
+ * @param classifierIndex
+ * @param input
+ * @return
+ */
 ProbabilityDistribution CPT::classify(long classifierIndex, const std::vector<ColumnIndexValuePair> &input)
 {
     map<ValueIndex, Probability> result;
@@ -133,10 +151,12 @@ void CPT::calculateProbabilities(vector<vector<ValueIndex>> table)
         if (*current == *previous) {
             continue;
         }
-        _proabilities.push_back({*previous, Probability(static_cast<long double>(distance(previous, current))/total)});
+        // if 2 or more subsequent rows are identical, they are inserted only once
+        // but their probability increases. This keeps the original sequence.
+        _proabilities.push_back({*previous, Probability(static_cast<double>(distance(previous, current))/total)});
         previous = current;
     }
-    _proabilities.push_back({*previous, Probability(static_cast<long double>(distance(previous, current))/total)});
+    _proabilities.push_back({*previous, Probability(static_cast<double>(distance(previous, current))/total)});
     assert(accumulate(_proabilities.begin(), _proabilities.end(), 0._p, [](Probability _1, Row const &_2){
         return _1 + _2.probability;
            }) == 1._p);

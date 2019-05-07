@@ -111,18 +111,22 @@ void TestPatternFind::testPreCheckAssumptionThatDataTurnOutAOne()
 
     CPT cpt = _dataStore.createConditionalProbabilityTable();
     auto classification = cpt.classify(status, {{type, ring}, {colour, green}, {ccContact, no}, {presenterSex, hostMale}, {sizesAvailable, yes}, {dayTime, night}});
+    std::cerr << "Naive classification for type=ring, colour=green, ccContact=no, presenter=male, multiSize=yes, and dayTime=night" << std::endl;
     classification.dump(std::cerr, _nameResolver);
+    auto prioriClassificatinOnStatus = cpt.classify(status, {});
+    std::cerr << "A priori classification of status:" << std::endl;
+    prioriClassificatinOnStatus.dump(std::cerr, _nameResolver);
 
     std::cerr << "------" << std::endl;
     DependencyDetector detect(cpt);
     auto x = detect.computePriors(vector<ColumnNameValuePair>{{type, ring}, {colour, green}, {ccContact, no}, {presenterSex, hostMale}, {sizesAvailable, yes}, {dayTime, night}});
 
-    auto net = detect.findSuitableGraph({{type, ring}, {colour, green}, {ccContact, no}, {presenterSex, hostMale}, {sizesAvailable, yes}, {dayTime, night}}, _nameResolver);
+    auto net = detect.findPredictionGraph(status, {{type, ring}, {colour, green}, {ccContact, no}, {presenterSex, hostMale}, {sizesAvailable, yes}, {dayTime, night}}, _nameResolver);
     net.dump(std::cerr, _nameResolver);
     vector<NamedProbability> expectedSinksNet1 {{ccContact, 1._p}};
     //QCOMPARE(net.sinks(), expectedSinksNet1);
     std::cerr << "------" << std::endl;
-    auto net2 = detect.findSuitableGraph({{type, brooch}, {colour, red}, {ccContact, yes}, {presenterSex, hostMale}, {sizesAvailable, no}, {dayTime, afternoon}}, _nameResolver);
+    auto net2 = detect.findPredictionGraph(status, {{type, brooch}, {colour, red}, {ccContact, yes}, {presenterSex, hostMale}, {sizesAvailable, no}, {dayTime, afternoon}}, _nameResolver);
     net2.dump(std::cerr, _nameResolver);
     vector<NamedProbability> expectedSinksNet2 {{colour, .5_p}};
     //QCOMPARE(net2.sinks(), expectedSinksNet2);

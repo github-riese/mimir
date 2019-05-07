@@ -2,24 +2,39 @@
 
 #include <algorithm>
 #include <deque>
+#include <map>
 
-#include "../models/BayesNet.h"
+#include <iostream>
+
+#include "../helpers/helpers.h"
+#include "../models/BayesNetFragment.h"
 #include "../models/Probability.h"
 #include "../traits/Timing.h"
 
 using std::deque;
+using std::pair;
+using std::map;
 using std::vector;
 
 using std::find_if;
 using std::sort;
 
+using std::cout;
+using std::cerr;
+using std::endl;
+
+using mimir::helpers::containerHas;
+
+using mimir::models::BayesNetFragment;
+using mimir::models::BayesNetFragmentVector;
 using mimir::models::CPT;
 using mimir::models::ColumnIndexValuePair;
+using mimir::models::ColumnIndexValuePairVector;
 using mimir::models::ColumnNameValuePair;
-using mimir::models::NamedProbability;
-using mimir::models::BayesNet;
+using mimir::models::ColumnNameValuePairVector;
 using mimir::models::Node;
-using mimir::models::NetworkFragment;
+using mimir::models::NodeVector;
+using mimir::models::BayesNetFragment;
 using mimir::models::Probability;
 using mimir::models::ValueIndex;
 
@@ -31,15 +46,15 @@ DependencyDetector::DependencyDetector(CPT &cpt) :
 {
 }
 
-vector<Node> DependencyDetector::computePriors(const std::vector<models::ColumnNameValuePair> &input) const
+NodeVector DependencyDetector::computePriors(const models::ColumnNameValuePairVector &input) const
 {
     return computePriors(namedPairVectorToIndexedPairVector(input));
 }
 
-vector<Node> DependencyDetector::computePriors(const vector<ColumnIndexValuePair> &input) const
+NodeVector DependencyDetector::computePriors(const models::ColumnIndexValuePairVector &input) const
 {
     // a list. for each input - P(xn=in)
-    // Probabilities delievered as vector of NetworkFragments
+    // Probabilities delievered as vector of Nodes
     // sorted by probability ascending
     traits::VerboseTiming<std::chrono::microseconds> _timer(__PRETTY_FUNCTION__);
     vector<models::Node> priorNodes;
@@ -51,129 +66,63 @@ vector<Node> DependencyDetector::computePriors(const vector<ColumnIndexValuePair
     return priorNodes;
 }
 
-BayesNet DependencyDetector::findSuitableGraph(const vector<ColumnNameValuePair> &input, NameResolver &nr)
+BayesNetFragment DependencyDetector::findPredictionGraph(const models::ValueIndex nameToPredict, const models::ColumnNameValuePairVector &input, NameResolver &nr)
 {
-    traits::VerboseTiming<std::chrono::microseconds> graphTiming(__PRETTY_FUNCTION__);
-    auto likelyGraphs = findLikelyGraphs(input);
-    sort(likelyGraphs.begin(), likelyGraphs.end());
-    for (auto likely : likelyGraphs) {
-        likely.dump(std::cerr, nr);
-    }
-    return BayesNet();
-//    auto bestGraphs = findBestGraphs(likelyGraphs, nr);
-//    return bestGraphs;
+    findAnyGraph(nameToPredict, input, nr);
+    return BayesNetFragment();
 }
 
-vector<models::BayesNetFragment> DependencyDetector::findLikelyGraphs(const std::vector<models::ColumnNameValuePair> &input) const
+BayesNetFragmentVector DependencyDetector::findAnyGraph(const models::ValueIndex nameToPredict, const models::ColumnNameValuePairVector &input, NameResolver &nr)
 {
-    vector<ColumnIndexValuePair> possibleFields;
-    for (auto candidate : input) {
-        possibleFields.push_back({_cpt.fieldIndex(candidate.columnName), candidate.value});
-    }
-    auto priors = computePriors(possibleFields);
-    // look at first field x1. get probability P(x1=i1)
-    // take the next field x2. get probability P(x2=i2)
-    // get conditional probability P(x1=i1|x2=i2)
-    // is P(x1=i1|x2=i2) equal P(x1=i1)? -> independend -> out
-    // get the conditional probability P(x2=i2|x1=i1)
-    // is P(x2=i2|x1=i1) equal P(x2=i2)? -> independend -> out
-    // use the greater value for next step
-    // take the next value, get the conditional Probability P(xA=iA|xB=iB,x3=i3)
-    // is that one greater than the value before? take the next value as condition
-    // is that one less than the value before? ignore x3, go on with x4
-    // no more values left? the current one is one net fragment.
-    // restart with all values that are not in the net.
-    vector<models::BayesNetFragment> result;
-    ColumnIndexValuePair i1, i2;
-    for (auto prior : priors) {
-        for (size_t field = 0; field < possibleFields.size(); ++field) {
-            vector<ColumnIndexValuePair> potentialParents;
-            vector<Node> potentialParentNodes;
-            Probability currentLikelihood = prior.probability, l;
-            ColumnNameValuePair const &priorInput = prior.namedValue;
-            i1 = {_cpt.fieldIndex(priorInput.columnName), priorInput.value};
-            if (i1.columnIndex == possibleFields.at(field).columnIndex) {
-                continue;
-            }
-            for (size_t parentField = 0; parentField < possibleFields.size(); ++parentField) {
-                size_t parentIndex = field + parentField;
-                if (parentIndex >= possibleFields.size()) {
-                    parentIndex -= possibleFields.size(); // wrap around
-                }
-                if (i1.columnIndex == possibleFields.at(parentIndex).columnIndex) {
+    traits::VerboseTiming<std::chrono::microseconds> _timer(__PRETTY_FUNCTION__);
+    // we'll proceed this way:
+    // we take the first input and calculate a distribution over nameToPredict and measure the vector length
+    // then we take the next input parameter and calculate the distribution and measure the vector length of the distribution
+    // if the vector is shorter now, we check param 2 alone
+    // if it's still shorter than before number 2 is ot
+    // if it's longer, it's in
+    auto inputSize = input.size();
+    typedef map<ColumnIndexValuePairVector, double> FieldsToProbabilityMap;
+    FieldsToProbabilityMap vectorLengthByField;
+    auto indexedFields = namedPairVectorToIndexedPairVector(input);
+    auto classIndex = _cpt.fieldIndex(nameToPredict);
+    auto prioriClassification = _cpt.classify(classIndex, {});
+    for (auto field : indexedFields) {
+        auto classification = _cpt.classify(classIndex, {field});
+        if (classification.vectorLength() > prioriClassification.vectorLength()) {
+            vectorLengthByField[{field}] = classification.vectorLength();
+
+            for (auto previous : vectorLengthByField) {
+                auto v = previous.first;
+                if (containerHas(v, field)) {
                     continue;
                 }
-                i2 = possibleFields.at(parentIndex);
-                potentialParents.push_back(i2);
-                potentialParentNodes.push_back(priors.at(parentIndex));
-                l = likelihood(i1, potentialParents);
-                if (l <= currentLikelihood) { // less likely is uninteresting, equal likelihood would point to independence
-                    potentialParents.pop_back();
-                    potentialParentNodes.pop_back();
-                    continue;
+                v.push_back(field);
+                auto t = _cpt.classify(classIndex, v);
+                if (t.vectorLength() > previous.second) {
+                    vectorLengthByField[v] = t.vectorLength();
                 }
-                currentLikelihood = l;
-                if (currentLikelihood == 1._p) {
-                    break;
-                }
-            }
-            models::BayesNetFragment fragment{{prior.namedValue, currentLikelihood}, potentialParentNodes};
-            if (result.size() == 0 || result.back() != fragment) {
-                result.push_back(fragment);
             }
         }
     }
-    return result;
-}
-
-BayesNet DependencyDetector::findBestGraphs(const std::vector<NetworkFragment> &candidates, NameResolver& nr)
-{
-    vector<NetworkFragment> mostProbable = candidates;
-    sort(mostProbable.begin(), mostProbable.end(), [](NetworkFragment const &left, NetworkFragment const &right){
-        if( left.probability() > right.probability() )
-            return true;
-        if (left.probability() == right.probability())
-            return left.countParents() > right.countParents();
-        return false;
+    typedef pair<ColumnIndexValuePairVector, double> FieldsAndVlengths;
+    vector<FieldsAndVlengths> vectorized;
+    std::copy(vectorLengthByField.begin(), vectorLengthByField.end(), std::back_inserter(vectorized));
+    sort(vectorized.begin(), vectorized.end(), [](FieldsAndVlengths const &left, FieldsAndVlengths const &right) {
+        return right.second < left.second;
     });
-    ValueIndex baseFieldName = mostProbable.front().input().columnName;
-    vector<BayesNet> networks;
-    for (auto fragment : mostProbable) {
-        if (fragment.input().columnName == baseFieldName) {
-            BayesNet n;
-            n.addFragment(fragment);
-            networks.push_back(n);
-            continue;
+    cerr << "Fields and probs:" << endl;
+    for (auto item : vectorized) {
+        for (auto field : item.first) {
+            cerr << nr.nameFromIndex(_cpt.fieldName(field.columnIndex)) << ", ";
         }
-        bool added = false;
-        auto currentNodeName = fragment.input().columnName;
-        for (auto &net : networks) {
-            if (!net.isKnownChild(currentNodeName) && net.canAdd(fragment)) {
-                net.addFragment(fragment);
-                added = true;
-                break;
-            }
-        }
-        if (!added) {
-            BayesNet n;
-            n.addFragment(fragment);
-            networks.push_back(n);
-        }
+        cerr << " --> " << item.second << endl;
     }
-    auto nw = networks.begin();
-    auto deepest = nw;
-    int depth = 0;
-    for (; nw != networks.end(); ++nw) {
-        int d = (*nw).greatestDepth();
-        if (d > depth) {
-            depth = d;
-            deepest = nw;
-        }
-    }
-    return *deepest;
+    return {};
 }
 
-Probability DependencyDetector::likelihood(const models::ColumnIndexValuePair &k, const std::vector<models::ColumnIndexValuePair> &input) const
+
+Probability DependencyDetector::likelihood(const models::ColumnIndexValuePair &k, const models::ColumnIndexValuePairVector &input) const
 {
     if (input.size() == 0) {
         return _cpt.probability({k});
@@ -182,14 +131,14 @@ Probability DependencyDetector::likelihood(const models::ColumnIndexValuePair &k
     return distribution.probabilityOf(k.value);
 }
 
-models::Probability DependencyDetector::conditionalProbability(const models::ColumnIndexValuePair &classifier, const vector<ColumnIndexValuePair> &input)
+models::Probability DependencyDetector::conditionalProbability(const models::ColumnIndexValuePair &classifier, const models::ColumnIndexValuePairVector &input)
 {
     auto result = _cpt.classify(classifier.columnIndex, input);
     auto classes = result.distribution();
-    auto v = find_if(classes.begin(), classes.end(), [&classifier](const NamedProbability& p){
-        return p.name == classifier.value;
+    auto v = find_if(classes.begin(), classes.end(), [&classifier](const models::NamedProbability& p){
+        return p.first == classifier.value;
     });
-    return v == classes.end() ? 0._p : (*v).probability;
+    return v == classes.end() ? 0._p : (*v).second;
 }
 
 void DependencyDetector::eliminateZeroEvidence(std::vector<models::ColumnIndexValuePair> &values) const
@@ -204,7 +153,7 @@ void DependencyDetector::eliminateZeroEvidence(std::vector<models::ColumnIndexVa
     }
 }
 
-vector<ColumnNameValuePair> DependencyDetector::indexedPairVectorToNamedPairVector(const vector<ColumnIndexValuePair> &values) const
+ColumnNameValuePairVector DependencyDetector::indexedPairVectorToNamedPairVector(const models::ColumnIndexValuePairVector &values) const
 {
     vector<ColumnNameValuePair> result;
     for (auto v : values) {
@@ -213,9 +162,9 @@ vector<ColumnNameValuePair> DependencyDetector::indexedPairVectorToNamedPairVect
     return result;
 }
 
-vector<ColumnIndexValuePair> DependencyDetector::namedPairVectorToIndexedPairVector(const vector<ColumnNameValuePair> &values) const
+ColumnIndexValuePairVector DependencyDetector::namedPairVectorToIndexedPairVector(const models::ColumnNameValuePairVector &values) const
 {
-    vector<ColumnIndexValuePair> result;
+    ColumnIndexValuePairVector result;
     for (auto v : values) {
         result.push_back({_cpt.fieldIndex(v.columnName), v.value});
     }

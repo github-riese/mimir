@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "KeyValuePair.h"
+#include "NamedProbability.h"
 #include "Probability.h"
 #include "ProbabilityDistribution.h"
 #include "ValueIndex.h"
