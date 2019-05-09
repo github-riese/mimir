@@ -6,6 +6,8 @@
 
 #include <iostream>
 
+#include <Logger.h>
+
 #include "../helpers/helpers.h"
 #include "../models/BayesNetFragment.h"
 #include "../models/Probability.h"
@@ -111,6 +113,8 @@ BayesNetFragmentVector DependencyDetector::findAnyGraph(const models::ValueIndex
     sort(vectorized.begin(), vectorized.end(), [](FieldsAndVlengths const &left, FieldsAndVlengths const &right) {
         return right.second < left.second;
     });
+    logger::Logger logger;
+    logger << "Hello" << "world";
     cerr << "Fields and probs:" << endl;
     for (auto item : vectorized) {
         for (auto field : item.first) {
