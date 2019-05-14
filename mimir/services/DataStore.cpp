@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <ios>
 
-#include "../traits/Timing.h"
+#include <iotaomegapsi/tools/timer/Timing.h>
 
 using std::find_if;
 using std::sort;
@@ -14,6 +14,8 @@ using std::vector;
 
 using mimir::models::CPT;
 using mimir::models::ValueIndex;
+
+using iotaomegapsi::tools::timer::VerboseTiming;
 
 namespace mimir {
 namespace services {

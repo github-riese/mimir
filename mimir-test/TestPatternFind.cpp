@@ -6,6 +6,13 @@
 #include "../mimir/services/Evaluator.h"
 #include "../mimir/services/DependencyDetector.h"
 
+#include <iotaomegapsi/tools/logger/DebugLogSink.h>
+#include <iotaomegapsi/tools/logger/SinkManager.h>
+
+#include <iotaomegapsi/tools/timer/Timing.h>
+
+REGISTER_TEST(TestPatternFind)
+
 using std::vector;
 
 using mimir::models::CPT;
@@ -20,10 +27,30 @@ using mimir::services::DependencyDetector;
 using mimir::services::Evaluator;
 using mimir::services::NameResolver;
 
+using iotaomegapsi::tools::logger::DebugLogSink;
+using iotaomegapsi::tools::logger::Logger;
+using iotaomegapsi::tools::logger::SinkManager;
+using iotaomegapsi::tools::logger::SharedLogSink_t;
+using iotaomegapsi::tools::timer::LoggingTiming;
+
+static SharedLogSink_t _s_debugLogSink;
+
 #define mkValueIndex(name) ValueIndex name = _nameResolver.indexFromName(#name);
+
 TestPatternFind::TestPatternFind() :
     _dataStore(_nameResolver)
 {
+    auto &sm = SinkManager::sinkManager();
+    sm.makeDefault("debug");
+    _s_debugLogSink = sm.namedSink("debug");
+    Logger::logger().info(__PRETTY_FUNCTION__);
+}
+
+TestPatternFind::~TestPatternFind()
+{
+    auto logContents = static_cast<DebugLogSink*>(_s_debugLogSink.get());
+    for (auto line : logContents->messages())
+        qDebug() << line.c_str();
 }
 
 void TestPatternFind::initTestCase()

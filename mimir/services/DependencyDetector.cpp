@@ -6,12 +6,12 @@
 
 #include <iostream>
 
-#include <Logger.h>
+#include <iotaomegapsi/tools/logger/Logger.h>
 
 #include "../helpers/helpers.h"
 #include "../models/BayesNetFragment.h"
 #include "../models/Probability.h"
-#include "../traits/Timing.h"
+#include <iotaomegapsi/tools/timer/Timing.h>
 
 using std::deque;
 using std::pair;
@@ -40,6 +40,8 @@ using mimir::models::BayesNetFragment;
 using mimir::models::Probability;
 using mimir::models::ValueIndex;
 
+using iotaomegapsi::tools::timer::LoggingTiming;
+
 namespace mimir {
 namespace services {
 
@@ -58,7 +60,7 @@ NodeVector DependencyDetector::computePriors(const models::ColumnIndexValuePairV
     // a list. for each input - P(xn=in)
     // Probabilities delievered as vector of Nodes
     // sorted by probability ascending
-    traits::VerboseTiming<std::chrono::microseconds> _timer(__PRETTY_FUNCTION__);
+    LoggingTiming<std::chrono::microseconds> _timer(__PRETTY_FUNCTION__);
     vector<models::Node> priorNodes;
     for (auto value : input) {
         Probability p = _cpt.probability({value});
@@ -76,7 +78,7 @@ BayesNetFragment DependencyDetector::findPredictionGraph(const models::ValueInde
 
 BayesNetFragmentVector DependencyDetector::findAnyGraph(const models::ValueIndex nameToPredict, const models::ColumnNameValuePairVector &input, NameResolver &nr)
 {
-    traits::VerboseTiming<std::chrono::microseconds> _timer(__PRETTY_FUNCTION__);
+    LoggingTiming<std::chrono::microseconds> _timer(__PRETTY_FUNCTION__);
     // we'll proceed this way:
     // we take the first input and calculate a distribution over nameToPredict and measure the vector length
     // then we take the next input parameter and calculate the distribution and measure the vector length of the distribution
@@ -113,8 +115,6 @@ BayesNetFragmentVector DependencyDetector::findAnyGraph(const models::ValueIndex
     sort(vectorized.begin(), vectorized.end(), [](FieldsAndVlengths const &left, FieldsAndVlengths const &right) {
         return right.second < left.second;
     });
-    logger::Logger logger;
-    logger << "Hello" << "world";
     cerr << "Fields and probs:" << endl;
     for (auto item : vectorized) {
         for (auto field : item.first) {

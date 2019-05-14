@@ -15,6 +15,7 @@ class TestPatternFind : public QObject
     Q_OBJECT
 public:
     TestPatternFind();
+    ~TestPatternFind();
 private Q_SLOTS:
     void initTestCase();
     void testPreCheckAssumptionThatDataTurnOutAOne();
@@ -25,5 +26,4 @@ private:
     mimir::services::DataStore _dataStore;
 };
 
-REGISTER_TEST(TestPatternFind)
 #endif // TESTPATTERNFIND_H

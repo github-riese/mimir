@@ -1,14 +1,17 @@
 #-------------------------------------------------
 #
-# Project created by QtCreator 2019-05-09T23:13:26
+# Project created by QtCreator 2019-05-14T13:07:15
 #
 #-------------------------------------------------
 
 QT       -= core gui
 
-TARGET = logger
+CONFIG   += c++1z
+TARGET = tools
 TEMPLATE = lib
-CONFIG += staticlib c++1z
+
+INCLUDEPATH += $$PWD/../..
+DEFINES += TOOLS_LIBRARY
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
@@ -22,17 +25,26 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-        ConsoleLogSink.cpp \
-        LogMessage.cpp \
-        Logger.cpp
+        logger/SinkManager.cpp \
+        logger/ConsoleLogSink.cpp \
+        logger/DebugLogSink.cpp \
+        logger/LogMessage.cpp \
+        logger/Logger.cpp \
+        logger/OstreamLogSink.cpp
 
 HEADERS += \
-        AbstractLogsink.h \
-        ConsoleLogSink.h \
-        LogLevel.h \
-        LogMessage.h \
-        Logger.h
+        logger/AbstractLogsink.h \
+        logger/ConsoleLogSink.h \
+        logger/DebugLogSink.h \
+        logger/LogLevel.h \
+        logger/LogMessage.h \
+        logger/Logger.h \
+        logger/OstreamLogSink.h \
+        logger/SinkManager.h \
+        timer/Timing.h \
+        ../iotaomegapsi_global.h 
+
 unix {
-    target.path = /usr/lib
+    target.path = /usr/lib/iotaomegapsi
     INSTALLS += target
 }

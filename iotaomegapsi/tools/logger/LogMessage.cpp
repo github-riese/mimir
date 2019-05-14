@@ -1,0 +1,34 @@
+#include "LogMessage.h"
+#include "Logger.h"
+
+namespace iotaomegapsi {
+namespace tools {
+namespace logger {
+
+LogMessage::LogMessage()
+{}
+
+LogMessage::LogMessage(LogLevel level, Logger *logger) :
+    _level(level),
+    _logger(logger)
+{
+}
+
+LogMessage::LogMessage(const LogMessage &previous) :
+    _level(previous._level),
+    _logger(previous._logger)
+{
+    _message.str(previous.message());
+}
+
+LogMessage::~LogMessage() noexcept
+{
+    if (_logger != nullptr) {
+        _logger->writeMessage(*this);
+    }
+}
+
+
+}
+} // namespace tools
+} // namespace iotaomegapsi

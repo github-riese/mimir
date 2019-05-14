@@ -1,6 +1,6 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
-    logger \
+    iotaomegapsi/tools \
     mimir \
     mimir-test

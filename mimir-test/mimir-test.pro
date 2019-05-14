@@ -52,3 +52,8 @@ unix|win32: LIBS += -L$$OUT_PWD/../mimir/ -lmimir
 
 INCLUDEPATH += $$PWD/../mimir
 DEPENDPATH += $$PWD/../mimir
+
+unix|win32: LIBS += -L$$OUT_PWD/../iotaomegapsi/tools/ -ltools
+
+INCLUDEPATH += $$PWD/..
+DEPENDPATH += $$PWD/../iotaomegapsi/tools

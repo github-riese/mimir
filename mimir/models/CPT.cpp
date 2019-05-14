@@ -8,7 +8,8 @@
 #include <set>
 #include <sstream>
 
-#include <traits/Timing.h>
+#include <iotaomegapsi/tools/timer/Timing.h>
+#include <iotaomegapsi/tools/logger/Logger.h>
 #include "../helpers/AccumulateHelper.h"
 
 using std::map;
@@ -21,6 +22,9 @@ using std::accumulate;
 using std::unique_copy;
 using std::distance;
 using std::find_if;
+
+using iotaomegapsi::tools::timer::VerboseTiming;
+using iotaomegapsi::tools::logger::Logger;
 
 namespace mimir {
 namespace models {
@@ -69,7 +73,7 @@ Probability CPT::probability(std::vector<ColumnIndexValuePair> matchRules) const
  */
 ProbabilityDistribution CPT::classify(ValueIndex classifier, const std::vector<ColumnNameValuePair> &columns)
 {
-    traits::VerboseTiming<std::chrono::microseconds> _timing("CPT::classify");
+    VerboseTiming<std::chrono::microseconds> _timing("CPT::classify", std::cerr);
     auto matchRule = buildMatchRule(columns);
     auto classifierIndex = fieldIndex(classifier);
     return classify(classifierIndex, matchRule);
@@ -142,7 +146,7 @@ void CPT::calculateProbabilities(vector<vector<ValueIndex>> table)
 {
     std::ostringstream ss;
     ss << "CPT::calculateProbabilities of " << table.size() << " values";
-    traits::VerboseTiming<std::chrono::microseconds> _timer(ss.str());
+    VerboseTiming<std::chrono::microseconds> _timer(ss.str());
 
     auto total = table.size();
     auto current = table.begin();

@@ -4,24 +4,31 @@
 #include <string>
 #include <sstream>
 
-#include "LogLevel.h"
+#include <iotaomegapsi/iotaomegapsi_global.h>
+#include <iotaomegapsi/tools/logger/LogLevel.h>
 
+namespace iotaomegapsi {
+namespace tools {
 namespace logger {
 
 class Logger;
-class LogMessage {
+class TOOLS_EXPORT LogMessage {
 public:
 
-    LogMessage(Logger* logger);
+    LogMessage();
+    LogMessage(LogLevel level, Logger* logger);
 
-    LogMessage()
-    {}
+    LogMessage(LogMessage const &previous);
+    LogMessage(LogMessage &&) = default;
 
     ~LogMessage() noexcept;
 
-    LogMessage(LogMessage const &previous)
-    {
-        _message.str(previous.message());
+    inline LogLevel level() const noexcept {
+        return _level;
+    }
+
+    inline void setLevel(LogLevel level) noexcept {
+        _level = level;
     }
 
     inline std::string message() const {
@@ -31,7 +38,7 @@ public:
     template<typename T>
     void add(T const &v) noexcept
     {
-        _message << v;
+        *this << v;
     }
 
     template<typename T>
@@ -46,13 +53,16 @@ public:
         _message.str(std::string());
     }
 private:
+    LogLevel _level = LogLevel::Default;
     std::stringstream _message;
     Logger *_logger = nullptr;
 };
 
 } // namespace logger
+} // namespace tools
+} // namespace iotaomegapsi
 
-inline std::ostream &operator<<(std::ostream &stream, logger::LogMessage const &m) noexcept
+inline std::ostream &operator<<(std::ostream &stream, iotaomegapsi::tools::logger::LogMessage const &m) noexcept
 {
     stream << m.message();
     return stream;

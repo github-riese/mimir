@@ -1,6 +1,8 @@
 #ifndef LOGLEVEL_H
 #define LOGLEVEL_H
 
+namespace iotaomegapsi {
+namespace tools {
 namespace logger {
 enum class LogLevel : int
 {
@@ -14,4 +16,7 @@ enum class LogLevel : int
 };
 
 }
+} // namespace tools
+} // namespace iotaomegapsi
+
 #endif // LOGLEVEL_H

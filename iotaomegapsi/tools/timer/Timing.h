@@ -5,8 +5,11 @@
 #include <iostream>
 #include <string>
 
-namespace mimir {
-namespace traits {
+#include <iotaomegapsi/tools/logger/Logger.h>
+
+namespace iotaomegapsi {
+namespace tools {
+namespace timer {
 
 template<class Duration>
 inline constexpr const char* unit();
@@ -54,7 +57,31 @@ private:
     std::string _name;
     std::ostream &_stream;
 };
-} // namespace traits
-} // namespace mimir
+
+template<typename Duration = std::chrono::milliseconds>
+class LoggingTiming : public Timing
+{
+public:
+    inline LoggingTiming(const std::string &name, logger::Logger &logger = logger::Logger::logger()) :
+        Timing(),
+        _name(name),
+        _logger(logger) {}
+    inline void report() const {
+        auto duration = sinceStart<Duration>();
+        _logger << "[Timer] \"" << _name << "\": " << duration.count() << unit<Duration>() << " elapsed.";
+    }
+    inline ~LoggingTiming() {
+        report();
+    }
+private:
+    std::string _name;
+    logger::Logger &_logger;
+};
+
+
+
+} // namespace timer
+} // namespace tools
+} // namespace iotaomegapsi
 
 #endif // TIMING_H
