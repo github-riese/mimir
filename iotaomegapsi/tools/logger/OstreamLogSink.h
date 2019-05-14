@@ -3,7 +3,7 @@
 
 #include <ostream>
 
-#include "../iotaomegapsi_global.h"
+#include <iotaomegapsi/iotaomegapsi_global.h>
 
 #include "AbstractLogsink.h"
 

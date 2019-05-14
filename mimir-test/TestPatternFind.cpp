@@ -43,7 +43,12 @@ TestPatternFind::TestPatternFind() :
     auto &sm = SinkManager::sinkManager();
     sm.makeDefault("debug");
     _s_debugLogSink = sm.namedSink("debug");
-    Logger::logger().info(__PRETTY_FUNCTION__);
+    Logger::logger().info("A logger has been instantiated in %s and shall log to log sink debug. in %d..%d..%d...now.",
+                          __PRETTY_FUNCTION__,
+                          3,
+                          2,
+                          1);
+    Logger::logger().info() << "Test commence.";
 }
 
 TestPatternFind::~TestPatternFind()

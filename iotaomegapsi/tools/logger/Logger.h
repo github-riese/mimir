@@ -37,6 +37,12 @@ public:
     void writeMessage(LogMessage const &message) noexcept;
     void writeFormattedText(LogLevel level, const std::string format, ...) noexcept;
 
+    LogMessage error() noexcept;
+    LogMessage warn() noexcept;
+    LogMessage info() noexcept;
+    LogMessage verbose() noexcept;
+    LogMessage debug() noexcept;
+
     void error(const std::string format, ...) noexcept;
     void warn(std::string const format, ...) noexcept;
     void info(std::string const format, ...) noexcept;
@@ -45,6 +51,7 @@ public:
 private:
     void writeMessageFwd(LogLevel level, const std::string &format, va_list) noexcept;
 private:
+    // TODO: think about a log decorator.
     LogLevel _level = LogLevel::Debug;
     LogLevel _defaultLoglevel = LogLevel::Information;
     SharedLogSink_t _sink;

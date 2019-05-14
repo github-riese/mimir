@@ -74,6 +74,31 @@ void Logger::writeFormattedText(LogLevel level, const std::string format, ...) n
     va_end(varArgs);
 }
 
+LogMessage Logger::error() noexcept
+{
+    return LogMessage(LogLevel::Error, this);
+}
+
+LogMessage Logger::warn() noexcept
+{
+    return LogMessage(LogLevel::Warning, this);
+}
+
+LogMessage Logger::info() noexcept
+{
+    return LogMessage(LogLevel::Information, this);
+}
+
+LogMessage Logger::verbose() noexcept
+{
+    return LogMessage(LogLevel::Verbose, this);
+}
+
+LogMessage Logger::debug() noexcept
+{
+    return LogMessage(LogLevel::Debug, this);
+}
+
 void Logger::error(const std::string format, ...) noexcept
 {
     va_list args;
