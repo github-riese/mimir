@@ -8,6 +8,7 @@
 
 #include <iotaomegapsi/tools/logger/DebugLogSink.h>
 #include <iotaomegapsi/tools/logger/SinkManager.h>
+#include <iotaomegapsi/tools/logger/DebugLogSink.h>
 
 #include <iotaomegapsi/tools/timer/Timing.h>
 
@@ -48,13 +49,15 @@ TestPatternFind::TestPatternFind() :
                           3,
                           2,
                           1);
-    Logger::logger().info() << "Test commence.";
+    Logger::logger().info() << "Tests commence.";
 }
 
 TestPatternFind::~TestPatternFind()
 {
-    auto logContents = static_cast<DebugLogSink*>(_s_debugLogSink.get());
-    for (auto line : logContents->messages())
+    auto debugLogSink = dynamic_cast<DebugLogSink*>(_s_debugLogSink.get());
+    if (debugLogSink == nullptr)
+        return;
+    for (auto line : debugLogSink->messages())
         qDebug() << line.c_str();
 }
 

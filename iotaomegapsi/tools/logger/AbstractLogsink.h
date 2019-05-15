@@ -16,11 +16,16 @@ namespace logger {
 class TOOLS_EXPORT AbstractLogSink
 {
 public:
+    AbstractLogSink() = default;
+    AbstractLogSink(AbstractLogSink const &) = delete;
+    AbstractLogSink(AbstractLogSink &&) = default;
+    AbstractLogSink& operator=(AbstractLogSink &&) = default;
+    AbstractLogSink& operator=(AbstractLogSink const &) = delete;
     virtual ~AbstractLogSink() noexcept = default;
     virtual bool writeMessage(LogMessage const &) noexcept = 0;
 };
 
-typedef std::shared_ptr<AbstractLogSink> SharedLogSink_t;
+using SharedLogSink_t = std::shared_ptr<AbstractLogSink>;
 
 } // namespace logger
 } // namespace tools

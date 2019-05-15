@@ -21,10 +21,10 @@ class TOOLS_EXPORT SinkManager
     };
 public:
     static SinkManager &sinkManager();
-    SinkManager();
+    SinkManager() = default;
     SharedLogSink_t defaultSink() const;
     SharedLogSink_t namedSink(std::string const &) const;
-    void registerSink(std::string const &name, SharedLogSink_t sink);
+    void registerSink(std::string const &name, const SharedLogSink_t &sink);
     bool makeDefault(std::string const &name);
 private:
     std::vector<SinkDesc> _knownSinks;

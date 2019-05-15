@@ -21,19 +21,12 @@ SinkManager &SinkManager::sinkManager()
 class NullSink : public AbstractLogSink
 {
 public:
-    ~NullSink() override; // avoid a warning abount no out-of-line virtuals...
     bool writeMessage(const LogMessage &) noexcept override
     {
         return true;
     }
 };
 REGISTER_SINK(null, NullSink);
-
-NullSink::~NullSink() {} // formalism.
-
-SinkManager::SinkManager()
-{
-}
 
 SharedLogSink_t SinkManager::defaultSink() const
 {
@@ -48,13 +41,13 @@ SharedLogSink_t SinkManager::namedSink(const std::string &name) const
     for (auto s : _knownSinks) {
         if (s.name == name)
             return s.sink;
-        else if (s.name == "null")
+         if (s.name == "null")
             nullSink = &s.sink;
     }
     return *nullSink;
 }
 
-void SinkManager::registerSink(const std::string &name, SharedLogSink_t sink)
+void SinkManager::registerSink(const std::string &name, SharedLogSink_t const &sink)
 {
     auto current = find_if(_knownSinks.begin(), _knownSinks.end(), [name] (auto current) -> bool {
         return current.name == name;

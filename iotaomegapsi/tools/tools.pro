@@ -9,6 +9,7 @@ QT       -= core gui
 CONFIG   += c++1z
 TARGET = tools
 TEMPLATE = lib
+CONFIG += staticlib
 
 INCLUDEPATH += $$PWD/../..
 DEFINES += TOOLS_LIBRARY

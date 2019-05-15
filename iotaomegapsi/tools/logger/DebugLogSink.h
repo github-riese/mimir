@@ -15,7 +15,12 @@ namespace logger {
 class TOOLS_EXPORT DebugLogSink : public AbstractLogSink
 {
 public:
-    ~DebugLogSink() override;
+    DebugLogSink() = default;
+    DebugLogSink(DebugLogSink const &) = delete;
+    DebugLogSink(DebugLogSink &&) = default;
+    DebugLogSink &operator =(DebugLogSink const &) = delete;
+    DebugLogSink &operator =(DebugLogSink &&) = default;
+    ~DebugLogSink() override = default;
     bool writeMessage(const LogMessage &) noexcept override;
     std::vector<std::string> messages() noexcept;
 private:

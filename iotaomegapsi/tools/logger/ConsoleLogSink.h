@@ -12,7 +12,7 @@ namespace logger {
 class TOOLS_EXPORT ConsoleLogSink : public AbstractLogSink
 {
 public:
-    ConsoleLogSink();
+    ConsoleLogSink() = default;
     bool writeMessage(const LogMessage &) noexcept override;
 };
 

@@ -11,11 +11,6 @@ namespace logger {
 
 REGISTER_SINK(debug, DebugLogSink);
 
-DebugLogSink::~DebugLogSink()
-{
-
-}
-
 bool DebugLogSink::writeMessage(const LogMessage &m) noexcept
 {
     auto now = std::chrono::system_clock::now();
@@ -28,6 +23,8 @@ bool DebugLogSink::writeMessage(const LogMessage &m) noexcept
 std::vector<std::string> DebugLogSink::messages() noexcept
 {
     std::vector<std::string> lines;
+    if (_messages.eof())
+        return lines;
     _messages.seekg(0);
     for (std::string line; std::getline(_messages, line);) {
         lines.push_back(line);

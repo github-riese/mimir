@@ -8,11 +8,6 @@ namespace logger {
 
 REGISTER_SINK("console", ConsoleLogSink);
 
-ConsoleLogSink::ConsoleLogSink()
-{
-
-}
-
 bool ConsoleLogSink::writeMessage(const LogMessage &message) noexcept
 {
     std::ostream &stream = message.level() < LogLevel::Information ? std::cerr : std::cout;

@@ -1,5 +1,6 @@
 #include <memory>
 #include <cstdarg>
+#include <utility>
 
 #include "Logger.h"
 #include "SinkManager.h"
@@ -14,7 +15,7 @@ public:
     Logger &fetch()
     {
         if (!_sharedLogger)
-            _sharedLogger.reset(new Logger);
+            _sharedLogger = std::make_shared<Logger>();
         return *_sharedLogger;
     }
     void set(Logger &logger)
@@ -41,11 +42,7 @@ Logger::Logger(LogLevel level) :
 
 Logger::Logger(SharedLogSink_t sink, LogLevel level) :
     _level(level),
-    _sink(sink)
-{
-}
-
-Logger::~Logger() noexcept
+    _sink(std::move(sink))
 {
 }
 
@@ -66,7 +63,7 @@ void Logger::writeMessage(const LogMessage &message) noexcept
     _sink->writeMessage(m);
 }
 
-void Logger::writeFormattedText(LogLevel level, const std::string format, ...) noexcept
+void Logger::writeFormattedText(LogLevel level, std::string format, ...) noexcept
 {
     va_list varArgs;
     va_start(varArgs, format);
@@ -99,7 +96,7 @@ LogMessage Logger::debug() noexcept
     return LogMessage(LogLevel::Debug, this);
 }
 
-void Logger::error(const std::string format, ...) noexcept
+void Logger::error(std::string format, ...) noexcept
 {
     va_list args;
     va_start(args, format);
@@ -107,7 +104,7 @@ void Logger::error(const std::string format, ...) noexcept
     va_end(args);
 }
 
-void Logger::warn(const std::string format, ...) noexcept
+void Logger::warn(std::string format, ...) noexcept
 {
     va_list args;
     va_start(args, format);
@@ -115,7 +112,7 @@ void Logger::warn(const std::string format, ...) noexcept
     va_end(args);
 }
 
-void Logger::info(const std::string format, ...) noexcept
+void Logger::info(std::string format, ...) noexcept
 {
     va_list args;
     va_start(args, format);
@@ -123,7 +120,7 @@ void Logger::info(const std::string format, ...) noexcept
     va_end(args);
 }
 
-void Logger::verbose(const std::string format, ...) noexcept
+void Logger::verbose(std::string format, ...) noexcept
 {
     va_list args;
     va_start(args, format);
@@ -131,7 +128,7 @@ void Logger::verbose(const std::string format, ...) noexcept
     va_end(args);
 }
 
-void Logger::debug(const std::string format, ...) noexcept
+void Logger::debug(std::string format, ...) noexcept
 {
     va_list args;
     va_start(args, format);

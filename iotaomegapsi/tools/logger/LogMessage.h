@@ -15,11 +15,12 @@ class Logger;
 class TOOLS_EXPORT LogMessage {
 public:
 
-    LogMessage();
+    LogMessage() = default;
     LogMessage(LogLevel level, Logger* logger);
-
     LogMessage(LogMessage const &previous);
+    LogMessage & operator=(LogMessage const &);
     LogMessage(LogMessage &&) = default;
+    LogMessage & operator =(LogMessage &&) = default;
 
     ~LogMessage() noexcept;
 

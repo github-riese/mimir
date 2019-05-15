@@ -81,7 +81,8 @@ HEADERS += \
 
 unix|win32: LIBS += -lcuda -L/usr/local/cuda/lib
 
-unix|win32: LIBS += -L$$OUT_PWD/../iotaomegapsi/tools/ -ltools
+unix!mac|win32: LIBS += -L$$OUT_PWD/../iotaomegapsi/tools/ -ltools -Wl,-whole_archive
+mac: LIBS += -L$$OUT_PWD/../iotaomegapsi/tools/ -ltools -Wl,-all_load
 
 INCLUDEPATH += $$PWD/..
 DEPENDPATH += $$PWD/../iotaomegapsi/tools

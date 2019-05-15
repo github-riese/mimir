@@ -20,7 +20,7 @@ public:
     static void setDefaultLogger(Logger &);
     Logger(LogLevel level = LogLevel::Information);
     Logger(SharedLogSink_t sink, LogLevel level = LogLevel::Information);
-    ~Logger() noexcept;
+    ~Logger() noexcept = default;
 
     inline LogLevel logLevel() const noexcept { return _level; }
     inline void setLoglevel(LogLevel level) noexcept { _level = level; }
@@ -35,7 +35,7 @@ public:
 
     void operator <<(LogMessage const &message) noexcept;
     void writeMessage(LogMessage const &message) noexcept;
-    void writeFormattedText(LogLevel level, const std::string format, ...) noexcept;
+    void writeFormattedText(LogLevel level, std::string format, ...) noexcept;
 
     LogMessage error() noexcept;
     LogMessage warn() noexcept;
@@ -43,11 +43,11 @@ public:
     LogMessage verbose() noexcept;
     LogMessage debug() noexcept;
 
-    void error(const std::string format, ...) noexcept;
-    void warn(std::string const format, ...) noexcept;
-    void info(std::string const format, ...) noexcept;
-    void verbose(std::string const format, ...) noexcept;
-    void debug(std::string const format, ...) noexcept;
+    void error(std::string format, ...) noexcept;
+    void warn(std::string format, ...) noexcept;
+    void info(std::string format, ...) noexcept;
+    void verbose(std::string format, ...) noexcept;
+    void debug(std::string format, ...) noexcept;
 private:
     void writeMessageFwd(LogLevel level, const std::string &format, va_list) noexcept;
 private:
