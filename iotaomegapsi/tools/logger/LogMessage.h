@@ -32,6 +32,10 @@ public:
         _level = level;
     }
 
+    inline size_t length() const noexcept {
+        return _message.str().length();
+    }
+
     inline std::string message() const {
         return _message.str();
     }

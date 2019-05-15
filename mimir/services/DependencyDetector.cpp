@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <deque>
 #include <map>
+#include <vector>
 
 #include <iostream>
 
@@ -85,9 +86,11 @@ BayesNetFragmentVector DependencyDetector::findAnyGraph(const models::ValueIndex
     // if the vector is shorter now, we check param 2 alone
     // if it's still shorter than before number 2 is ot
     // if it's longer, it's in
-    auto inputSize = input.size();
-    typedef map<ColumnIndexValuePairVector, double> FieldsToProbabilityMap;
+    using FieldsToProbabilityMap = map<ColumnIndexValuePairVector, double>;
     FieldsToProbabilityMap vectorLengthByField;
+    typedef pair<ColumnIndexValuePairVector, double> FieldsAndVlengths;
+    vector<FieldsAndVlengths> vectorized;
+
     auto indexedFields = namedPairVectorToIndexedPairVector(input);
     auto classIndex = _cpt.fieldIndex(nameToPredict);
     auto prioriClassification = _cpt.classify(classIndex, {});
@@ -96,21 +99,20 @@ BayesNetFragmentVector DependencyDetector::findAnyGraph(const models::ValueIndex
         if (classification.vectorLength() > prioriClassification.vectorLength()) {
             vectorLengthByField[{field}] = classification.vectorLength();
 
-            for (auto previous : vectorLengthByField) {
-                auto v = previous.first;
-                if (containerHas(v, field)) {
-                    continue;
-                }
-                v.push_back(field);
-                auto t = _cpt.classify(classIndex, v);
-                if (t.vectorLength() > previous.second) {
-                    vectorLengthByField[v] = t.vectorLength();
-                }
+        }
+        for (auto previous : vectorLengthByField) {
+            cerr << ".";
+            auto v = previous.first;
+            if (containerHas(v, field)) {
+                continue;
+            }
+            v.push_back(field);
+            auto t = _cpt.classify(classIndex, v);
+            if (t.vectorLength() > previous.second) {
+                 vectorLengthByField[v] = t.vectorLength();
             }
         }
     }
-    typedef pair<ColumnIndexValuePairVector, double> FieldsAndVlengths;
-    vector<FieldsAndVlengths> vectorized;
     std::copy(vectorLengthByField.begin(), vectorLengthByField.end(), std::back_inserter(vectorized));
     sort(vectorized.begin(), vectorized.end(), [](FieldsAndVlengths const &left, FieldsAndVlengths const &right) {
         return right.second < left.second;

@@ -13,6 +13,11 @@ struct ColumnNameValuePair
 {
     ValueIndex columnName;
     ValueIndex value;
+    inline constexpr bool valid() const
+    {
+        return columnName.isValid() && value.isValid();
+    }
+
     constexpr inline bool operator <(ColumnNameValuePair const &rhs) const
     {
         return columnName < rhs.columnName;

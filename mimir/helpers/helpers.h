@@ -71,12 +71,10 @@ struct UnpackDouble
     double operator()(uint64_t packed);
 };
 
-template <typename ContainerType, typename ValueType>
-bool containerHas(ContainerType const &container, ValueType const &value) noexcept
+template <typename ContainerType>
+bool containerHas(ContainerType const &container, typename ContainerType::value_type const &value) noexcept
 {
-    return std::find_if(container.cbegin(), container.cend(), [&value](ValueType  const&item) {
-        return item == value;
-    }) != container.end();
+    return std::find(container.cbegin(), container.cend(), value) != container.end();
 }
 
 } // namespace helpers

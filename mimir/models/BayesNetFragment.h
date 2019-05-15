@@ -2,7 +2,8 @@
 #define NETWORKFRAGMENT_H
 
 #include <vector>
-#include <iostream>
+
+#include <iotaomegapsi/tools/logger/Logger.h>
 
 #include "KeyValuePair.h"
 #include "Probability.h"
@@ -15,6 +16,12 @@ namespace models {
 struct Node {
     ColumnNameValuePair namedValue;
     Probability probability;
+
+    inline constexpr bool valid() const
+    {
+        return namedValue.valid();
+    }
+
     inline bool operator <(Node const &rhs) const {
         if (long fieldDiff = static_cast<long>(namedValue.columnName - rhs.namedValue.columnName)) {
             return fieldDiff < 0;
@@ -22,9 +29,9 @@ struct Node {
         return probability < rhs.probability;
     }
 
-    inline std::ostream & dump(std::ostream &stream, services::NameResolver &nr) {
-        stream << nr.nameFromIndex(namedValue.columnName) << "=" << nr.nameFromIndex(namedValue.value);
-        return stream;
+    inline iotaomegapsi::tools::logger::LogMessage dump(iotaomegapsi::tools::logger::LogMessage &message, services::NameResolver &nr) {
+        message << nr.nameFromIndex(namedValue.columnName) << "=" << nr.nameFromIndex(namedValue.value);
+        return message;
     }
 
     inline bool operator == (Node const &rhs) const {
@@ -49,7 +56,12 @@ struct BayesNetFragment
         }
         return parents.size() < rhs.parents.size();
     }
-    inline std::ostream &dump(std::ostream &stream, services::NameResolver &nr) {
+    inline iotaomegapsi::tools::logger::Logger &dump(iotaomegapsi::tools::logger::Logger &logger, services::NameResolver &nr) {
+        auto stream = logger.info();
+        if (!node.valid()) {
+            stream << "(invalid BayesNetFragment: node is invalid.)";
+            return logger;
+        }
         stream << "P(";
         node.dump(stream, nr);
         if (parents.size() > 0) {
@@ -63,8 +75,8 @@ struct BayesNetFragment
         }
         stream << ") = ";
         stream << node.probability;
-        stream << std::endl;
-        return stream;
+        stream << "\n";
+        return logger;
     }
 
     inline bool operator == (BayesNetFragment const &rhs) const {

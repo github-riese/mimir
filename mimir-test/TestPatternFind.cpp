@@ -44,16 +44,12 @@ TestPatternFind::TestPatternFind() :
     auto &sm = SinkManager::sinkManager();
     sm.makeDefault("debug");
     _s_debugLogSink = sm.namedSink("debug");
-    Logger::logger().info("A logger has been instantiated in %s and shall log to log sink debug. in %d..%d..%d...now.",
-                          __PRETTY_FUNCTION__,
-                          3,
-                          2,
-                          1);
     Logger::logger().info() << "Tests commence.";
 }
 
 TestPatternFind::~TestPatternFind()
 {
+    qDebug() << "Enter:" << __PRETTY_FUNCTION__;
     auto debugLogSink = dynamic_cast<DebugLogSink*>(_s_debugLogSink.get());
     if (debugLogSink == nullptr)
         return;
@@ -157,12 +153,17 @@ void TestPatternFind::testPreCheckAssumptionThatDataTurnOutAOne()
     auto x = detect.computePriors(vector<ColumnNameValuePair>{{type, ring}, {colour, green}, {ccContact, no}, {presenterSex, hostMale}, {sizesAvailable, yes}, {dayTime, night}});
 
     auto net = detect.findPredictionGraph(status, {{type, ring}, {colour, green}, {ccContact, no}, {presenterSex, hostMale}, {sizesAvailable, yes}, {dayTime, night}}, _nameResolver);
-    net.dump(std::cerr, _nameResolver);
+    qDebug() << "check1";
+    Logger logger;
+    net.dump(logger, _nameResolver);
+    qDebug() << "check2";
     vector<NamedProbability> expectedSinksNet1 {{ccContact, 1._p}};
     //QCOMPARE(net.sinks(), expectedSinksNet1);
     std::cerr << "------" << std::endl;
     auto net2 = detect.findPredictionGraph(status, {{type, brooch}, {colour, red}, {ccContact, yes}, {presenterSex, hostMale}, {sizesAvailable, no}, {dayTime, afternoon}}, _nameResolver);
-    net2.dump(std::cerr, _nameResolver);
+    qDebug() << "check3";
+    net2.dump(logger, _nameResolver);
+    qDebug() << "check4";
     vector<NamedProbability> expectedSinksNet2 {{colour, .5_p}};
     //QCOMPARE(net2.sinks(), expectedSinksNet2);
     std::cerr << "------" << std::endl;
