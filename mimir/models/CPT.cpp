@@ -107,6 +107,24 @@ ProbabilityDistribution CPT::classify(long classifierIndex, const std::vector<Co
     return probabilityDistribution;
 }
 
+Probability CPT::conditionalProbability(const ColumnIndexValuePairVector &fields, const ColumnIndexValuePairVector &parents) const
+{
+    auto sumOfMatches = 0._p;
+    auto sumOfNonMatches = 0._p;
+    auto combined = fields;
+    for (auto row : _proabilities) {
+        if (!row.matchesInput(parents))
+            continue;
+        if (row.matchesInput(fields))
+            sumOfMatches += row.probability;
+        else
+            sumOfNonMatches += row.probability;
+    }
+    return sumOfMatches / (sumOfMatches+sumOfNonMatches);
+}
+
+
+
 vector<ValueIndex> CPT::distinctValues(ValueIndex field) const
 {
     long int index = fieldIndex(field);

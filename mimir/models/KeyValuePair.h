@@ -13,9 +13,10 @@ struct ColumnNameValuePair
 {
     ValueIndex columnName;
     ValueIndex value;
+
     inline constexpr bool valid() const
     {
-        return columnName.isValid() && value.isValid();
+        return columnName.valid() && value.valid();
     }
 
     constexpr inline bool operator <(ColumnNameValuePair const &rhs) const
@@ -27,14 +28,21 @@ struct ColumnNameValuePair
     {
         return columnName == rhs.columnName && value == rhs.value;
     }
+
 };
 
 using ColumnNameValuePairVector = std::vector<ColumnNameValuePair>;
 
 struct ColumnIndexValuePair
 {
-    long int columnIndex;
+    long int columnIndex = -1;
     ValueIndex value;
+
+    constexpr inline bool valid() const
+    {
+        return columnIndex >= 0 && value.valid();
+    }
+
     constexpr inline bool operator<(ColumnIndexValuePair const &rhs) const
     {
         return columnIndex < rhs.columnIndex;
@@ -46,25 +54,6 @@ struct ColumnIndexValuePair
 };
 
 using ColumnIndexValuePairVector = std::vector<ColumnIndexValuePair>;
-
-/**
- * @brief The ConditionalProbability struct
- * for expressions P(k|x1, x2, ..., xn) k is in name, X is in parents
- */
-struct ConditionalProbability
-{
-    Probability probability;
-    ValueIndex name;
-    std::vector<ValueIndex> parents;
-    constexpr inline bool operator <(ConditionalProbability const &rhs) const noexcept
-    {
-        return probability < rhs.probability;
-    }
-    constexpr inline bool operator==(ConditionalProbability const &rhs) const noexcept
-    {
-        return probability == rhs.probability;
-    }
-};
 
 } // namespace models
 } // namespace mimir

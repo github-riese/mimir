@@ -2,15 +2,37 @@
 #define NAMEDPROBABILITY_H
 
 #include <vector>
-#include <tuple>
 #include "models/Probability.h"
 #include "models/ValueIndex.h"
 
 namespace mimir {
 namespace models {
 
-using NamedProbability = std::pair<ValueIndex, Probability>;
-using NamedProbabilityVector = std::vector<NamedProbability>;
+struct ValueProbability {
+    ValueIndex value;
+    Probability probability;
+    std::vector<long> parentFielIndices;
+    constexpr bool operator==(ValueProbability const &) const noexcept;
+    constexpr bool operator<(ValueProbability const &) const noexcept;
+    constexpr bool operator<(Probability const &) const noexcept;
+};
+
+using ValueProbabilityVector = std::vector<ValueProbability>;
+
+constexpr bool ValueProbability::operator==(const ValueProbability &rhs) const noexcept
+{
+    return value == rhs.value && probability == rhs.probability;
+}
+
+constexpr bool ValueProbability::operator<(const ValueProbability &rhs) const noexcept
+{
+    return probability < rhs.probability;
+}
+
+constexpr bool ValueProbability::operator<(const Probability &p) const noexcept
+{
+    return probability < p;
+}
 
 }
 }

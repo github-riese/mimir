@@ -19,7 +19,8 @@ using std::vector;
 using mimir::models::CPT;
 using mimir::models::Evaluation;
 using mimir::models::ColumnNameValuePair;
-using mimir::models::NamedProbability;
+using mimir::models::ValueProbability;
+using mimir::models::ValueProbabilityVector;
 using mimir::models::Probability;
 using mimir::models::ProbabilityWithPriors;
 using mimir::models::ValueIndex;
@@ -152,19 +153,15 @@ void TestPatternFind::testPreCheckAssumptionThatDataTurnOutAOne()
     DependencyDetector detect(cpt);
     auto x = detect.computePriors(vector<ColumnNameValuePair>{{type, ring}, {colour, green}, {ccContact, no}, {presenterSex, hostMale}, {sizesAvailable, yes}, {dayTime, night}});
 
-    auto net = detect.findPredictionGraph(status, {{type, ring}, {colour, green}, {ccContact, no}, {presenterSex, hostMale}, {sizesAvailable, yes}, {dayTime, night}}, _nameResolver);
-    qDebug() << "check1";
+    auto net = detect.findPredictionGraph(status, {{type, ring}, {colour, green}, {ccContact, no}, {presenterSex, hostMale}, {sizesAvailable, yes}, {dayTime, night}}, 3);
     Logger logger;
-    net.dump(logger, _nameResolver);
-    qDebug() << "check2";
-    vector<NamedProbability> expectedSinksNet1 {{ccContact, 1._p}};
+    //net.dump(logger, _nameResolver);
+    ValueProbabilityVector expectedSinksNet1 {{ccContact, 1._p}};
     //QCOMPARE(net.sinks(), expectedSinksNet1);
     std::cerr << "------" << std::endl;
-    auto net2 = detect.findPredictionGraph(status, {{type, brooch}, {colour, red}, {ccContact, yes}, {presenterSex, hostMale}, {sizesAvailable, no}, {dayTime, afternoon}}, _nameResolver);
-    qDebug() << "check3";
-    net2.dump(logger, _nameResolver);
-    qDebug() << "check4";
-    vector<NamedProbability> expectedSinksNet2 {{colour, .5_p}};
+    auto net2 = detect.findPredictionGraph(status, {{type, brooch}, {colour, red}, {ccContact, yes}, {presenterSex, hostMale}, {sizesAvailable, no}, {dayTime, afternoon}}, 2);
+    //net2.dump(logger, _nameResolver);
+    ValueProbabilityVector expectedSinksNet2 {{colour, .5_p}};
     //QCOMPARE(net2.sinks(), expectedSinksNet2);
     std::cerr << "------" << std::endl;
 

@@ -14,11 +14,13 @@
 #include "../models/Probability.h"
 #include <iotaomegapsi/tools/timer/Timing.h>
 
+using std::back_inserter;
 using std::deque;
 using std::pair;
 using std::map;
 using std::vector;
 
+using std::copy;
 using std::find_if;
 using std::sort;
 
@@ -65,33 +67,44 @@ NodeVector DependencyDetector::computePriors(const models::ColumnIndexValuePairV
     vector<models::Node> priorNodes;
     for (auto value : input) {
         Probability p = _cpt.probability({value});
-        priorNodes.push_back({{_cpt.fieldName(value.columnIndex), value.value}, p});
+        priorNodes.push_back({_cpt.fieldName(value.columnIndex), value.value, p});
     }
     sort(priorNodes.begin(), priorNodes.end());
     return priorNodes;
 }
 
-BayesNetFragment DependencyDetector::findPredictionGraph(const models::ValueIndex nameToPredict, const models::ColumnNameValuePairVector &input, NameResolver &nr)
+BayesNetFragment DependencyDetector::findPredictionGraph(const models::ValueIndex nameToPredict, const models::ColumnNameValuePairVector &input, size_t maxGrapths, Strategy strategy)
 {
-    findAnyGraph(nameToPredict, input, nr);
+    findAnyGraph(nameToPredict, input, maxGrapths);
     return BayesNetFragment();
 }
 
-BayesNetFragmentVector DependencyDetector::findAnyGraph(const models::ValueIndex nameToPredict, const models::ColumnNameValuePairVector &input, NameResolver &nr)
+BayesNetFragmentVector DependencyDetector::findAnyGraph(const models::ValueIndex nameToPredict, const models::ColumnNameValuePairVector &input, size_t maxToEvaluate) const
 {
     LoggingTiming<std::chrono::microseconds> _timer(__PRETTY_FUNCTION__);
-    // we'll proceed this way:
-    // we take the first input and calculate a distribution over nameToPredict and measure the vector length
-    // then we take the next input parameter and calculate the distribution and measure the vector length of the distribution
-    // if the vector is shorter now, we check param 2 alone
-    // if it's still shorter than before number 2 is ot
-    // if it's longer, it's in
+    /* This is what we'll do:
+     * 1. we get the probabilities of each parameter
+     * 2. we get the likelihood of each parameter given any other parameter if the likelihood is greater than the probability of the parameter alone.
+     * 3. we find the max a posteoris (whithout acutally classifiing!) given any combination of input. Of those we choose maxToEvaluate. This will be the root of the graph.
+     * 4. for each result of 3 we now build a parameter tree that contains all the parameters.
+     */
+    auto indexedFields = namedPairVectorToIndexedPairVector(input);
+    auto likelihoods = maximizeLikelyhoods(indexedFields);
+    auto graphBases = maxAPosteoriLevel0(nameToPredict, indexedFields, maxToEvaluate);
+    for (auto graphBase : graphBases)
+    {
+        buildGraph(graphBase, likelihoods);
+    }
+
+    return {};
+}
+
+DependencyDetector::VectorLengthOfFieldVector DependencyDetector::maxAPosteoriLevel0(const models::ValueIndex nameToPredict, const models::ColumnIndexValuePairVector &indexedFields, size_t maxToEvaluate) const
+{
     using FieldsToProbabilityMap = map<ColumnIndexValuePairVector, double>;
     FieldsToProbabilityMap vectorLengthByField;
-    typedef pair<ColumnIndexValuePairVector, double> FieldsAndVlengths;
-    vector<FieldsAndVlengths> vectorized;
+    VectorLengthOfFieldVector vectorized;
 
-    auto indexedFields = namedPairVectorToIndexedPairVector(input);
     auto classIndex = _cpt.fieldIndex(nameToPredict);
     auto prioriClassification = _cpt.classify(classIndex, {});
     for (auto field : indexedFields) {
@@ -101,7 +114,6 @@ BayesNetFragmentVector DependencyDetector::findAnyGraph(const models::ValueIndex
 
         }
         for (auto previous : vectorLengthByField) {
-            cerr << ".";
             auto v = previous.first;
             if (containerHas(v, field)) {
                 continue;
@@ -114,40 +126,54 @@ BayesNetFragmentVector DependencyDetector::findAnyGraph(const models::ValueIndex
         }
     }
     std::copy(vectorLengthByField.begin(), vectorLengthByField.end(), std::back_inserter(vectorized));
-    sort(vectorized.begin(), vectorized.end(), [](FieldsAndVlengths const &left, FieldsAndVlengths const &right) {
+    sort(vectorized.begin(), vectorized.end(), [](VecorLengthOfField const &left, VecorLengthOfField const &right) {
         return right.second < left.second;
     });
-    cerr << "Fields and probs:" << endl;
-    for (auto item : vectorized) {
-        for (auto field : item.first) {
-            cerr << nr.nameFromIndex(_cpt.fieldName(field.columnIndex)) << ", ";
-        }
-        cerr << " --> " << item.second << endl;
-    }
-    return {};
+    return {vectorized.begin(), vectorized.size() > maxToEvaluate ? vectorized.begin() + static_cast<int>(maxToEvaluate) : vectorized.end()};
 }
 
+DependencyDetector::FieldLikelihoodVector DependencyDetector::maximizeLikelyhoods(const models::ColumnIndexValuePairVector &fields) const
+{
+    using FieldProbsMap = map<ColumnIndexValuePairVector, FieldLikelihood>;
+    FieldProbsMap likelihoods;
+    for (auto field : fields) {
+        likelihoods[{field}] = {field, {}, _cpt.probability({field})};
+        for (auto previous : likelihoods) {
+            auto v = previous.first;
+            if (containerHas(v, field)) continue;
+            auto l = _cpt.conditionalProbability({field}, v);
+            if (l > previous.second.probability) {
+                v.push_back(field);
+                likelihoods[v] = l;
+            }
+        }
+    }
+    FieldLikelihoodVector vectorized;
+    copy(likelihoods.begin(), likelihoods.end(), std::back_inserter(vectorized));
+    sort(vectorized.begin(), vectorized.end(), [](auto left, auto right) -> bool{ return left.second > right.second; });
+    return vectorized;
+}
+
+void DependencyDetector::buildGraph(VecorLengthOfField const &base, FieldLikelihoodVector const &likelihoods) const
+{
+    models::BayesNet net;
+    for(auto column : base.first) {
+        BayesNetFragment fragment;
+        fragment.node.field = {_cpt.fieldName(column.columnIndex), column.value};
+    }
+}
 
 Probability DependencyDetector::likelihood(const models::ColumnIndexValuePair &k, const models::ColumnIndexValuePairVector &input) const
 {
-    if (input.size() == 0) {
-        return _cpt.probability({k});
-    }
-    auto distribution = _cpt.classify(k.columnIndex, input);
-    return distribution.probabilityOf(k.value);
+    return _cpt.conditionalProbability({k}, input);
 }
 
 models::Probability DependencyDetector::conditionalProbability(const models::ColumnIndexValuePair &classifier, const models::ColumnIndexValuePairVector &input)
 {
-    auto result = _cpt.classify(classifier.columnIndex, input);
-    auto classes = result.distribution();
-    auto v = find_if(classes.begin(), classes.end(), [&classifier](const models::NamedProbability& p){
-        return p.first == classifier.value;
-    });
-    return v == classes.end() ? 0._p : (*v).second;
+    return _cpt.conditionalProbability({classifier}, input);
 }
 
-void DependencyDetector::eliminateZeroEvidence(std::vector<models::ColumnIndexValuePair> &values) const
+void DependencyDetector::eliminateZeroEvidence(ColumnIndexValuePairVector &values) const
 {
     auto iterator = values.begin();
     while (iterator != values.end()) {

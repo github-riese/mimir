@@ -79,12 +79,12 @@ ValueIndex ProbabilityDistribution::leastProbable() const
     return _minVal;
 }
 
-NamedProbability ProbabilityDistribution::max() const
+ValueProbability ProbabilityDistribution::max() const
 {
     return { _maxVal, _maxProb };
 }
 
-NamedProbability ProbabilityDistribution::min() const
+ValueProbability ProbabilityDistribution::min() const
 {
     return { _minVal, _minProb };
 }
@@ -122,9 +122,9 @@ vector<ValueIndex> ProbabilityDistribution::classifiers() const
     return _classifiers;
 }
 
-vector<NamedProbability> ProbabilityDistribution::distribution() const
+ValueProbabilityVector ProbabilityDistribution::distribution() const
 {
-    vector<NamedProbability> result;
+    ValueProbabilityVector result;
     if (_classifiers.size() == 0) {
         return result;
     }

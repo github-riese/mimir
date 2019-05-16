@@ -172,5 +172,5 @@ void Models::testCPT()
     QCOMPARE(distribution.argMax(), .5_p);
     QCOMPARE(distribution.vectorLength(), std::sqrt(.5*.5 + .25*.25 + .25*.25));
 
-    QCOMPARE((dist2.max()), (mimir::models::NamedProbability{ring, 1._p}));
+    QCOMPARE((dist2.max()), (mimir::models::ValueProbability{ring, 1._p}));
 }

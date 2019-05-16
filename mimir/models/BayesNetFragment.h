@@ -7,6 +7,7 @@
 
 #include "KeyValuePair.h"
 #include "Probability.h"
+#include "ProbabilityDistribution.h"
 
 #include "../services/NameResolver.h"
 
@@ -14,38 +15,54 @@ namespace mimir {
 namespace models {
 
 struct Node {
-    ColumnNameValuePair namedValue;
+    ColumnNameValuePair field;
     Probability probability;
-
-    inline constexpr bool valid() const
+    constexpr bool operator<(Node const &rhs) const
     {
-        return namedValue.valid();
-    }
-
-    inline bool operator <(Node const &rhs) const {
-        if (long fieldDiff = static_cast<long>(namedValue.columnName - rhs.namedValue.columnName)) {
-            return fieldDiff < 0;
-        }
         return probability < rhs.probability;
     }
-
-    inline iotaomegapsi::tools::logger::LogMessage dump(iotaomegapsi::tools::logger::LogMessage &message, services::NameResolver &nr) {
-        message << nr.nameFromIndex(namedValue.columnName) << "=" << nr.nameFromIndex(namedValue.value);
-        return message;
+    constexpr operator bool() const
+    {
+        return field.valid();
     }
+};
 
-    inline bool operator == (Node const &rhs) const {
-        return namedValue == rhs.namedValue;
+struct BayesNetFragment {
+    Node node;
+    std::vector<BayesNetFragment> parents;
+    size_t depth() const
+    {
+        if (parents.empty())
+            return 1;
+        size_t depth = 1;
+        for (auto &parent : parents) {
+            depth = std::max(depth, parent.depth());
+        }
+        return depth;
     }
+};
 
-    inline bool operator != (Node const &rhs) const {
-        return !(namedValue == rhs.namedValue);
+struct BayesNet {
+    ProbabilityDistribution classification;
+    std::vector<BayesNetFragment> parents;
+    size_t greatestDepth() const
+    {
+        if (parents.empty()) {
+            return 0;
+        }
+
+        size_t depth = 0;
+        for(auto parent : parents) {
+            auto pdepth = parent.depth();
+            depth = std::max(depth, pdepth);
+        }
+        return depth;
     }
 };
 
 using NodeVector = std::vector<Node>;
 
-struct BayesNetFragment
+/*struct BayesNetFragment
 {
     Node node;
     std::vector<Node> parents;
@@ -58,16 +75,16 @@ struct BayesNetFragment
     }
     inline iotaomegapsi::tools::logger::Logger &dump(iotaomegapsi::tools::logger::Logger &logger, services::NameResolver &nr) {
         auto stream = logger.info();
-        if (!node.valid()) {
+        if (!node) {
             stream << "(invalid BayesNetFragment: node is invalid.)";
             return logger;
         }
         stream << "P(";
-        node.dump(stream, nr);
+        stream << nr.nameFromIndex(node.field.columnName) << "=" << nr.nameFromIndex(node.field.value);
         if (parents.size() > 0) {
             stream << "|";
             for (auto parent = parents.begin(); parent != parents.end(); ++ parent) {
-                (*parent).dump(stream, nr);
+                stream << nr.nameFromIndex(parent->field.columnName) << "=" << nr.nameFromIndex(parent->field.value);
                 if (std::distance(parents.begin(), parent) < static_cast<decltype (std::distance(parents.begin(), parent))>(parents.size() - 1)) {
                     stream << ", ";
                 }
@@ -87,7 +104,7 @@ struct BayesNetFragment
         return node != rhs.node || parents != rhs.parents;
     }
 
-};
+};*/
 
 using BayesNetFragmentVector = std::vector<BayesNetFragment>;
 

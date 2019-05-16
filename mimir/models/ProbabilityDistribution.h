@@ -17,6 +17,7 @@ namespace models {
 class ProbabilityDistribution
 {
 public:
+    ProbabilityDistribution() = default;
     ProbabilityDistribution(std::vector<std::pair<ValueIndex, Probability>>);
     ProbabilityDistribution(std::vector<Probability>, std::vector<ValueIndex> = std::vector<ValueIndex>());
     ProbabilityDistribution(std::map<ValueIndex, Probability>);
@@ -26,12 +27,12 @@ public:
     Probability argMax() const;
     ValueIndex mostProbable() const;
     ValueIndex leastProbable() const;
-    NamedProbability max() const;
-    NamedProbability min() const;
+    ValueProbability max() const;
+    ValueProbability min() const;
     bool operator <(const ProbabilityDistribution &rhs) const;
     std::vector<Probability> probabilities() const;
     std::vector<ValueIndex> classifiers() const;
-    std::vector<NamedProbability> distribution() const;
+    ValueProbabilityVector distribution() const;
 
     Probability probabilityOf(ValueIndex) const;
     std::ostream &dump(std::ostream &, services::NameResolver &) const;

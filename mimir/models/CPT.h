@@ -34,6 +34,9 @@ public:
 
     ProbabilityDistribution classify(ValueIndex, std::vector<ColumnNameValuePair> const &);
     ProbabilityDistribution classify(long, std::vector<ColumnIndexValuePair> const&);
+
+    Probability conditionalProbability(ColumnIndexValuePairVector const &, ColumnIndexValuePairVector const &) const;
+
     std::vector<ValueIndex> distinctValues(ValueIndex field) const;
     std::vector<ValueIndex> distinctValues(long fieldIndex) const;
     std::ostream &dump(std::ostream&, services::NameResolver &) const;
