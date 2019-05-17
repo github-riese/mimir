@@ -15,7 +15,7 @@ bool DebugLogSink::writeMessage(const LogMessage &m) noexcept
 {
     auto now = std::chrono::system_clock::now();
     auto time = std::chrono::system_clock::to_time_t(now);
-    _messages << std::put_time(std::localtime(&time), "[%Y-%m-%d %H:%I:%S] ");
+    _messages << std::put_time(std::localtime(&time), "[%Y-%m-%d %H:%M:%S] ");
     _messages << m.message() << std::endl;
     return true;
 }
