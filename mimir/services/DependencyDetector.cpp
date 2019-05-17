@@ -30,6 +30,7 @@ using std::endl;
 
 using mimir::helpers::containerHas;
 
+using mimir::models::BayesNet;
 using mimir::models::BayesNetFragment;
 using mimir::models::BayesNetFragmentVector;
 using mimir::models::CPT;
@@ -55,7 +56,13 @@ DependencyDetector::DependencyDetector(CPT &cpt) :
 
 NodeVector DependencyDetector::computePriors(const models::ColumnNameValuePairVector &input) const
 {
-    return computePriors(namedPairVectorToIndexedPairVector(input));
+    LoggingTiming<std::chrono::microseconds> _timer(__PRETTY_FUNCTION__);
+    vector<Node> priorNodes;
+    for (auto value : input) {
+        priorNodes.push_back({{value}, _cpt.probability({value})});
+    }
+    sort(priorNodes.begin(), priorNodes.end());
+    return priorNodes;
 }
 
 NodeVector DependencyDetector::computePriors(const models::ColumnIndexValuePairVector &input) const
@@ -66,8 +73,7 @@ NodeVector DependencyDetector::computePriors(const models::ColumnIndexValuePairV
     LoggingTiming<std::chrono::microseconds> _timer(__PRETTY_FUNCTION__);
     vector<models::Node> priorNodes;
     for (auto value : input) {
-        Probability p = _cpt.probability({value});
-        priorNodes.push_back({_cpt.fieldName(value.columnIndex), value.value, p});
+        priorNodes.push_back({{_cpt.fieldName(value.columnIndex), value.value}, priorOf(value)});
     }
     sort(priorNodes.begin(), priorNodes.end());
     return priorNodes;
@@ -75,43 +81,56 @@ NodeVector DependencyDetector::computePriors(const models::ColumnIndexValuePairV
 
 BayesNetFragment DependencyDetector::findPredictionGraph(const models::ValueIndex nameToPredict, const models::ColumnNameValuePairVector &input, size_t maxGrapths, Strategy strategy)
 {
-    findAnyGraph(nameToPredict, input, maxGrapths);
+    _className = nameToPredict;
+    _classIndex = _cpt.fieldIndex(_className);
+    _examinedParams = namedPairVectorToIndexedPairVector(input);
+    buildPriorMap();
+    findAnyGraph(maxGrapths);
     return BayesNetFragment();
 }
 
-BayesNetFragmentVector DependencyDetector::findAnyGraph(const models::ValueIndex nameToPredict, const models::ColumnNameValuePairVector &input, size_t maxToEvaluate) const
+void DependencyDetector::buildPriorMap()
+{
+    auto priors = computePriors(_examinedParams);
+    for(auto prior : priors)
+        _priors[_cpt.fieldIndex(prior.field.columnName)] = prior;
+}
+
+BayesNetFragmentVector DependencyDetector::findAnyGraph(size_t maxToEvaluate)
 {
     LoggingTiming<std::chrono::microseconds> _timer(__PRETTY_FUNCTION__);
     /* This is what we'll do:
-     * 1. we get the probabilities of each parameter
-     * 2. we get the likelihood of each parameter given any other parameter if the likelihood is greater than the probability of the parameter alone.
-     * 3. we find the max a posteoris (whithout acutally classifiing!) given any combination of input. Of those we choose maxToEvaluate. This will be the root of the graph.
-     * 4. for each result of 3 we now build a parameter tree that contains all the parameters.
+     * 1. we get the likelihood of each parameter given any other parameter if the likelihood is greater than the probability of the parameter alone.
+     * 2. we find the max a posteoris (whithout acutally classifiing!) given any combination of input. Of those we choose maxToEvaluate. This will be the root of the graph.
+     * 3. for each result of 3 we now build a parameter tree that contains all the parameters.
      */
-    auto indexedFields = namedPairVectorToIndexedPairVector(input);
-    auto likelihoods = maximizeLikelyhoods(indexedFields);
-    auto graphBases = maxAPosteoriLevel0(nameToPredict, indexedFields, maxToEvaluate);
+    maximizeLikelyhoods();
+    auto graphBases = maxAPosteoriLevel0(maxToEvaluate);
     for (auto graphBase : graphBases)
     {
-        buildGraph(graphBase, likelihoods);
+        buildGraph(graphBase, _likelihoods);
     }
 
     return {};
 }
 
-DependencyDetector::VectorLengthOfFieldVector DependencyDetector::maxAPosteoriLevel0(const models::ValueIndex nameToPredict, const models::ColumnIndexValuePairVector &indexedFields, size_t maxToEvaluate) const
+DependencyDetector::VectorLengthOfFieldVector DependencyDetector::maxAPosteoriLevel0(size_t maxToEvaluate) const
 {
     using FieldsToProbabilityMap = map<ColumnIndexValuePairVector, double>;
     FieldsToProbabilityMap vectorLengthByField;
     VectorLengthOfFieldVector vectorized;
 
-    auto classIndex = _cpt.fieldIndex(nameToPredict);
-    auto prioriClassification = _cpt.classify(classIndex, {});
-    for (auto field : indexedFields) {
-        auto classification = _cpt.classify(classIndex, {field});
+    auto prioriClassification = _cpt.classify(_classIndex, {});
+    auto parameters = _examinedParams;
+    sort(parameters.begin(), parameters.end(),
+         [this](ColumnIndexValuePair const &left, ColumnIndexValuePair const &right){
+            return _priors.at(left.columnIndex).probability > _priors.at(right.columnIndex).probability;
+        }
+    );
+   for (auto field : parameters) {
+        auto classification = _cpt.classify(_classIndex, {field});
         if (classification.vectorLength() > prioriClassification.vectorLength()) {
             vectorLengthByField[{field}] = classification.vectorLength();
-
         }
         for (auto previous : vectorLengthByField) {
             auto v = previous.first;
@@ -119,39 +138,47 @@ DependencyDetector::VectorLengthOfFieldVector DependencyDetector::maxAPosteoriLe
                 continue;
             }
             v.push_back(field);
-            auto t = _cpt.classify(classIndex, v);
+            auto t = _cpt.classify(_classIndex, v);
             if (t.vectorLength() > previous.second) {
+                sort(v.begin(), v.end());
                  vectorLengthByField[v] = t.vectorLength();
             }
         }
     }
     std::copy(vectorLengthByField.begin(), vectorLengthByField.end(), std::back_inserter(vectorized));
     sort(vectorized.begin(), vectorized.end(), [](VecorLengthOfField const &left, VecorLengthOfField const &right) {
+        if (right.second == left.second)
+            return right.first.size() < left.first.size();
         return right.second < left.second;
     });
+    vector<BayesNet> baseNets;
+    auto netbase = vectorized.begin();
+    for (auto n = 0u; n < maxToEvaluate; ++n) {
+        BayesNet net;
+        for (auto parent : netbase->first) {
+            net.parents.push_back({_priors.at(parent.columnIndex), {}});
+        }
+        baseNets.push_back(net);
+    }
     return {vectorized.begin(), vectorized.size() > maxToEvaluate ? vectorized.begin() + static_cast<int>(maxToEvaluate) : vectorized.end()};
 }
 
-DependencyDetector::FieldLikelihoodVector DependencyDetector::maximizeLikelyhoods(const models::ColumnIndexValuePairVector &fields) const
+void DependencyDetector::maximizeLikelyhoods()
 {
-    using FieldProbsMap = map<ColumnIndexValuePairVector, FieldLikelihood>;
-    FieldProbsMap likelihoods;
-    for (auto field : fields) {
-        likelihoods[{field}] = {field, {}, _cpt.probability({field})};
-        for (auto previous : likelihoods) {
-            auto v = previous.first;
-            if (containerHas(v, field)) continue;
-            auto l = _cpt.conditionalProbability({field}, v);
-            if (l > previous.second.probability) {
-                v.push_back(field);
-                likelihoods[v] = l;
+    _likelihoods.clear();
+    for (auto field : _examinedParams) {
+        _likelihoods.push_back({field, {}, _cpt.probability({field})});
+        for (auto previous : _likelihoods) {
+            auto v = previous.parents;
+            if (previous.field == field || containerHas(v, field)) continue;
+            v.push_back(field);
+            auto l = _cpt.conditionalProbability({previous.field}, v);
+            if (l > previous.probability) {
+                _likelihoods.push_back({previous.field, v, l});
             }
         }
     }
-    FieldLikelihoodVector vectorized;
-    copy(likelihoods.begin(), likelihoods.end(), std::back_inserter(vectorized));
-    sort(vectorized.begin(), vectorized.end(), [](auto left, auto right) -> bool{ return left.second > right.second; });
-    return vectorized;
+    sort(_likelihoods.begin(), _likelihoods.end(), [](auto left, auto right) -> bool{ return left.probability > right.probability; });
 }
 
 void DependencyDetector::buildGraph(VecorLengthOfField const &base, FieldLikelihoodVector const &likelihoods) const
@@ -201,6 +228,11 @@ ColumnIndexValuePairVector DependencyDetector::namedPairVectorToIndexedPairVecto
         result.push_back({_cpt.fieldIndex(v.columnName), v.value});
     }
     return result;
+}
+
+Probability DependencyDetector::priorOf(models::ColumnIndexValuePair const &value) const
+{
+    return  _cpt.probability({value});
 }
 
 } // namespace services

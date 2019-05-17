@@ -27,6 +27,8 @@ struct Node {
     }
 };
 
+using NodeVector = std::vector<Node>;
+
 struct BayesNetFragment {
     Node node;
     std::vector<BayesNetFragment> parents;
@@ -59,8 +61,6 @@ struct BayesNet {
         return depth;
     }
 };
-
-using NodeVector = std::vector<Node>;
 
 /*struct BayesNetFragment
 {

@@ -120,7 +120,7 @@ Probability CPT::conditionalProbability(const ColumnIndexValuePairVector &fields
         else
             sumOfNonMatches += row.probability;
     }
-    return sumOfMatches / (sumOfMatches+sumOfNonMatches);
+    return sumOfMatches / (sumOfMatches + sumOfNonMatches); // note: Probability takes care of preventing div by zero.
 }
 
 

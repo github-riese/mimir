@@ -18,6 +18,7 @@ class DependencyDetector
     using VectorLengthOfFieldVector = std::vector<VecorLengthOfField>;
     struct FieldLikelihood { models::ColumnIndexValuePair field; models::ColumnIndexValuePairVector parents; models::Probability probability;};
     using FieldLikelihoodVector = std::vector<FieldLikelihood>;
+    using PriorMap = std::map<long, models::Node>;
 
 public:
     enum class Strategy
@@ -48,10 +49,11 @@ public:
      */
     models::BayesNetFragment findPredictionGraph(const models::ValueIndex nameToPredict, const models::ColumnNameValuePairVector &input, size_t maxGrapths, Strategy strategy = Strategy::DontCare);
 private:
-    models::BayesNetFragmentVector findAnyGraph(const models::ValueIndex nameToPredict, models::ColumnNameValuePairVector const &input, size_t maxToEvaluate) const;
+    void buildPriorMap();
+    models::BayesNetFragmentVector findAnyGraph(size_t maxToEvaluate);
 
-    VectorLengthOfFieldVector maxAPosteoriLevel0(const models::ValueIndex nameToPredict, const models::ColumnIndexValuePairVector &indexedFields, size_t maxToEvaluate) const;
-    FieldLikelihoodVector maximizeLikelyhoods(const models::ColumnIndexValuePairVector &fields) const;
+    VectorLengthOfFieldVector maxAPosteoriLevel0(size_t maxToEvaluate) const;
+    void    maximizeLikelyhoods();
 
     void buildGraph(VecorLengthOfField const &, FieldLikelihoodVector const &) const;
 
@@ -60,8 +62,15 @@ private:
     void eliminateZeroEvidence(models::ColumnIndexValuePairVector &) const;
     models::ColumnNameValuePairVector indexedPairVectorToNamedPairVector(models::ColumnIndexValuePairVector const &) const;
     models::ColumnIndexValuePairVector namedPairVectorToIndexedPairVector(models::ColumnNameValuePairVector const &) const;
+
+    models::Probability priorOf(const models::ColumnIndexValuePair &value) const;
 private:
     models::CPT &_cpt;
+    models::ValueIndex _className;
+    long _classIndex = -1;
+    models::ColumnIndexValuePairVector _examinedParams;
+    PriorMap _priors;
+    FieldLikelihoodVector _likelihoods;
 };
 
 } // namespace services
