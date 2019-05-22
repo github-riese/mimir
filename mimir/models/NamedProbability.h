@@ -11,7 +11,6 @@ namespace models {
 struct ValueProbability {
     ValueIndex value;
     Probability probability;
-    std::vector<long> parentFielIndices;
     constexpr bool operator==(ValueProbability const &) const noexcept;
     constexpr bool operator<(ValueProbability const &) const noexcept;
     constexpr bool operator<(Probability const &) const noexcept;

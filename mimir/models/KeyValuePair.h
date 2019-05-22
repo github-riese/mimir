@@ -32,6 +32,7 @@ struct ColumnNameValuePair
 };
 
 using ColumnNameValuePairVector = std::vector<ColumnNameValuePair>;
+void sort(ColumnNameValuePairVector &vector, bool ascending);
 
 struct ColumnIndexValuePair
 {
@@ -54,6 +55,7 @@ struct ColumnIndexValuePair
 };
 
 using ColumnIndexValuePairVector = std::vector<ColumnIndexValuePair>;
+void sort(ColumnIndexValuePairVector &vector, bool ascending);
 
 } // namespace models
 } // namespace mimir

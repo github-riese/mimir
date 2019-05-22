@@ -13,7 +13,7 @@ namespace models {
 class Probability
 {
 public:
-    explicit inline Probability() : _probability(0) {}
+    inline Probability() = default;
     inline Probability(double probability) :
         _probability(probability)
     {}
@@ -27,7 +27,7 @@ public:
 
     inline constexpr operator double() const noexcept { return _probability; }
     inline constexpr bool operator <(const Probability &rhs) const noexcept { return _probability < rhs._probability; }
-    inline bool operator ==(const Probability &rhs) const noexcept { return std::fabs(_probability - rhs._probability) * 1e10 < std::min(std::fabs(_probability), std::fabs(rhs._probability)); }
+    inline bool operator ==(const Probability &rhs) const noexcept { return std::fabs(_probability - rhs._probability) * 1e7 < std::min(std::fabs(_probability), std::fabs(rhs._probability)); }
     inline bool equals(const Probability &rhs, double precision) const noexcept { return  std::fabs(_probability - rhs._probability) * precision < std::min(std::fabs(_probability), std::fabs(rhs._probability)); }
 
     inline bool operator !() const noexcept { return !valid(); }

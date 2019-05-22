@@ -33,6 +33,10 @@ SOURCES += \
     models/activation/Sigmoid.cpp \
     models/activation/RectifiedLinear.cpp \
     models/activation/Softmax.cpp \
+    models/detect/InternalNodeTree.cpp \
+    services/detect/AbstractDependencyDetector.cpp \
+    services/detect/DetectorFactory.cpp \
+    services/detect/MaxClassTurnOutDetector.cpp \
     services/neuronnet/ActivationsManager.cpp \
     services/DataStore.cpp \
     services/DependencyDetector.cpp \
@@ -58,6 +62,7 @@ HEADERS += \
     models/ProbabilityDistribution.h \
     models/ProbabilityWithPriors.h \
     models/ValueIndex.h \
+    models/detect/InternalNodeTree.h \
     services/DataStore.h \
     services/DependencyDetector.h \
     services/Evaluator.h \
@@ -65,6 +70,9 @@ HEADERS += \
     models/Layer.h \
     helpers/math.h \
     models/Matrix.h \
+    services/detect/AbstractDependencyDetector.h \
+    services/detect/DetectorFactory.h \
+    services/detect/MaxClassTurnOutDetector.h \
     services/neuronnet/NeuronNet.h \
     services/neuronnet/Trainer.h \
     services/neuronnet/NeuronNetSerializer.h \

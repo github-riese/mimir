@@ -14,7 +14,7 @@ namespace services {
 
 class DependencyDetector
 {
-    using VecorLengthOfField = std::pair<models::ColumnIndexValuePairVector, models::Probability>;
+    using VecorLengthOfField = std::pair<models::ColumnIndexValuePairVector, double>;
     using VectorLengthOfFieldVector = std::vector<VecorLengthOfField>;
     struct FieldLikelihood { models::ColumnIndexValuePair field; models::ColumnIndexValuePairVector parents; models::Probability probability;};
     using FieldLikelihoodVector = std::vector<FieldLikelihood>;
@@ -34,7 +34,11 @@ public:
         /**
          * in case of multiple trees choose the one with greatest depth.
          */
-        PreferDepth
+        PreferDepth,
+        /**
+         * will strictly try to find independend nodes and group them.
+         */
+        Canonical
     };
     DependencyDetector(models::CPT &cpt);
     models::NodeVector computePriors(const mimir::models::ColumnNameValuePairVector &input) const;
@@ -52,7 +56,7 @@ private:
     void buildPriorMap();
     models::BayesNetFragmentVector findAnyGraph(size_t maxToEvaluate);
 
-    VectorLengthOfFieldVector maxAPosteoriLevel0(size_t maxToEvaluate) const;
+    VectorLengthOfFieldVector maxAPosteoriForClass(size_t maxToEvaluate) const;
     void    maximizeLikelyhoods();
 
     void buildGraph(VecorLengthOfField const &, FieldLikelihoodVector const &) const;

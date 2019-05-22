@@ -9,20 +9,26 @@
 
 #include <iotaomegapsi/tools/logger/Logger.h>
 
+
 #include "../helpers/helpers.h"
 #include "../models/BayesNetFragment.h"
+#include "../models/detect/InternalNodeTree.h"
 #include "../models/Probability.h"
 #include <iotaomegapsi/tools/timer/Timing.h>
+
+#include "detect/MaxClassTurnOutDetector.h"
 
 using std::back_inserter;
 using std::deque;
 using std::pair;
 using std::map;
 using std::vector;
+using std::min;
 
 using std::copy;
 using std::find_if;
 using std::sort;
+using std::fabs;
 
 using std::cout;
 using std::cerr;
@@ -42,7 +48,10 @@ using mimir::models::Node;
 using mimir::models::NodeVector;
 using mimir::models::BayesNetFragment;
 using mimir::models::Probability;
+using mimir::models::ProbabilityDistribution;
 using mimir::models::ValueIndex;
+
+using namespace mimir::models::detect;
 
 using iotaomegapsi::tools::timer::LoggingTiming;
 
@@ -79,13 +88,16 @@ NodeVector DependencyDetector::computePriors(const models::ColumnIndexValuePairV
     return priorNodes;
 }
 
-BayesNetFragment DependencyDetector::findPredictionGraph(const models::ValueIndex nameToPredict, const models::ColumnNameValuePairVector &input, size_t maxGrapths, Strategy strategy)
+BayesNetFragment DependencyDetector::findPredictionGraph(const models::ValueIndex nameToPredict, const models::ColumnNameValuePairVector &input, size_t maxGraphs, Strategy strategy)
 {
     _className = nameToPredict;
     _classIndex = _cpt.fieldIndex(_className);
     _examinedParams = namedPairVectorToIndexedPairVector(input);
+    auto classProbabilities = _cpt.classify(_classIndex, {});
+    detect::MaxClassTurnOutDetector maxTurnoutDetector(_cpt, _classIndex, _examinedParams);
+    maxTurnoutDetector.calculateDirectClassParents(classProbabilities, maxGraphs);
     buildPriorMap();
-    findAnyGraph(maxGrapths);
+    findAnyGraph(maxGraphs);
     return BayesNetFragment();
 }
 
@@ -105,7 +117,7 @@ BayesNetFragmentVector DependencyDetector::findAnyGraph(size_t maxToEvaluate)
      * 3. for each result of 3 we now build a parameter tree that contains all the parameters.
      */
     maximizeLikelyhoods();
-    auto graphBases = maxAPosteoriLevel0(maxToEvaluate);
+    auto graphBases = maxAPosteoriForClass(maxToEvaluate);
     for (auto graphBase : graphBases)
     {
         buildGraph(graphBase, _likelihoods);
@@ -114,7 +126,12 @@ BayesNetFragmentVector DependencyDetector::findAnyGraph(size_t maxToEvaluate)
     return {};
 }
 
-DependencyDetector::VectorLengthOfFieldVector DependencyDetector::maxAPosteoriLevel0(size_t maxToEvaluate) const
+bool closeEnough(double left, double right)
+{
+    return fabs(left - right) * 1e7 < min(fabs(left), fabs(right));;
+}
+
+DependencyDetector::VectorLengthOfFieldVector DependencyDetector::maxAPosteoriForClass(size_t maxToEvaluate) const
 {
     using FieldsToProbabilityMap = map<ColumnIndexValuePairVector, double>;
     FieldsToProbabilityMap vectorLengthByField;
@@ -122,11 +139,7 @@ DependencyDetector::VectorLengthOfFieldVector DependencyDetector::maxAPosteoriLe
 
     auto prioriClassification = _cpt.classify(_classIndex, {});
     auto parameters = _examinedParams;
-    sort(parameters.begin(), parameters.end(),
-         [this](ColumnIndexValuePair const &left, ColumnIndexValuePair const &right){
-            return _priors.at(left.columnIndex).probability > _priors.at(right.columnIndex).probability;
-        }
-    );
+    sort(parameters, false);
    for (auto field : parameters) {
         auto classification = _cpt.classify(_classIndex, {field});
         if (classification.vectorLength() > prioriClassification.vectorLength()) {
@@ -147,19 +160,11 @@ DependencyDetector::VectorLengthOfFieldVector DependencyDetector::maxAPosteoriLe
     }
     std::copy(vectorLengthByField.begin(), vectorLengthByField.end(), std::back_inserter(vectorized));
     sort(vectorized.begin(), vectorized.end(), [](VecorLengthOfField const &left, VecorLengthOfField const &right) {
-        if (right.second == left.second)
+        if (closeEnough(right.second, left.second))
             return right.first.size() < left.first.size();
         return right.second < left.second;
     });
-    vector<BayesNet> baseNets;
-    auto netbase = vectorized.begin();
-    for (auto n = 0u; n < maxToEvaluate; ++n) {
-        BayesNet net;
-        for (auto parent : netbase->first) {
-            net.parents.push_back({_priors.at(parent.columnIndex), {}});
-        }
-        baseNets.push_back(net);
-    }
+
     return {vectorized.begin(), vectorized.size() > maxToEvaluate ? vectorized.begin() + static_cast<int>(maxToEvaluate) : vectorized.end()};
 }
 
@@ -183,10 +188,9 @@ void DependencyDetector::maximizeLikelyhoods()
 
 void DependencyDetector::buildGraph(VecorLengthOfField const &base, FieldLikelihoodVector const &likelihoods) const
 {
-    models::BayesNet net;
-    for(auto column : base.first) {
-        BayesNetFragment fragment;
-        fragment.node.field = {_cpt.fieldName(column.columnIndex), column.value};
+    InternalNet net;
+    for (auto parent : base.first) {
+        net.parents.push_back({{parent, _priors.at(parent.columnIndex).probability}, {}});
     }
 }
 
