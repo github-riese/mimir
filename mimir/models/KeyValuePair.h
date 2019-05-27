@@ -50,7 +50,7 @@ struct ColumnIndexValuePair
     }
 
     bool operator==(ColumnIndexValuePair const &rhs) const {
-        return rhs.columnIndex == columnIndex && rhs.value == rhs.value;
+        return columnIndex == rhs.columnIndex && value == rhs.value;
     }
 };
 

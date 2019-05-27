@@ -91,7 +91,7 @@ ProbabilityDistribution CPT::classify(ValueIndex classifier, const std::vector<C
 ProbabilityDistribution CPT::classify(long classifierIndex, const std::vector<ColumnIndexValuePair> &input)
 {
     map<ValueIndex, Probability> result;
-    Probability sumOfMatches;
+    auto sumOfMatches = 0._p;
     for(auto row : _proabilities){
         if (!row.matchesInput(input)) {
             continue;

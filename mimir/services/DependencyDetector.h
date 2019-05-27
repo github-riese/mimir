@@ -8,38 +8,16 @@
 #include "../models/ValueIndex.h"
 #include "../models/KeyValuePair.h"
 #include "../models/BayesNetFragment.h"
+#include "../models/detect/DetectionStrategy.h"
 
 namespace mimir {
 namespace services {
 
 class DependencyDetector
 {
-    using VecorLengthOfField = std::pair<models::ColumnIndexValuePairVector, double>;
-    using VectorLengthOfFieldVector = std::vector<VecorLengthOfField>;
-    struct FieldLikelihood { models::ColumnIndexValuePair field; models::ColumnIndexValuePairVector parents; models::Probability probability;};
-    using FieldLikelihoodVector = std::vector<FieldLikelihood>;
     using PriorMap = std::map<long, models::Node>;
 
 public:
-    enum class Strategy
-    {
-        /**
-         * in case of multiple trees chose the first at hand.
-         */
-        DontCare,
-        /**
-         * in case of multiple trees choose the one with broadest nodes. I.e. the one with the most relatively independent values.
-         */
-        PreferWidth,
-        /**
-         * in case of multiple trees choose the one with greatest depth.
-         */
-        PreferDepth,
-        /**
-         * will strictly try to find independend nodes and group them.
-         */
-        Canonical
-    };
     DependencyDetector(models::CPT &cpt);
     models::NodeVector computePriors(const mimir::models::ColumnNameValuePairVector &input) const;
     mimir::models::NodeVector computePriors(const models::ColumnIndexValuePairVector &input) const;
@@ -51,15 +29,12 @@ public:
      * @param nr
      * @return
      */
-    models::BayesNetFragment findPredictionGraph(const models::ValueIndex nameToPredict, const models::ColumnNameValuePairVector &input, size_t maxGrapths, Strategy strategy = Strategy::DontCare);
+    models::BayesNet findPredictionGraph(const models::ValueIndex nameToPredict, const models::ColumnNameValuePairVector &input, size_t maxGrapths, models::detect::DetectStrategy strategy = models::detect::MaximizeOutcome);
 private:
     void buildPriorMap();
     models::BayesNetFragmentVector findAnyGraph(size_t maxToEvaluate);
 
-    VectorLengthOfFieldVector maxAPosteoriForClass(size_t maxToEvaluate) const;
-    void    maximizeLikelyhoods();
-
-    void buildGraph(VecorLengthOfField const &, FieldLikelihoodVector const &) const;
+    void buildGraph(models::ColumnIndexValuePairVector const &) const;
 
     models::Probability likelihood(models::ColumnIndexValuePair const &k, models::ColumnIndexValuePairVector const &input) const;
     models::Probability conditionalProbability(models::ColumnIndexValuePair const&, models::ColumnIndexValuePairVector const &);
@@ -74,7 +49,6 @@ private:
     long _classIndex = -1;
     models::ColumnIndexValuePairVector _examinedParams;
     PriorMap _priors;
-    FieldLikelihoodVector _likelihoods;
 };
 
 } // namespace services

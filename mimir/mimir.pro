@@ -62,6 +62,7 @@ HEADERS += \
     models/ProbabilityDistribution.h \
     models/ProbabilityWithPriors.h \
     models/ValueIndex.h \
+    models/detect/DetectionStrategy.h \
     models/detect/InternalNodeTree.h \
     services/DataStore.h \
     services/DependencyDetector.h \
@@ -71,6 +72,7 @@ HEADERS += \
     helpers/math.h \
     models/Matrix.h \
     services/detect/AbstractDependencyDetector.h \
+    services/detect/DependencyDetectionInterface.h \
     services/detect/DetectorFactory.h \
     services/detect/MaxClassTurnOutDetector.h \
     services/neuronnet/NeuronNet.h \

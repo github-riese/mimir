@@ -43,6 +43,8 @@ struct InternalNet
     bool canAdd(InternalFragment const &candidate) const;
 };
 
+using InternalNetVector = std::vector<InternalNet>;
+
 BayesNetFragment convert(InternalFragment const &fragment, CPT const &cpt);
 
 BayesNet convert(const InternalNet &inNet, ProbabilityDistribution const &classification, CPT const &cpt);

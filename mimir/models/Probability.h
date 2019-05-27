@@ -13,7 +13,7 @@ namespace models {
 class Probability
 {
 public:
-    inline Probability() = default;
+    inline explicit Probability() : _probability(0.) {}
     inline Probability(double probability) :
         _probability(probability)
     {}

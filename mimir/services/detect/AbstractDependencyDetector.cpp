@@ -7,9 +7,9 @@ namespace detect {
 using models::ColumnNameValuePairVector;
 using models::ColumnIndexValuePairVector;
 
-AbstractDependencyDetector::AbstractDependencyDetector(models::CPT &cpt, long classFielIndex, models::ColumnIndexValuePairVector const &sample) :
+AbstractDependencyDetector::AbstractDependencyDetector(models::CPT &cpt, long classFieldIndex, models::ColumnIndexValuePairVector const &sample) :
     _cpt(cpt),
-    _classFieldIndex(classFielIndex),
+    _classFieldIndex(classFieldIndex),
     _sampleFields(sample)
 {
 }
