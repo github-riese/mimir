@@ -33,6 +33,8 @@ struct InternalFragment
      * @return
      */
     bool canAdd(InternalFragment const &candidate) const;
+    bool contains(ColumnIndexValuePair const &) const;
+    ColumnIndexValuePairVector parentValues() const;
 };
 
 using InternalFragmentVector = std::vector<InternalFragment>;

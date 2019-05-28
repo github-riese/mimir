@@ -99,7 +99,9 @@ models::BayesNet DependencyDetector::findPredictionGraph(const models::ValueInde
     detect::DetectorFactory detectorFactory(_cpt, _classIndex, _examinedParams);
     detect::SharedDetector maxTurnoutDetector = detectorFactory.getDetector(strategy);
     auto internalNets = maxTurnoutDetector->buildNets(classDistribution, maxGraphs);
-    return convert(internalNets.front(), classDistribution, _cpt);
+    if (internalNets.size() > 0)
+        return convert(internalNets.front(), classDistribution, _cpt);
+    return {};
 }
 
 void DependencyDetector::buildPriorMap()

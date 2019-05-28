@@ -39,7 +39,7 @@ BayesNet convert(const InternalNet &inNet, const ProbabilityDistribution &classi
 bool InternalFragment::canAdd(const InternalFragment &candidate) const
 {
     for (auto p : candidate.parents) {
-        if (p.node.column.columnIndex == node.column.columnIndex)
+        if (p.node.column.columnIndex == node.column.columnIndex && parents.size() > 0)
             return false;
     }
     for (auto p : parents) {
@@ -49,6 +49,14 @@ bool InternalFragment::canAdd(const InternalFragment &candidate) const
     return true;
 }
 
+ColumnIndexValuePairVector InternalFragment::parentValues() const
+{
+    ColumnIndexValuePairVector parentValues;
+    for(auto const &p : parents)
+        parentValues.push_back(p.node.column);
+    return parentValues;
+}
+
 bool InternalNet::canAdd(const InternalFragment &candidate) const
 {
     for (auto p : parents) {
@@ -56,6 +64,16 @@ bool InternalNet::canAdd(const InternalFragment &candidate) const
             return false;
     }
     return true;
+}
+
+bool mimir::models::detect::InternalFragment::contains(const ColumnIndexValuePair &search) const
+{
+    if (node.column == search)
+        return true;
+    for (auto p : parents)
+        if (p.contains(search))
+            return true;
+    return false;
 }
 
 }

@@ -13,6 +13,7 @@ using std::find_if;
 using mimir::models::ColumnIndexValuePair;
 using mimir::models::ColumnIndexValuePairVector;
 using mimir::models::Probability;
+using mimir::models::detect::InternalNode;
 using mimir::models::detect::InternalFragment;
 using mimir::models::detect::InternalFragmentVector;
 using mimir::models::detect::InternalNet;
@@ -57,24 +58,24 @@ models::detect::InternalNetVector MaxClassTurnOutDetector::buildNets(const model
 {
     _baseDistribution = baseProbability;
     auto parents = findDirectParents(maxResults);
-    auto likelihoods = maximizeLikelyhoods();
+    maximizeLikelyhoods();
 
     InternalNetVector internalNets;
     for (auto const &parent : parents)
     {
-        InternalNet net = buildNet(parent, likelihoods);
-        internalNets.push_back(net);
+        //InternalNet net = buildNet(parent, likelihoods);
+        //internalNets.push_back(net);
     }
     return internalNets;
 }
 
+
 InternalNet MaxClassTurnOutDetector::buildNet(const ColumnIndexValuePairVector &parents, const InternalFragmentVector &likelihoods)
 {
     InternalNet net;
-
     for (auto &parent : parents) {
         auto lp = likelihoods.begin();
-        while (lp != likelihoods.end())
+        for (;lp != likelihoods.end(); ++lp)
         {
             lp = find_if(lp, likelihoods.end(), [&parent](auto const &fragment) -> bool {return fragment.node.column.columnIndex == parent.columnIndex;});
             if (lp == likelihoods.end()) {
@@ -124,34 +125,41 @@ std::vector<models::ColumnIndexValuePairVector> MaxClassTurnOutDetector::findDir
     return baseParents;
 }
 
-models::detect::InternalFragmentVector MaxClassTurnOutDetector::maximizeLikelyhoods()
+void MaxClassTurnOutDetector::maximizeLikelyhoods()
 {
     _likelihoods.clear();
     InternalFragmentVector fragmentVector;
-    map<ColumnIndexValuePair, Probability> fieldProbs;
-    for (auto field : _sampleFields) {
-        auto p = _cpt.probability({field});
-        fieldProbs[field] = p;
-        _likelihoods.push_back({field, {}, p});
+    for (auto sample : _sampleFields) {
+        auto p = _cpt.probability({sample});
+        InternalNode field{sample, p};
+        _likelihoods.push_back({field, {}});
         for (auto previous : _likelihoods) {
-            auto v = previous.parents;
-            if (previous.field == field || containerHas(v, field)) continue;
-            v.push_back(field);
-            auto l = _cpt.conditionalProbability({previous.field}, v);
-            if (l > previous.probability) {
-                _likelihoods.push_back({previous.field, v, l});
+            auto v = previous.parentValues();
+            if (previous.contains(sample)) continue;
+            v.push_back(sample);
+            auto l = _cpt.conditionalProbability({previous.node.column}, v);
+            if (l > previous.node.probability) {
+                previous.node.probability = l;
+                previous.parents.push_back({{sample, p},{}});
+                _likelihoods.push_back(previous);
             }
         }
     }
-    sort(_likelihoods.begin(), _likelihoods.end(), [](auto left, auto right) -> bool{ return left.probability > right.probability; });
-    for (auto const &l : _likelihoods) {
-        InternalFragment f{{l.field, fieldProbs[l.field]}, {}};
-        for(auto const &p : l.parents) {
-            f.parents.push_back({{p, fieldProbs[p]},{}});
-        }
-        fragmentVector.push_back(f);
+    sort(_likelihoods.begin(), _likelihoods.end(), [](auto left, auto right) -> bool{ return left.node.probability > right.node.probability; });
+}
+
+InternalFragmentVector MaxClassTurnOutDetector::likelihoodFragments()
+{
+    InternalFragmentVector fragments;
+    for (auto likelihood : _likelihoods) {
+        InternalFragment fragment;
     }
-    return fragmentVector;
+    return fragments;
+}
+
+bool MaxClassTurnOutDetector::buildInternalNet(models::detect::InternalNet &baseNet, models::detect::InternalFragmentVector &level, const models::detect::InternalFragment &toBeAdded)
+{
+
 }
 
 } // namespace detect

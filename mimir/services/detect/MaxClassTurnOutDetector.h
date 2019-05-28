@@ -23,13 +23,13 @@ public:
      */
     models::detect::InternalNetVector buildNets(models::ProbabilityDistribution const &, size_t maxResults) override;
 private:
-    models::detect::InternalNet buildNet(models::ColumnIndexValuePairVector const &parents, const models::detect::InternalFragmentVector &likelihoods);
     std::vector<models::ColumnIndexValuePairVector> findDirectParents(size_t maxResults);
-    models::detect::InternalFragmentVector maximizeLikelyhoods();
+    void maximizeLikelyhoods();
+    models::detect::InternalFragmentVector likelihoodFragments();
+    models::detect::InternalNet buildNet(models::ColumnIndexValuePairVector const &parents, const models::detect::InternalFragmentVector &likelihoods);
+    bool buildInternalNet(models::detect::InternalNet &baseNet, models::detect::InternalFragmentVector &level, models::detect::InternalFragment const &toBeAdded);
 private:
-    struct FieldLikelihood { models::ColumnIndexValuePair field; models::ColumnIndexValuePairVector parents; models::Probability probability;};
-    using FieldLikelihoodVector = std::vector<FieldLikelihood>;
-    FieldLikelihoodVector _likelihoods;
+    models::detect::InternalFragmentVector _likelihoods;
     models::ProbabilityDistribution _baseDistribution;
 };
 
