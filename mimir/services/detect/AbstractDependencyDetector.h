@@ -14,7 +14,7 @@ class AbstractDependencyDetector : public DependencyDetectionInterface
 public:
     AbstractDependencyDetector(models::CPT &cpt, long classFieldIndex, models::ColumnIndexValuePairVector const &sample);
     virtual ~AbstractDependencyDetector() = default;
-    virtual models::detect::InternalNetVector buildNets(models::ProbabilityDistribution const &, size_t maxResults) = 0;
+    virtual models::detect::InternalFragmentVector detect(models::ProbabilityDistribution const &) = 0;
 protected:
     models::CPT &_cpt;
     long _classFieldIndex;

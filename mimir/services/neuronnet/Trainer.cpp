@@ -30,7 +30,7 @@ Trainer::Trainer(NeuronNet &net) :
 {
 }
 
-void Trainer::addTrainingData(std::vector<double> input, std::vector<double> expectation)
+void Trainer::addTrainingData(std::vector<float> input, std::vector<float> expectation)
 {
     long padding = static_cast<long>(_net.sizeOfLayer(-1u) - expectation.size());
     if (padding < 0)  {
@@ -56,7 +56,7 @@ std::ostream &operator <<(std::ostream & stream, std::vector<T> const &data)
     return stream;
 }
 
-unsigned Trainer::run(size_t batchSize, unsigned maxEpochs, double maxError, double minRate, double eta, MinibatchResultCallback resultCallback)
+unsigned Trainer::run(size_t batchSize, unsigned maxEpochs, float maxError, float minRate, float eta, MinibatchResultCallback resultCallback)
 {
     _callback = resultCallback;
     std::cout.setf(std::ios::fixed, std::ios::floatfield);
@@ -79,7 +79,7 @@ unsigned Trainer::run(size_t batchSize, unsigned maxEpochs, double maxError, dou
     return maxEpochs;
 }
 
-double Trainer::currentError() const
+float Trainer::currentError() const
 {
     return _currentError;
 }
@@ -95,7 +95,7 @@ void Trainer::createGradients()
     _weightGradient.clear();
     for (auto layer : _net.layers()) {
         if (!layer.isInputLayer()) {
-            _biasGradient.push_back(std::vector<double>(layer.size()));
+            _biasGradient.push_back(std::vector<float>(layer.size()));
         }
         if (!layer.isOutputLayer()) {
             _weightGradient.push_back(Matrix(layer.size(), layer.nextSize()));
@@ -116,7 +116,7 @@ void Trainer::resetGradients()
     }
 }
 
-bool Trainer::detectedCorrectly(const std::vector<double> &left, const std::vector<double> &right, double maxError) const
+bool Trainer::detectedCorrectly(const std::vector<float> &left, const std::vector<float> &right, float maxError) const
 {
     if (left.size() > 1) {
         return std::distance(left.begin(), std::max_element(left.begin(), left.end())) == std::distance(right.begin(), std::max_element(right.begin(), right.end()));
@@ -124,9 +124,9 @@ bool Trainer::detectedCorrectly(const std::vector<double> &left, const std::vect
     return std::abs(left.front() - right.front()) <= maxError;
 }
 
-void Trainer::calculateGradients(std::vector<double> const &expectation)
+void Trainer::calculateGradients(std::vector<float> const &expectation)
 {
-    double gradientWeight = 1;
+    float gradientWeight = 1;
     auto deltaBias = _biasGradient.rbegin();
     auto deltaWeight = _weightGradient.rbegin();
     auto rlayer = _net.layers().rbegin();
@@ -148,9 +148,9 @@ void Trainer::calculateGradients(std::vector<double> const &expectation)
     }
 }
 
-void Trainer::applyGradient(double eta)
+void Trainer::applyGradient(float eta)
 {
-    double weightDecay = .004;//5;
+    float weightDecay = .004;//5;
     auto deltaB = _biasGradient.begin();
     auto deltaW = _weightGradient.begin();
     for (auto &l : _net.layers()) {
@@ -165,26 +165,26 @@ void Trainer::applyGradient(double eta)
     }
 }
 
-std::vector<double> operator/(std::vector<std::vector<double>> const &vv, double div)
+std::vector<float> operator/(std::vector<std::vector<float>> const &vv, float div)
 {
-    std::vector<double> result(vv.front().size());
+    std::vector<float> result(vv.front().size());
     for (auto v : vv) {
         result += v;
     }
-    return result*(1./div);
+    return result*(1.f/div);
 }
 
-std::tuple<unsigned, double, double> Trainer::runMinibatch(std::vector<models::BatchItem> &miniBatch, unsigned maxEpochs, double maxError, double minRate, double eta)
+std::tuple<unsigned, float, float> Trainer::runMinibatch(std::vector<models::BatchItem> &miniBatch, unsigned maxEpochs, float maxError, float minRate, float eta)
 {
     auto epoch = 0u;
-    double error = 0.;
-    double rate = 0.;
+    float error = 0.;
+    float rate = 0.;
     while (epoch < maxEpochs) {
         ++epoch;
         resetGradients();
-        std::vector<std::vector<double>> results;
-        std::vector<std::vector<double>> expectations;
-        double currentError = 0;
+        std::vector<std::vector<float>> results;
+        std::vector<std::vector<float>> expectations;
+        float currentError = 0;
         for (models::BatchItem &item : miniBatch) {
             auto result = _net.run(item.input());
             calculateGradients(item.expectation());
@@ -192,7 +192,7 @@ std::tuple<unsigned, double, double> Trainer::runMinibatch(std::vector<models::B
             results.push_back(result);
             currentError += _net.error(item.expectation());
         }
-        currentError /= static_cast<double>(miniBatch.size());
+        currentError /= static_cast<float>(miniBatch.size());
         error += currentError;
 
         auto currentDetectRate = detectRate(results, expectations);
@@ -200,18 +200,18 @@ std::tuple<unsigned, double, double> Trainer::runMinibatch(std::vector<models::B
         if (currentError <= maxError && currentDetectRate >= minRate) {
             break;
         }
-        auto e = error/static_cast<double>(epoch);
+        auto e = error/static_cast<float>(epoch);
         if (e < 1e-1)  e*=10;
         else e = 1.;
-        applyGradient(eta/static_cast<double>(miniBatch.size()) * e);
+        applyGradient(eta/static_cast<float>(miniBatch.size()) * e);
     }
-    return {epoch, rate/static_cast<double>(epoch), error/static_cast<double>(epoch)};
+    return {epoch, rate/static_cast<float>(epoch), error/static_cast<float>(epoch)};
 }
 
-double Trainer::detectRate(const std::vector<std::vector<double> > &results, const std::vector<std::vector<double> > &expectations)
+float Trainer::detectRate(const std::vector<std::vector<float> > &results, const std::vector<std::vector<float> > &expectations)
 {
-    double correct = 0.;
-    double incorrect = 0.;
+    float correct = 0.;
+    float incorrect = 0.;
     for (auto tuple : boost::range::combine(results, expectations)) {
         auto seen = std::distance(tuple.get<0>().begin(), std::max_element(tuple.get<0>().begin(), tuple.get<0>().end()));
         auto really = std::distance(tuple.get<1>().begin(), std::max_element(tuple.get<1>().begin(), tuple.get<1>().end()));

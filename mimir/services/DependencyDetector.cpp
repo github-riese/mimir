@@ -10,6 +10,7 @@
 #include <iotaomegapsi/tools/logger/Logger.h>
 
 #include "detect/DependencyDetectionInterface.h"
+#include "detect/Netbuilder.h"
 
 #include "../helpers/helpers.h"
 #include "../models/BayesNetFragment.h"
@@ -98,9 +99,9 @@ models::BayesNet DependencyDetector::findPredictionGraph(const models::ValueInde
     auto classDistribution = _cpt.classify(_classIndex, {});
     detect::DetectorFactory detectorFactory(_cpt, _classIndex, _examinedParams);
     detect::SharedDetector maxTurnoutDetector = detectorFactory.getDetector(strategy);
-    auto internalNets = maxTurnoutDetector->buildNets(classDistribution, maxGraphs);
-    if (internalNets.size() > 0)
-        return convert(internalNets.front(), classDistribution, _cpt);
+    auto internalNets = maxTurnoutDetector->detect(classDistribution);
+    detect::Netbuilder netBuilder(_examinedParams, internalNets);
+    auto internalNet = netBuilder.buildNet();
     return {};
 }
 

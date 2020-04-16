@@ -9,16 +9,16 @@ namespace models {
 class TrainerValueHelper
 {
 public:
-    TrainerValueHelper(std::vector<double> const &hypothesis, std::vector<double> const &expectation);
-    const std::vector<double> &hypothesis() const;
-    void setHypothesis(const std::vector<double> &hypothesis);
+    TrainerValueHelper(std::vector<float> const &hypothesis, std::vector<float> const &expectation);
+    const std::vector<float> &hypothesis() const;
+    void setHypothesis(const std::vector<float> &hypothesis);
 
-    const std::vector<double> &expectation() const;
-    void setExpectation(const std::vector<double> &expectation);
+    const std::vector<float> &expectation() const;
+    void setExpectation(const std::vector<float> &expectation);
 
 private:
-    std::vector<double> _hypothesis;
-    std::vector<double> _expectation;
+    std::vector<float> _hypothesis;
+    std::vector<float> _expectation;
 };
 
 } // namespace models

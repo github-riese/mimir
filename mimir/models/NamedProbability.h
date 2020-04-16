@@ -2,9 +2,9 @@
 #define NAMEDPROBABILITY_H
 
 #include <vector>
-#include "models/KeyValuePair.h"
-#include "models/Probability.h"
-#include "models/ValueIndex.h"
+#include <models/KeyValuePair.h>
+#include <models/Probability.h>
+#include <models/ValueIndex.h>
 
 namespace mimir {
 namespace models {

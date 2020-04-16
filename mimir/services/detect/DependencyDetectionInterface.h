@@ -15,7 +15,7 @@ class DependencyDetectionInterface
 {
 public:
     virtual ~DependencyDetectionInterface() = default;
-    virtual models::detect::InternalNetVector buildNets(models::ProbabilityDistribution const &, size_t maxResults) = 0;
+    virtual models::detect::InternalFragmentVector detect(models::ProbabilityDistribution const &) = 0;
 };
 } // namespace detect
 } // namespace services

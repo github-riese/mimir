@@ -11,36 +11,36 @@ using mimir::models::Probability;
 namespace mimir {
 namespace helpers {
 
-double mean(const std::vector<models::Probability> &probabilities)
+float mean(const std::vector<models::Probability> &probabilities)
 {
     return mean(probabilities.begin(), probabilities.end());
 }
 
-double deviation(const std::vector<models::Probability> &probabilities)
+float deviation(const std::vector<models::Probability> &probabilities)
 {
     return deviation(probabilities.begin(), probabilities.end());
 }
 
-std::vector<double> toVector(std::valarray<double> const&array)
+std::vector<float> toVector(std::valarray<float> const&array)
 {
     return {std::begin(array), std::end(array)};
 }
 
-std::valarray<double> toArray(std::vector<double> const &vector)
+std::valarray<float> toArray(std::vector<float> const &vector)
 {
-    std::valarray<double> t(vector.size());
+    std::valarray<float> t(vector.size());
     std::copy(std::begin(vector), std::end(vector), std::begin(t));
     return t;
 }
 
-uint64_t PackDouble::operator()(double value)
+uint64_t PackDouble::operator()(float value)
 {
     if (value == 0.) {
         return 0;
     }
     unsigned bits = 64;
     unsigned expbits = 11;
-    double fnorm;
+    float fnorm;
     int shift;
     long long sign, exp, significand;
     unsigned significandbits = bits - expbits - 1; // -1 for sign bit
@@ -65,14 +65,14 @@ uint64_t PackDouble::operator()(double value)
     return static_cast<uint64_t>((sign<<(bits-1)) | (exp<<(bits-expbits-1)) | significand);
 }
 
-double UnpackDouble::operator()(uint64_t packed)
+float UnpackDouble::operator()(uint64_t packed)
 {
     if (0 == packed) {
         return 0.;
     }
     unsigned bits = 64;
     unsigned expbits = 11;
-    double result;
+    float result;
     long long shift;
     unsigned bias;
     unsigned significandbits = bits - expbits - 1; // -1 for sign bit

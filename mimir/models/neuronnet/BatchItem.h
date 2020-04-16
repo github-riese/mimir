@@ -10,17 +10,17 @@ class BatchItem
 {
 public:
     BatchItem() = default;
-    BatchItem(std::vector<double> const &input, std::vector<double> const &expectation);
+    BatchItem(std::vector<float> const &input, std::vector<float> const &expectation);
 
-    std::vector<double> const &input() const;
-    void setInput(const std::vector<double> &input);
+    std::vector<float> const &input() const;
+    void setInput(const std::vector<float> &input);
 
-    std::vector<double> const &expectation() const;
-    void setExpectation(const std::vector<double> &expectation);
+    std::vector<float> const &expectation() const;
+    void setExpectation(const std::vector<float> &expectation);
 
 private:
-    std::vector<double> _input;
-    std::vector<double> _expectation;
+    std::vector<float> _input;
+    std::vector<float> _expectation;
 };
 
 } // namespace models

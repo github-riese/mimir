@@ -13,19 +13,19 @@ namespace mimir {
 namespace helpers {
 
 template <typename InputIterator>
-inline double variance(InputIterator first, InputIterator last)
+inline float variance(InputIterator first, InputIterator last)
 {
     auto distance = std::distance(first, last);
     if (distance < 2) {
         return 0.l;
     }
     struct VarianceData {
-        double sums = 0;
-        double sumOfSquares = 0;
+        float sums = 0;
+        float sumOfSquares = 0;
     };
     auto v = std::accumulate(first, last, VarianceData(),
                             [](VarianceData const &left, mimir::models::Probability const&right) -> VarianceData {
-                                double v = right.value();
+                                float v = right.value();
                                 return VarianceData{left.sums + v, left.sumOfSquares + v*v };
                             }
             );
@@ -33,42 +33,42 @@ inline double variance(InputIterator first, InputIterator last)
 }
 
 template <typename Container>
-inline double variance(Container const &container)
+inline float variance(Container const &container)
 {
     return variance(std::begin(container), std::end(container));
 }
 
 template <typename InputIterator>
-inline double deviation(InputIterator first, InputIterator last)
+inline float deviation(InputIterator first, InputIterator last)
 {
     return std::sqrt(variance(first, last));
 }
 
-double mean(const std::deque<mimir::models::Probability> &);
-double mean(const std::vector<mimir::models::Probability>&);
+float mean(const std::deque<mimir::models::Probability> &);
+float mean(const std::vector<mimir::models::Probability>&);
 
 template<typename InputIterator>
-double mean(InputIterator first, InputIterator last)
+float mean(InputIterator first, InputIterator last)
 {
     auto distance = std::distance(first, last);
     auto sum = std::accumulate(first, last, mimir::models::Probability(0));
     return sum.value() / distance;
 }
 
-double deviation(const std::deque<mimir::models::Probability> &);
-double deviation(const std::vector<mimir::models::Probability> &);
+float deviation(const std::deque<mimir::models::Probability> &);
+float deviation(const std::vector<mimir::models::Probability> &);
 
-std::vector<double> toVector(std::valarray<double> const&);
-std::valarray<double> toArray(std::vector<double> const &);
+std::vector<float> toVector(std::valarray<float> const&);
+std::valarray<float> toArray(std::vector<float> const &);
 
 struct PackDouble
 {
-    uint64_t operator()(double value);
+    uint64_t operator()(float value);
 };
 
 struct UnpackDouble
 {
-    double operator()(uint64_t packed);
+    float operator()(uint64_t packed);
 };
 
 template <typename ContainerType>

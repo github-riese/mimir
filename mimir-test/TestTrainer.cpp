@@ -13,19 +13,19 @@
 #include <services/neuronnet/NeuronNetSerializer.h>
 #include <models/activation/Softmax.h>
 
-//REGISTER_TEST(TestTrainer)
+REGISTER_TEST(TestTrainer)
 
 using mimir::services::neuronnet::NeuronNet;
 using mimir::services::neuronnet::NeuronNetSerializer;
 using mimir::services::neuronnet::Trainer;
 
-std::vector<std::vector<double>> makeExpectations(std::ifstream &in, unsigned maxItems)
+std::vector<std::vector<float>> makeExpectations(std::ifstream &in, unsigned maxItems)
 {
-    std::vector<std::vector<double>> result;
+    std::vector<std::vector<float>> result;
     while (maxItems-- > 0) {
         char c;
         in.read(&c, 1);
-        std::vector<double> expectation(10, 0);
+        std::vector<float> expectation(10, 0);
         expectation[static_cast<size_t>(c)] = 1.0;
         result.push_back(expectation);
         if (in.eof()) break;
@@ -33,16 +33,16 @@ std::vector<std::vector<double>> makeExpectations(std::ifstream &in, unsigned ma
     return result;
 }
 
-std::vector<std::vector<double>> makeInput(std::ifstream &in, unsigned maxItems)
+std::vector<std::vector<float>> makeInput(std::ifstream &in, unsigned maxItems)
 {
-    std::vector<std::vector<double>> result;
+    std::vector<std::vector<float>> result;
     while (maxItems-- > 0) {
     std::istreambuf_iterator<char> reader(in);
-    std::vector<double> input;
+    std::vector<float> input;
     for(size_t n = 0; n < 28*28; ++n) {
         char c;
         in.read(&c, 1);
-        input.push_back(static_cast<double>(static_cast<unsigned char>(c))/255.);
+        input.push_back(static_cast<float>(static_cast<unsigned char>(c))/255.);
     }
     result.push_back(input);
     if (in.eof()) break;
@@ -66,7 +66,7 @@ void TestTrainer::testXOR()
                                                 {1, 1},
                                                 {1, 1}
                                             }));
-    net.setWeigths(1, mimir::models::Matrix(std::vector<std::valarray<double>>{
+    net.setWeigths(1, mimir::models::Matrix(std::vector<std::valarray<float>>{
                                                 {1},
                                                 {-2}
                                             }));
@@ -100,14 +100,14 @@ void TestTrainer::testChangeNet()
     net.addNode(1, -5, {.001});
     QVERIFY(net.sizeOfLayer(0) == 5);
     QVERIFY(net.sizeOfLayer(1) == 5);
-    QVERIFY(net.layers().front().weights().column(4) == std::vector<double>(5, .001));
+    QVERIFY(net.layers().front().weights().column(4) == std::vector<float>(5, .001));
     auto result = net.run({1, 2, 3, 4, 5});
     QVERIFY(result.size() == 5u);
     // net had been initialized with near null random values on connect.
     // that should result in values of roundabout .5
     // the nodes added after connecting had been set to a small bias
     // that should pull the result in the direction of zero
-    std::vector<double> expectation = {.5, .5, 0, 0, 0};
+    std::vector<float> expectation = {.5, .5, 0, 0, 0};
     auto res = result.begin();
     auto exp = expectation.begin();
     while (res != result.end()) {
@@ -121,9 +121,9 @@ void TestTrainer::testChangeNet()
 void TestTrainer::testSoftMax()
 {
     mimir::models::activation::Softmax softMax;
-    std::vector<double> data{1000, 2000, 3000};
+    std::vector<float> data{1000, 2000, 3000};
     softMax.activate(data);
-    QVERIFY((data == std::vector<double>{0, 0, 1}));
+    QVERIFY((data == std::vector<float>{0, 0, 1}));
 }
 
 void TestTrainer::testTrain()
@@ -137,11 +137,11 @@ void TestTrainer::testTrain()
     QVERIFY(testee.currentError() < .003);
 }
 
-void saveImage(std::string const &name, std::vector<double> const &pixels, int expectedNumber) {
+void saveImage(std::string const &name, std::vector<float> const &pixels, int expectedNumber) {
 
     QImage img({28, 28}, QImage::Format::Format_Grayscale8);
     std::vector<uchar> imgdata;
-    for(double grey : pixels)
+    for(float grey : pixels)
         imgdata.push_back(static_cast<uchar>(255.*grey));
     memcpy(img.bits(),imgdata.data(), 28*28);
     QString fileName(QString::fromStdString(name));
@@ -157,36 +157,35 @@ void TestTrainer::testImageDetect()
     char x[32] = {};
     labels.read(x, 8);
     data.read(x, 16);
-    unsigned int batchSize = 5;
-    NeuronNet detector(28*28, 10, "softmax");
-    detector.addHiddenLayer(56, "rectifiedLinear");
-    detector.addHiddenLayer(28, "sigmoid");
+    unsigned int batchSize = 20;
+    NeuronNet detector(28*28, 10, "sigmoid");
+    detector.addHiddenLayer(15, "sigmoid");
     detector.connect();
     Trainer trainer(detector);
     trainer.createGradients();
-    auto batches = makeInput(data, 600);
-    auto expectations = makeExpectations(labels, 600);
+    auto batches = makeInput(data, 1000);
+    auto expectations = makeExpectations(labels, 1000);
     auto batch = batches.begin();
     auto expect = expectations.begin();
     qDebug() << "Begin training...";
     while (batch != batches.end() && expect != expectations.end()) {
         trainer.addTrainingData(*batch++, *expect++);
     }
-    double learningRate = .5;
+    float learningRate = .001;
     int minibatch = 0;
-    auto batchResult = [&minibatch, &batches, &expectations, &detector, &batchSize](double currentError, double detectRate, unsigned epochsNeeded) {
+    auto batchResult = [&minibatch, &batches, &expectations, &detector, &batchSize](float currentError, float detectRate, unsigned epochsNeeded) {
         qDebug() << "minibatch" << minibatch++ << "error" << currentError << "detected" << detectRate*100. << "%" << "epochs: "<< epochsNeeded;
         if (detectRate > .8) {
             auto result = detector.run(*(batches.begin() + static_cast<unsigned>(minibatch)*batchSize-1));
             qDebug() << result << *(expectations.begin() + static_cast<unsigned>(minibatch)*batchSize-1);
         }
     };
-    trainer.run(batchSize, 250, 1e-5, .9, learningRate, batchResult);
+    trainer.run(batchSize, 1500, 1e-5, .9, learningRate, batchResult);
     int right = 0, wrong = 0;
     for (auto n = 0u; n < batches.size(); n += 5) {
         auto seen = detector.run(batches.at(n));
         auto expected = expectations.at(n);
-        std::vector<std::pair<size_t, double>> rank;
+        std::vector<std::pair<size_t, float>> rank;
         for (auto x = 0u; x < seen.size(); ++x) {
             rank.push_back({x, seen[x]});
         }

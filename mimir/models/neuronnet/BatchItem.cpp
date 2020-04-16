@@ -3,28 +3,28 @@
 namespace mimir {
 namespace models {
 
-BatchItem::BatchItem(const std::vector<double> &input, const std::vector<double> &expectation) :
+BatchItem::BatchItem(const std::vector<float> &input, const std::vector<float> &expectation) :
     _input(input),
     _expectation(expectation)
 {
 }
 
-std::vector<double> const &BatchItem::input() const
+std::vector<float> const &BatchItem::input() const
 {
     return _input;
 }
 
-void BatchItem::setInput(const std::vector<double> &input)
+void BatchItem::setInput(const std::vector<float> &input)
 {
     _input = input;
 }
 
-const std::vector<double> &BatchItem::expectation() const
+const std::vector<float> &BatchItem::expectation() const
 {
     return _expectation;
 }
 
-void BatchItem::setExpectation(const std::vector<double> &expectation)
+void BatchItem::setExpectation(const std::vector<float> &expectation)
 {
     _expectation = expectation;
 }

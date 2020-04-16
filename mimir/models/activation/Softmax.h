@@ -14,10 +14,10 @@ public:
     // ActivationInterface interface
 public:
     std::string name() const override;
-    void activate(std::vector<double> &) const noexcept override;
-    std::vector<double> derivative(std::vector<double> const &hypothesis) const noexcept override;
-    double error(mimir::models::TrainerValueHelper const &) const noexcept override;
-    std::vector<double> lossDerivative(const std::vector<double> &hypothesis, const std::vector<double> &expectations) const noexcept override;
+    void activate(std::vector<float> &) const noexcept override;
+    std::vector<float> derivative(std::vector<float> const &hypothesis) const noexcept override;
+    float error(mimir::models::TrainerValueHelper const &) const noexcept override;
+    std::vector<float> lossDerivative(const std::vector<float> &hypothesis, const std::vector<float> &expectations) const noexcept override;
 };
 
 } // namespace activation

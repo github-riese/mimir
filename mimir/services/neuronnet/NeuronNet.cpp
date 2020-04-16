@@ -53,7 +53,7 @@ void NeuronNet::appendLayer(size_t numNeurons, const std::string &activation)
 {
     std::random_device randDev;
     std::mt19937 twister(randDev());
-    std::normal_distribution<double> random(-.001, .001);
+    std::normal_distribution<float> random(-.001, .001);
     Layer l(activation.empty() && _layers.size() > 0 ? _layers.back().activation() : getActivationsManager().get(activation));
     for (auto n = 0u; n < numNeurons; ++n) {
         l.addNode(random(randDev));
@@ -80,7 +80,7 @@ void NeuronNet::connect()
     (*previous).connect(Layer());
 }
 
-std::vector<double> NeuronNet::run(std::vector<double> inputs)
+std::vector<float> NeuronNet::run(std::vector<float> inputs)
 {
     Layer &input = _layers.front();
     input.setInput(inputs);
@@ -95,7 +95,7 @@ std::vector<double> NeuronNet::run(std::vector<double> inputs)
 }
 
 
-std::vector<double> NeuronNet::results()
+std::vector<float> NeuronNet::results()
 {
     return _layers.back().hypothesis();
 }
@@ -116,7 +116,7 @@ size_t NeuronNet::numberOfLayers() const
     return _layers.size();
 }
 
-bool NeuronNet::addNode(size_t layer, double bias, std::vector<double> weightsIn, std::valarray<double> weightsOut)
+bool NeuronNet::addNode(size_t layer, float bias, std::vector<float> weightsIn, std::valarray<float> weightsOut)
 {
     if (layer >= _layers.size() && layer != -1u) {
         return false;
@@ -156,17 +156,17 @@ models::Layer &NeuronNet::layer(size_t n)
     return _layers.at(n);
 }
 
-void NeuronNet::setBias(size_t layer, size_t neuron, double value)
+void NeuronNet::setBias(size_t layer, size_t neuron, float value)
 {
     _layers[layer].setBias(neuron, value);
 }
 
-void NeuronNet::setBiases(size_t layer, const std::vector<double> &biases)
+void NeuronNet::setBiases(size_t layer, const std::vector<float> &biases)
 {
     _layers[layer].setBiases(biases);
 }
 
-void NeuronNet::setWeight(size_t layer, size_t neuron, size_t nextLayerNeuron, double value)
+void NeuronNet::setWeight(size_t layer, size_t neuron, size_t nextLayerNeuron, float value)
 {
     _layers[layer].setWeight(neuron, nextLayerNeuron, value);
 }
@@ -186,7 +186,7 @@ void NeuronNet::setName(const std::string &name)
     _name = name;
 }
 
-double NeuronNet::error(std::vector<double> const &expectation) const
+float NeuronNet::error(std::vector<float> const &expectation) const
 {
     if (_layers.size() > 0) {
         auto outputActivator = _layers.back().activation();
@@ -194,7 +194,7 @@ double NeuronNet::error(std::vector<double> const &expectation) const
             return outputActivator->error({_layers.back().hypothesis(), expectation});
         }
     }
-    return std::numeric_limits<double>::quiet_NaN();
+    return std::numeric_limits<float>::quiet_NaN();
 }
 
 }

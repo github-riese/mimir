@@ -15,17 +15,17 @@ std::string Sigmoid::name() const
     return "sigmoid";
 }
 
-void Sigmoid::activate(std::vector<double> &v) const noexcept
+void Sigmoid::activate(std::vector<float> &v) const noexcept
 {
-    std::transform(v.begin(), v.end(), v.begin(), [](double v){
+    std::transform(v.begin(), v.end(), v.begin(), [](float v){
         return 1./(1.+std::exp(-v));
     });
 }
 
-std::vector<double> Sigmoid::derivative(const std::vector<double> &hypothesis) const noexcept
+std::vector<float> Sigmoid::derivative(const std::vector<float> &hypothesis) const noexcept
 {
     auto result = hypothesis;
-    apply(result, [](double sigmoid) { return sigmoid * (1 - sigmoid);});
+    apply(result, [](float sigmoid) { return sigmoid * (1 - sigmoid);});
     return result;
 }
 

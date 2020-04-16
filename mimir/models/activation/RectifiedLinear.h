@@ -14,8 +14,8 @@ public:
     // ActivationInterface interface
 public:
     std::string name() const override;
-    void activate(std::vector<double> &) const noexcept override;
-    std::vector<double> derivative(std::vector<double> const &) const noexcept override;
+    void activate(std::vector<float> &) const noexcept override;
+    std::vector<float> derivative(std::vector<float> const &) const noexcept override;
 };
 
 } // namespace activation

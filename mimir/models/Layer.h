@@ -23,24 +23,24 @@ public:
      * @brief adds a new node to this layer.
      * @param bias value for the new node (which will be, of course, ignored if _isInputLayer = true)
      */
-    void addNode(double bias = 0., std::valarray<double> const &weights = {});
-    std::vector<double> hypothesis();
-    std::vector<double> hypothesis() const;
+    void addNode(float bias = 0., std::valarray<float> const &weights = {});
+    std::vector<float> hypothesis();
+    std::vector<float> hypothesis() const;
     bool connect(const Layer &next);
-    bool reconnect(Layer const &next, const std::vector<double> &weights = {});
-    double weight(size_t idxMyNeuron, size_t idxNextLayerNeuron) const;
+    bool reconnect(Layer const &next, const std::vector<float> &weights = {});
+    float weight(size_t idxMyNeuron, size_t idxNextLayerNeuron) const;
     const Matrix &weights() const;
-    void setInput(std::vector<double> const &);
-    std::vector<double> input() const;
-    std::vector<double> biases() const;
-    void setBiases(const std::vector<double> &);
-    void setBias(size_t neuron, double value);
-    void changeBiases(const std::vector<double> &);
+    void setInput(std::vector<float> const &);
+    std::vector<float> input() const;
+    std::vector<float> biases() const;
+    void setBiases(const std::vector<float> &);
+    void setBias(size_t neuron, float value);
+    void changeBiases(const std::vector<float> &);
     void setWeights(const Matrix &);
-    void setWeight(size_t neuron, size_t nextLayerNeuron, double value);
+    void setWeight(size_t neuron, size_t nextLayerNeuron, float value);
     void changeWeights(const Matrix &);
-    std::vector<double> zValues() const;
-    std::vector<double> run();
+    std::vector<float> zValues() const;
+    std::vector<float> run();
     bool isConnected() const;
     bool isInputLayer() const;
     size_t size() const noexcept;
@@ -55,9 +55,9 @@ protected:
 private:
     bool _isConnected = false;
     size_t _nextLayerSize = 0u;
-    std::vector<double> _inputs;
-    std::vector<double> _biases;
-    std::vector<double> _hypothesis;
+    std::vector<float> _inputs;
+    std::vector<float> _biases;
+    std::vector<float> _hypothesis;
     Matrix _weights;
     models::activation::ActivationInterface *_activator = nullptr;
     bool _dirty = false;

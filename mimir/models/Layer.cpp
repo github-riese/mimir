@@ -20,7 +20,7 @@ Layer::Layer(activation::ActivationInterface *activate) :
 {
 }
 
-void Layer::addNode(double bias, const std::valarray<double> &weights)
+void Layer::addNode(float bias, const std::valarray<float> &weights)
 {
     if (weights.size() > 0 && (weights.size() != _nextLayerSize || weights.size() != 1)) {
         throw std::logic_error("Wrong number of weights given on adding node.");
@@ -31,16 +31,16 @@ void Layer::addNode(double bias, const std::valarray<double> &weights)
     _hypothesis.push_back(0);
     if (_nextLayerSize) {
         if (weights.size() == 0) {
-            _weights.addRow(std::valarray<double>(0., _nextLayerSize));
+            _weights.addRow(std::valarray<float>(0., _nextLayerSize));
         } else if (weights.size() == 1) {
-            _weights.addRow(std::valarray<double>(weights[0], _nextLayerSize));
+            _weights.addRow(std::valarray<float>(weights[0], _nextLayerSize));
         } else {
             _weights.addRow(weights);
         }
     }
 }
 
-std::vector<double> Layer::hypothesis()
+std::vector<float> Layer::hypothesis()
 {
     if (_dirty) {
         if (!_isInputLayer) {
@@ -52,7 +52,7 @@ std::vector<double> Layer::hypothesis()
     return _hypothesis;
 }
 
-std::vector<double> Layer::hypothesis() const
+std::vector<float> Layer::hypothesis() const
 {
     return _hypothesis;
 }
@@ -68,7 +68,7 @@ bool Layer::connect(Layer const &next)
     auto nextLayerNeuronCount = next._inputs.size();
     auto nextSize = next.size();
     if (nextSize > 0) {
-        double nextSizeSquared = static_cast<double>(nextSize*nextSize);
+        float nextSizeSquared = static_cast<float>(nextSize*nextSize);
         _weights = Matrix{
                 _inputs.size(),
                 nextLayerNeuronCount,
@@ -84,7 +84,7 @@ bool Layer::connect(Layer const &next)
     return true;
 }
 
-bool Layer::reconnect(const Layer &next, std::vector<double> const &weights)
+bool Layer::reconnect(const Layer &next, std::vector<float> const &weights)
 {
     if (!isConnected()) {
         return connect(next);
@@ -94,16 +94,16 @@ bool Layer::reconnect(const Layer &next, std::vector<double> const &weights)
     if (extraColumns < 0) {
         return false;
     }
-    double singleValue = weights.size() == 1 ? weights.front() : 0;
+    float singleValue = weights.size() == 1 ? weights.front() : 0;
     while (extraColumns-- > 0) {
-        _weights.addColumn(-1u, (weights.size() == _inputs.size()) ? weights : std::vector<double>(_inputs.size(), singleValue));
+        _weights.addColumn(-1u, (weights.size() == _inputs.size()) ? weights : std::vector<float>(_inputs.size(), singleValue));
     }
     _nextLayerSize = next.size();
     _dirty = true;
     return true;
 }
 
-double Layer::weight(size_t idxMyNeuron, size_t idxNextLayerNeuron) const
+float Layer::weight(size_t idxMyNeuron, size_t idxNextLayerNeuron) const
 {
     if (!_isConnected) {
         throw std::logic_error("Not connected");
@@ -119,7 +119,7 @@ const Matrix &Layer::weights() const
     return _weights;
 }
 
-void Layer::setInput(const std::vector<double> &values)
+void Layer::setInput(const std::vector<float> &values)
 {
     if (values.size() != size()) {
         std::stringstream s;
@@ -135,17 +135,17 @@ void Layer::setInput(const std::vector<double> &values)
     }
 }
 
-std::vector<double> Layer::input() const
+std::vector<float> Layer::input() const
 {
     return _inputs;
 }
 
-std::vector<double> Layer::biases() const
+std::vector<float> Layer::biases() const
 {
     return _biases;
 }
 
-void Layer::setBiases(const std::vector<double> &biasValues)
+void Layer::setBiases(const std::vector<float> &biasValues)
 {
     if (biasValues.size() != _biases.size()) {
         throw std::logic_error("wrong number of biases for layer");
@@ -154,12 +154,12 @@ void Layer::setBiases(const std::vector<double> &biasValues)
     _biases = biasValues;
 }
 
-void Layer::setBias(size_t neuron, double value)
+void Layer::setBias(size_t neuron, float value)
 {
     _biases[neuron] = value;
 }
 
-void Layer::changeBiases(const std::vector<double> &deltas)
+void Layer::changeBiases(const std::vector<float> &deltas)
 {
     if (deltas.size() != _biases.size()) {
         throw std::logic_error("wrong number of biases for layer");
@@ -183,7 +183,7 @@ void Layer::setWeights(const Matrix &weights)
     _dirty = true;
 }
 
-void Layer::setWeight(size_t neuron, size_t nextLayerNeuron, double value)
+void Layer::setWeight(size_t neuron, size_t nextLayerNeuron, float value)
 {
     _weights.setValue(neuron, nextLayerNeuron, value);
 }
@@ -193,17 +193,17 @@ void Layer::changeWeights(const Matrix &delta)
     _weights -= delta.column(0);
 }
 
-std::vector<double> Layer::zValues() const
+std::vector<float> Layer::zValues() const
 {
     return _inputs + _biases;
 }
 
-std::vector<double> Layer::run()
+std::vector<float> Layer::run()
 {
     if (!_isConnected) {
         throw std::logic_error("can't run a layer without subsequent layer.");
     }
-    std::vector<double> vals;
+    std::vector<float> vals;
     vals = (_weights.transposed() * hypothesis()).column(0);
     return vals;
 }

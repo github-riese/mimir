@@ -46,7 +46,7 @@ private:
     NetHeader readNetHeader(std::istream &) const;
     LayerHeader readLayerHeader(std::istream &) const;
     std::string readName(std::istream &, uint32_t length) const;
-    std::vector<double> readBiases(std::istream &, size_t) const;
+    std::vector<float> readBiases(std::istream &, size_t) const;
     models::Matrix readWeights(std::istream &, size_t, size_t) const;
     bool rebuildLayers(std::istream &, NetHeader const&, NeuronNet &);
     void writeFileHeader(std::ostream &);

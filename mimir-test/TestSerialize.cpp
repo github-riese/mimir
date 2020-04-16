@@ -49,7 +49,7 @@ void TestSerialize::testSerialize()
     net.addHiddenLayer(4);
     net.connect();
     net.layers().front().setWeights({{{1, 2, 3, 4},{5, 6, 7, 8}}});
-    net.layers()[1].setWeights(mimir::models::Matrix{std::vector<double>{4, 3, 2, 1}});
+    net.layers()[1].setWeights(mimir::models::Matrix{std::vector<float>{4, 3, 2, 1}});
     net.setBias(1, 0, 1);
     net.setBias(1, 1, -1);
     net.setBias(1, 2, 1);

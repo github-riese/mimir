@@ -131,9 +131,9 @@ std::string NeuronNetSerializer::readName(std::istream &in, uint32_t length) con
     return name;
 }
 
-std::vector<double> NeuronNetSerializer::readBiases(std::istream &in, size_t nodes) const
+std::vector<float> NeuronNetSerializer::readBiases(std::istream &in, size_t nodes) const
 {
-    std::vector<double> result(nodes);
+    std::vector<float> result(nodes);
     helpers::UnpackDouble unpack;
     std::transform(result.begin(), result.end(), result.begin(), [&unpack, this, &in](auto) {
         auto packed = readUInt64(in);
@@ -146,7 +146,7 @@ models::Matrix NeuronNetSerializer::readWeights(std::istream &in, size_t rows, s
 {
     models::Matrix result;
     std::vector<uint64_t> rawRow(columns);
-    std::valarray<double> row(columns);
+    std::valarray<float> row(columns);
     helpers::UnpackDouble unpack;
     while (rows-- > 0) {
         std::transform(rawRow.begin(), rawRow.end(), rawRow.begin(), [this, &in](auto) {
@@ -163,7 +163,7 @@ bool NeuronNetSerializer::rebuildLayers(std::istream &in, const NeuronNetSeriali
     struct LayerDescription {
         LayerHeader header;
         std::string activationName;
-        std::vector<double> biases;
+        std::vector<float> biases;
         models::Matrix weights;
     };
     std::vector<LayerDescription> layerDesc;

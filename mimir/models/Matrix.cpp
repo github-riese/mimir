@@ -9,7 +9,7 @@ namespace mimir {
 namespace models {
 
 
-Matrix::Matrix(const std::vector<std::valarray<double> > &values) noexcept :
+Matrix::Matrix(const std::vector<std::valarray<float> > &values) noexcept :
     _rows(values.size()),
     _cols(values.front().size())
 {
@@ -21,28 +21,28 @@ Matrix::Matrix(const std::vector<std::valarray<double> > &values) noexcept :
     }
 }
 
-Matrix::Matrix(const std::vector<double> &vector) noexcept :
+Matrix::Matrix(const std::vector<float> &vector) noexcept :
     _rows(vector.size()),
     _cols(1)
 {
     _data.assign(vector.begin(), vector.end());
 }
 
-Matrix::Matrix(const std::valarray<double> &array) noexcept :
+Matrix::Matrix(const std::valarray<float> &array) noexcept :
     _rows(1),
     _cols(array.size())
 {
     _data.assign(std::begin(array), std::end(array));
 }
 
-Matrix::Matrix(size_t rows, size_t colums, double initalValue) noexcept :
+Matrix::Matrix(size_t rows, size_t colums, float initalValue) noexcept :
     _rows(rows),
     _cols(colums)
 {
     _data.assign(_rows * _cols, initalValue);
 }
 
-Matrix::Matrix(size_t rows, size_t columns, std::function<double(size_t, size_t)> setter) :
+Matrix::Matrix(size_t rows, size_t columns, std::function<float(size_t, size_t)> setter) :
     _rows(rows),
     _cols(columns)
 {
@@ -60,9 +60,9 @@ Matrix Matrix::transposed() const
     return Matrix{*this}.transpose();
 }
 
-std::vector<std::valarray<double>> Matrix::data() const
+std::vector<std::valarray<float>> Matrix::data() const
 {
-    std::vector<std::valarray<double>> out;
+    std::vector<std::valarray<float>> out;
     auto pointer = _data.begin();
     for (auto row = 0ul; row < _rows; ++row) {
         out.push_back({&(*pointer), _cols});
@@ -71,7 +71,7 @@ std::vector<std::valarray<double>> Matrix::data() const
     return out;
 }
 
-std::vector<double> Matrix::column(size_t column) const
+std::vector<float> Matrix::column(size_t column) const
 {
     if (column >= _cols) {
         throw std::out_of_range("No such column.");
@@ -79,7 +79,7 @@ std::vector<double> Matrix::column(size_t column) const
     if (_cols == 1 && column == 0) {
         return _data;
     }
-    std::vector<double> result;
+    std::vector<float> result;
     result.reserve(_rows);
     auto pointer = _data.begin();
     while (pointer != _data.end()) {
@@ -89,7 +89,7 @@ std::vector<double> Matrix::column(size_t column) const
     return result;
 }
 
-std::valarray<double> Matrix::row(size_t row) const
+std::valarray<float> Matrix::row(size_t row) const
 {
     if (row >= _rows) {
         throw std::out_of_range("No such row.");
@@ -97,13 +97,13 @@ std::valarray<double> Matrix::row(size_t row) const
     if (_rows == 1 && row == 0) {
         return mimir::helpers::toArray(_data);
     }
-    std::valarray<double> result(_cols);
+    std::valarray<float> result(_cols);
     long start = static_cast<long>(row * _cols);
     std::copy(_data.begin() + start, _data.begin() + start + static_cast<long>(_cols), std::begin(result));
     return result;
 }
 
-void Matrix::addColumn(size_t before, const std::vector<double> &values)
+void Matrix::addColumn(size_t before, const std::vector<float> &values)
 {
     if (before != -1u && before > _cols) {
         throw new std::logic_error("Cant' add a column behind the end of the matrix.");
@@ -134,7 +134,7 @@ void Matrix::addColumn(size_t before, const std::vector<double> &values)
     ++_cols;
 }
 
-void Matrix::addRow(const std::valarray<double> &row)
+void Matrix::addRow(const std::valarray<float> &row)
 {
     if (_rows != 0 && _cols != row.size()) {
         throw std::logic_error("Matrix value size mismatch.");
@@ -151,7 +151,7 @@ Matrix &Matrix::operator*=(const Matrix &rhs)
         throw std::logic_error("can't multiply matrices where left number of columns doesn't match right number of rows.");
     }
     Matrix rightColumns = rhs.transposed();
-    std::vector<double> result;
+    std::vector<float> result;
     result.assign(_rows * rhs._cols, 0);
     auto resultIterator = result.begin();
     auto leftIterator = _data.begin();
@@ -174,34 +174,34 @@ Matrix Matrix::operator *(const Matrix &rhs) const
     return Matrix{*this} *= rhs;
 }
 
-Matrix Matrix::operator *(const std::vector<double> &vector) const
+Matrix Matrix::operator *(const std::vector<float> &vector) const
 {
     return Matrix{*this} *= Matrix{vector};
 }
 
-Matrix Matrix::operator *(const std::valarray<double> &array) const
+Matrix Matrix::operator *(const std::valarray<float> &array) const
 {
     return Matrix{*this} *= array;
 }
 
-Matrix Matrix::operator *(double v) const
+Matrix Matrix::operator *(float v) const
 {
     return Matrix{*this} *= v;
 }
 
-Matrix &Matrix::operator *=(const std::vector<double> &vector)
+Matrix &Matrix::operator *=(const std::vector<float> &vector)
 {
     return *this *= Matrix {vector};
 }
 
-Matrix &Matrix::operator *=(const std::valarray<double> &valarray)
+Matrix &Matrix::operator *=(const std::valarray<float> &valarray)
 {
     return *this *= Matrix{{valarray}};
 }
 
-Matrix &Matrix::operator *=(double value)
+Matrix &Matrix::operator *=(float value)
 {
-    std::transform(_data.begin(), _data.end(), _data.begin(), [value](double v) -> double { return v * value; });
+    std::transform(_data.begin(), _data.end(), _data.begin(), [value](float v) -> float { return v * value; });
     return *this;
 }
 
@@ -216,9 +216,9 @@ mimir::models::Matrix &mimir::models::Matrix::pieceWiseMultiply(const mimir::mod
     return *this;
 }
 
-Matrix &Matrix::operator /=(double value)
+Matrix &Matrix::operator /=(float value)
 {
-    std::transform(_data.begin(), _data.end(), _data.begin(), [value](double v) -> double { return v / value; });
+    std::transform(_data.begin(), _data.end(), _data.begin(), [value](float v) -> float { return v / value; });
     return *this;
 }
 
@@ -235,24 +235,24 @@ Matrix &Matrix::operator -=(const Matrix &rhs)
     if (cols() != rhs.cols() || rows() != rhs.rows()) {
         throw std::logic_error("Can't piecewise substract matrices of unequal size.");
     }
-    std::transform(_data.begin(), _data.end(), rhs._data.begin(), _data.begin(), [] (double left, double right) -> double { return left - right; });
+    std::transform(_data.begin(), _data.end(), rhs._data.begin(), _data.begin(), [] (float left, float right) -> float { return left - right; });
     return *this;
 }
 
-Matrix &Matrix::operator -=(const std::vector<double> &rhs)
+Matrix &Matrix::operator -=(const std::vector<float> &rhs)
 {
     if (rows() != rhs.size()) {
         throw std::logic_error("Size mismatch. Subtractor vector must have as many elements as the matrix has rows.");
     }
     auto pointer = _data.begin();
     for (auto value : rhs) {
-        std::transform(pointer, pointer + static_cast<long>(_cols), pointer, [value](double current) -> double { return current - value; });
+        std::transform(pointer, pointer + static_cast<long>(_cols), pointer, [value](float current) -> float { return current - value; });
         std::advance(pointer, static_cast<long>(_cols));
     }
     return *this;
 }
 
-Matrix &Matrix::operator -=(const std::valarray<double> &sub)
+Matrix &Matrix::operator -=(const std::valarray<float> &sub)
 {
     if (sub.size() != cols()) {
         throw std::logic_error("Rowise add needs an array as wide as the matrix.");
@@ -278,20 +278,20 @@ Matrix Matrix::operator +(const Matrix &rhs) const
     return Matrix{*this} += rhs;
 }
 
-Matrix Matrix::operator +(double v) const
+Matrix Matrix::operator +(float v) const
 {
     return Matrix{*this} += v;
 }
 
-Matrix &Matrix::operator +=(double v)
+Matrix &Matrix::operator +=(float v)
 {
-    std::transform(_data.begin(), _data.end(), _data.begin(), [v](double oldVal) -> double { return oldVal + v; });
+    std::transform(_data.begin(), _data.end(), _data.begin(), [v](float oldVal) -> float { return oldVal + v; });
     return *this;
 }
 
-mimir::models::Matrix &mimir::models::Matrix::operator -=(double v)
+mimir::models::Matrix &mimir::models::Matrix::operator -=(float v)
 {
-    std::transform(_data.begin(), _data.end(), _data.begin(), [v](double oldVal) -> double { return oldVal - v; });
+    std::transform(_data.begin(), _data.end(), _data.begin(), [v](float oldVal) -> float { return oldVal - v; });
     return *this;
 }
 
@@ -300,11 +300,11 @@ Matrix &Matrix::operator +=(const Matrix &rhs)
     if (cols() != rhs.cols() || rows() != rhs.rows()) {
         throw std::logic_error("Can't piecewise add matrices of unequal size.");
     }
-    std::transform(_data.begin(), _data.end(), rhs._data.begin(), _data.begin(), [] (double left, double right) -> double { return left + right; });
+    std::transform(_data.begin(), _data.end(), rhs._data.begin(), _data.begin(), [] (float left, float right) -> float { return left + right; });
     return *this;
 }
 
-Matrix &Matrix::operator +=(const std::valarray<double> &add)
+Matrix &Matrix::operator +=(const std::valarray<float> &add)
 {
     if (add.size() != cols()) {
         throw std::logic_error("Rowise add needs an array as wide as the matrix.");
@@ -322,7 +322,7 @@ Matrix &Matrix::operator +=(const std::valarray<double> &add)
     return *this;
 }
 
-Matrix Matrix::operator +(const std::valarray<double> &add) const
+Matrix Matrix::operator +(const std::valarray<float> &add) const
 {
     return Matrix{*this} += add;
 }
@@ -337,7 +337,7 @@ size_t Matrix::rows() const
     return _rows;
 }
 
-double Matrix::value(size_t row, size_t column) const
+float Matrix::value(size_t row, size_t column) const
 {
     if (row >= _rows || column >= _cols) {
         throw std::out_of_range("Requested value out of bounds of matrix.");
@@ -345,7 +345,7 @@ double Matrix::value(size_t row, size_t column) const
     return _data.at(row * _cols + column);
 }
 
-void Matrix::setValue(size_t row, size_t column, double value)
+void Matrix::setValue(size_t row, size_t column, float value)
 {
     if (row >= _rows || column >= _cols) {
         throw std::out_of_range("Requested value out of bounds of matrix.");
@@ -353,7 +353,7 @@ void Matrix::setValue(size_t row, size_t column, double value)
     _data[row * _cols + column] = value;
 }
 
-void Matrix::fill(double value)
+void Matrix::fill(float value)
 {
     _data.assign(_data.size(), value);
 }
@@ -368,17 +368,17 @@ Matrix &Matrix::makeIdentity()
     return *this;
 }
 
-double Matrix::sum() const
+float Matrix::sum() const
 {
     return std::accumulate(_data.begin(), _data.end(), 0.);
 }
 
-double Matrix::avg() const
+float Matrix::avg() const
 {
-    return sum() / static_cast<double>(_data.size());
+    return sum() / static_cast<float>(_data.size());
 }
 
-double Matrix::mse() const
+float Matrix::mse() const
 {
     auto avarage = avg();
     auto distance = std::accumulate(_data.begin(), _data.end(), 0., [avarage](auto init, auto value) -> auto {
@@ -397,7 +397,7 @@ bool Matrix::operator==(const Matrix &rhs) const
         return false;
     }
     return std::equal(_data.begin(), _data.end(), rhs._data.begin(),
-            [](double left, double right) -> bool {
+            [](float left, float right) -> bool {
                 return std::abs(left-right) < .00000000001;
             }
     );
@@ -413,7 +413,7 @@ Matrix& Matrix::transpose()
     if (_rows == 0) {
         return *this;
     }
-    std::vector<double> tmp(_data.size());
+    std::vector<float> tmp(_data.size());
     /*
      *  1  2  3     1  4
      *  4  5  6     2  5

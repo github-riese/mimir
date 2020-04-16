@@ -17,36 +17,36 @@ std::string Softmax::name() const
     return "softmax";
 }
 
-void Softmax::activate(std::vector<double> &v) const noexcept
+void Softmax::activate(std::vector<float> &v) const noexcept
 {
     auto maxV = *std::max_element(v.begin(), v.end());
     v -= maxV;
-    auto sum = std::accumulate(v.begin(), v.end(), 0., [](double init, double v) noexcept -> double {
+    auto sum = std::accumulate(v.begin(), v.end(), 0., [](float init, float v) noexcept -> float {
         return init + std::exp(v);
     });
-    apply(v, [&sum](double v) noexcept (true) -> double { return std::exp(v) / sum; });
+    apply(v, [&sum](float v) noexcept (true) -> float { return std::exp(v) / sum; });
 }
 
-std::vector<double> Softmax::derivative(std::vector<double> const &hypothesis) const noexcept
+std::vector<float> Softmax::derivative(std::vector<float> const &hypothesis) const noexcept
 {
     auto smax = hypothesis;
-    return smax * (1. - smax);
+    return smax * (1.f - smax);
 }
 
-double Softmax::error(const TrainerValueHelper &values) const noexcept
+float Softmax::error(const TrainerValueHelper &values) const noexcept
 {
     auto combined = boost::combine(values.hypothesis(), values.expectation());
-    double crossEntropy = std::accumulate(combined.begin(), combined.end(), 0., [](double init, auto tuple) -> double {
-        double hypothesis, expectation;
+    float crossEntropy = std::accumulate(combined.begin(), combined.end(), 0., [](float init, auto tuple) -> float {
+        float hypothesis, expectation;
         boost::tie(hypothesis, expectation) = tuple;
         return init + (expectation * std::log(hypothesis));
     });
     return -crossEntropy;
 }
 
-std::vector<double> Softmax::lossDerivative(const std::vector<double> &hypothesis, const std::vector<double> &expectations) const noexcept
+std::vector<float> Softmax::lossDerivative(const std::vector<float> &hypothesis, const std::vector<float> &expectations) const noexcept
 {
-    std::vector<double> dLoss = expectations - hypothesis;
+    std::vector<float> dLoss = expectations - hypothesis;
     return -dLoss;
 }
 

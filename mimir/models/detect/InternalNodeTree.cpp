@@ -38,6 +38,8 @@ BayesNet convert(const InternalNet &inNet, const ProbabilityDistribution &classi
 
 bool InternalFragment::canAdd(const InternalFragment &candidate) const
 {
+    if (node.column.columnIndex == candidate.node.column.columnIndex)
+        return false;
     for (auto p : candidate.parents) {
         if (p.node.column.columnIndex == node.column.columnIndex && parents.size() > 0)
             return false;

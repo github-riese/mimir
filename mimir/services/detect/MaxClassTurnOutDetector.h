@@ -21,9 +21,9 @@ public:
      * @param maxResults
      * @return
      */
-    models::detect::InternalNetVector buildNets(models::ProbabilityDistribution const &, size_t maxResults) override;
+    models::detect::InternalFragmentVector detect(models::ProbabilityDistribution const &) override;
 private:
-    std::vector<models::ColumnIndexValuePairVector> findDirectParents(size_t maxResults);
+    std::vector<models::ColumnIndexValuePairVector> findDirectParents();
     void maximizeLikelyhoods();
     models::detect::InternalFragmentVector likelihoodFragments();
     models::detect::InternalNet buildNet(models::ColumnIndexValuePairVector const &parents, const models::detect::InternalFragmentVector &likelihoods);

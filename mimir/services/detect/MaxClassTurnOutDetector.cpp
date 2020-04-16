@@ -54,19 +54,12 @@ MaxClassTurnOutDetector::MaxClassTurnOutDetector(models::CPT &cpt, long classFie
 {
 }
 
-models::detect::InternalNetVector MaxClassTurnOutDetector::buildNets(const models::ProbabilityDistribution &baseProbability, size_t maxResults)
+models::detect::InternalFragmentVector MaxClassTurnOutDetector::detect(const models::ProbabilityDistribution &baseProbability)
 {
     _baseDistribution = baseProbability;
-    auto parents = findDirectParents(maxResults);
+    auto parents = findDirectParents();
     maximizeLikelyhoods();
-
-    InternalNetVector internalNets;
-    for (auto const &parent : parents)
-    {
-        //InternalNet net = buildNet(parent, likelihoods);
-        //internalNets.push_back(net);
-    }
-    return internalNets;
+    return _likelihoods;
 }
 
 
@@ -90,10 +83,8 @@ InternalNet MaxClassTurnOutDetector::buildNet(const ColumnIndexValuePairVector &
     return net;
 }
 
-std::vector<models::ColumnIndexValuePairVector> MaxClassTurnOutDetector::findDirectParents(size_t maxResults)
+std::vector<models::ColumnIndexValuePairVector> MaxClassTurnOutDetector::findDirectParents()
 {
-    if (maxResults == 0)
-        return {};
     vector<VectorLengthOfFields> vectorLengthsByField;
     auto parameters = _sampleFields;
     sort(parameters, false);
@@ -118,7 +109,7 @@ std::vector<models::ColumnIndexValuePairVector> MaxClassTurnOutDetector::findDir
     sort(vectorLengthsByField.begin(), vectorLengthsByField.end(), DescSorter());
     auto pick = vectorLengthsByField.begin();
     std::vector<models::ColumnIndexValuePairVector> baseParents;
-    for (auto n = 0u; n < maxResults && pick != vectorLengthsByField.end(); ++n, ++pick) {
+    for (auto n = 0u; pick != vectorLengthsByField.end(); ++n, ++pick) {
         if (pick->second > _baseDistribution.vectorLength())
             baseParents.emplace_back(pick->first);
     }

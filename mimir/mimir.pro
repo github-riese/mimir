@@ -5,6 +5,7 @@ CONFIG += c++1z library
 
 CONFIG(release, debug|release) {
 mac: QMAKE_CXXFLAGS += -O3 -msse4.1
+mac: QMAKE_CXXFLAGS -= -O2
 }
 
 # The following define makes your compiler emit warnings if you use
@@ -37,6 +38,7 @@ SOURCES += \
     services/detect/AbstractDependencyDetector.cpp \
     services/detect/DetectorFactory.cpp \
     services/detect/MaxClassTurnOutDetector.cpp \
+    services/detect/Netbuilder.cpp \
     services/neuronnet/ActivationsManager.cpp \
     services/DataStore.cpp \
     services/DependencyDetector.cpp \
@@ -75,6 +77,7 @@ HEADERS += \
     services/detect/DependencyDetectionInterface.h \
     services/detect/DetectorFactory.h \
     services/detect/MaxClassTurnOutDetector.h \
+    services/detect/Netbuilder.h \
     services/neuronnet/NeuronNet.h \
     services/neuronnet/Trainer.h \
     services/neuronnet/NeuronNetSerializer.h \
