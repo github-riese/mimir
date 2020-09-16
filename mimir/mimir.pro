@@ -4,7 +4,7 @@ QT -= gui
 CONFIG += c++1z library
 
 CONFIG(release, debug|release) {
-mac: QMAKE_CXXFLAGS += -O3 -msse4.1
+mac: QMAKE_CXXFLAGS += -O3 -msse4.2 -mavx -mavx2 -mfma -maes
 mac: QMAKE_CXXFLAGS -= -O2
 }
 

@@ -13,11 +13,15 @@
 #include <services/neuronnet/NeuronNetSerializer.h>
 #include <models/activation/Softmax.h>
 
+#include <mimir/helpers/math.h>
+
 REGISTER_TEST(TestTrainer)
 
 using mimir::services::neuronnet::NeuronNet;
 using mimir::services::neuronnet::NeuronNetSerializer;
 using mimir::services::neuronnet::Trainer;
+
+using namespace mimir::helpers::math;
 
 std::vector<std::vector<float>> makeExpectations(std::ifstream &in, unsigned maxItems)
 {
@@ -44,6 +48,8 @@ std::vector<std::vector<float>> makeInput(std::ifstream &in, unsigned maxItems)
         in.read(&c, 1);
         input.push_back(static_cast<float>(static_cast<unsigned char>(c))/255.);
     }
+    auto avg = std::accumulate(input.begin(), input.end(), 0.f) / static_cast<float>(input.size());
+    input -= avg;
     result.push_back(input);
     if (in.eof()) break;
     }
@@ -163,15 +169,15 @@ void TestTrainer::testImageDetect()
     detector.connect();
     Trainer trainer(detector);
     trainer.createGradients();
-    auto batches = makeInput(data, 1000);
-    auto expectations = makeExpectations(labels, 1000);
+    auto batches = makeInput(data, 2000);
+    auto expectations = makeExpectations(labels, 2000);
     auto batch = batches.begin();
     auto expect = expectations.begin();
     qDebug() << "Begin training...";
     while (batch != batches.end() && expect != expectations.end()) {
         trainer.addTrainingData(*batch++, *expect++);
     }
-    float learningRate = .001;
+    float learningRate = .10001;
     int minibatch = 0;
     auto batchResult = [&minibatch, &batches, &expectations, &detector, &batchSize](float currentError, float detectRate, unsigned epochsNeeded) {
         qDebug() << "minibatch" << minibatch++ << "error" << currentError << "detected" << detectRate*100. << "%" << "epochs: "<< epochsNeeded;
@@ -180,7 +186,7 @@ void TestTrainer::testImageDetect()
             qDebug() << result << *(expectations.begin() + static_cast<unsigned>(minibatch)*batchSize-1);
         }
     };
-    trainer.run(batchSize, 1500, 1e-5, .9, learningRate, batchResult);
+    trainer.run(batchSize, 2500, 1e-5, .9, learningRate, batchResult);
     int right = 0, wrong = 0;
     for (auto n = 0u; n < batches.size(); n += 5) {
         auto seen = detector.run(batches.at(n));
@@ -192,11 +198,12 @@ void TestTrainer::testImageDetect()
         sort(rank.begin(), rank.end(), [](auto left, auto right) { return left.second < right.second; });
         auto ds = std::distance(seen.begin(), std::max_element(seen.begin(), seen.end()));
         auto de = std::distance(expected.begin(), std::max_element(expected.begin(), expected.end()));
-        qDebug() << "seen:" << ds
-                 << "expected:" << de
-                 << "P =" << seen[static_cast<size_t>(ds)]*100. << "%"
-                 << rank[1].first << "(" << rank[1].second * 100.<< "), "
-                 << rank[2].first << "(" << rank[2].second * 100.<< ")";
+        qDebug().nospace()
+                 << "seen: " << ds
+                 << " expected:" << de
+                 << " P =" << seen[static_cast<size_t>(ds)]*100. << "%"
+                 << rank[1].first << " (" << rank[1].second * 100.<< "), "
+                 << rank[2].first << " (" << rank[2].second * 100.<< ")";
         if (ds == de) ++right;
         else ++wrong;
     }

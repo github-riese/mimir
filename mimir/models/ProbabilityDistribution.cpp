@@ -8,6 +8,8 @@
 using std::pair;
 using std::vector;
 
+using std::copy;
+using std::back_inserter;
 using std::distance;
 using std::for_each;
 using std::max_element;
@@ -28,24 +30,19 @@ ProbabilityDistribution::ProbabilityDistribution(vector<pair<ValueIndex, Probabi
     analyze();
 }
 
-ProbabilityDistribution::ProbabilityDistribution(std::vector<Probability> probabilties, std::vector<ValueIndex> classifiers)
+ProbabilityDistribution::ProbabilityDistribution(std::vector<Probability> probabilities, std::vector<ValueIndex> classifiers)
 {
-    for_each(probabilties.begin(), probabilties.end(), [this](Probability const &p){
-        _probabilities.push_back(p);
-    });
-
-    for_each(classifiers.begin(), classifiers.end(), [this](ValueIndex const &v){
-        _classifiers.push_back(v);
-    });
+    copy(probabilities.begin(), probabilities.end(), back_inserter(_probabilities));
+    copy(classifiers.begin(), classifiers.end(), back_inserter(_classifiers));
     analyze();
 }
 
 ProbabilityDistribution::ProbabilityDistribution(std::map<ValueIndex, Probability> probabilities)
 {
-    for (auto p : probabilities) {
-        _classifiers.push_back(p.first);
-        _probabilities.push_back(p.second);
-    }
+    for_each(probabilities.begin(), probabilities.end(), [this](auto const &pair) -> void{
+        _classifiers.push_back(pair.first);
+        _probabilities.push_back(pair.second);
+    });
     analyze();
 }
 
@@ -130,7 +127,7 @@ ValueProbabilityVector ProbabilityDistribution::distribution() const
     }
     auto prob = _probabilities.begin();
     auto name = _classifiers.begin();
-    while (prob != _probabilities.end()) {
+    while (prob != _probabilities.end() && name != _classifiers.end()) {
         result.push_back({*(name++), *(prob++)});
     }
     return result;
@@ -138,13 +135,9 @@ ValueProbabilityVector ProbabilityDistribution::distribution() const
 
 Probability ProbabilityDistribution::probabilityOf(ValueIndex name) const
 {
-    auto idx = _classifiers.begin();
-    while (idx != _classifiers.end()) {
-        if (*idx == name) {
-            break;
-        }
-        ++idx;
-    }
+    auto idx = find_if(_classifiers.begin(), _classifiers.end(), [&name](auto val) -> bool{
+        return val == name;
+    });
     if (idx == _classifiers.end()) {
         return 0._p;
     }
